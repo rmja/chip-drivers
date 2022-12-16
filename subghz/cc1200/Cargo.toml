@@ -1,0 +1,9 @@
+[package]
+name = "cc1200-driver"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+async-trait = "0.1"
+bitfield = "0.14"
+futures = { version = "0.3.0", default-features = false }
