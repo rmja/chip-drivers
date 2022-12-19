@@ -3,10 +3,13 @@
 extern crate alloc;
 extern crate bitfield;
 
+#[macro_use]
+extern crate num_derive;
+
 mod config;
 mod driver;
 mod errors;
-mod gpio;
+pub mod gpio;
 mod opcode;
 pub mod regs;
 mod statusbyte;
@@ -26,5 +29,4 @@ pub use self::{
     errors::*,
     opcode::Strobe,
     statusbyte::{State, StatusByte},
-    gpio::Gpio,
 };

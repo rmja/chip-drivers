@@ -1,4 +1,5 @@
 use crate::opcode::PriReg;
+use num_traits::FromPrimitive;
 
 #[derive(Copy, Clone)]
 pub enum Gpio {
@@ -19,8 +20,90 @@ impl Gpio {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, FromPrimitive)]
+#[allow(non_camel_case_types)]
+pub enum GpioOutput {
+    /// Asserted when the RX FIFO is filled above FIFO_CFG.FIFO_THR. De-asserted
+    /// when the RX FIFO is drained below (or is equal) to the same threshold.
+    RXFIFO_THR = 0,
+    /// Asserted when the RX FIFO is filled above FIFO_CFG.FIFO_THR or the end of
+    /// packet is reached. De-asserted when the RX FIFO is empty.
+    RXFIFO_THR_PKT = 1,
+    /// Asserted when the TX FIFO is filled above (or is equal to)
+    /// (127−FIFO_CFG.FIFO_THR). De-asserted when the TX FIFO is drained below the
+    /// same threshold.
+    TXFIFO_THR = 2,
+    /// Asserted when the TX FIFO is full.
+    /// De-asserted when the TX FIFO is drained below (127−FIFO_CFG.FIFO_THR).
+    TXFIFO_THR_PKT = 3,
+    RXFIFO_OVERFLOW = 4,
+    TXFIFO_UNDERFLOW = 5,
+    /// Asserted when sync word has been received and de-asserted at the end of the
+    /// packet. Will de-assert when the optional address and/or length check fails
+    /// or the RX FIFO overflows/underflows
+    PKT_SYNC_RXTX = 6,
+    CRC_OK = 7,
+    SERIAL_CLK = 8,
+    SERIAL_RX = 9,
+    RESERVED_10,
+    PQT_REACHED = 11,
+    PQT_VALID = 12,
+    /// RSSI calculation is valid
+    RSSI_VALID = 13,
+    // 14 depends on pin
+    // 15 depends on pin
+    CARRIER_SENSE_VALID = 16,
+    CARRIER_SENSE = 17,
+    // 18 depends on pin
+    PKT_CRC_OK = 19,
+    MCU_WAKEUP = 20,
+    SYNC_LOW0_HIGH1 = 21,
+    // 22 depends on pin
+    LNA_PA_REG_PD = 23,
+    LNA_PD = 24,
+    PA_PD = 25,
+    RX0TX1_CFG = 26,
+    RESERVED_27 = 27,
+    IMAGE_FOUND = 28,
+    CLKEN_CFM = 29,
+    CFM_TX_DATA_CLK = 30,
+    RESERVED_31 = 31,
+    RESERVED_32 = 32,
+    RSSI_STEP_FOUND = 33,
+    // 34 depends on pin
+    // 35 depends on pin
+    ANTENNA_SELECT = 36,
+    MARC_2PIN_STATUS1 = 37,
+    MARC_2PIN_STATUS0 = 38,
+    // 39 depends on pin
+    // 40 depends on pin
+    // 41 depends on pin
+    PA_RAMP_UP = 42,
+    AGC_STABLE_GAIN = 44,
+    AGC_UPDATE = 45,
+    // 46 depends on pin
+    RESERVED_47 = 47,
+    HIGHZ = 48,
+    EXT_CLOCK = 49,
+    CHIP_RDYn = 50,
+    HW0 = 51,
+    RESERVED_52 = 52,
+    RESERVED_53 = 53,
+    CLOCK_40K = 54,
+    WOR_EVENT0 = 55,
+    WOR_EVENT1 = 56,
+    WOR_EVENT2 = 57,
+    RESERVED_58 = 58,
+    XOSC_STABLE = 59,
+    EXT_OSC_EN = 60,
+    RESERVED_61 = 61,
+    RESERVED_62 = 62,
+    RESERVED_63 = 63,
+}
+
 macro_rules! gpio_output {
-    ($name:ident, $($variant:ident = $value:expr),*) => {
+    ($name:ident, $custom:ident, $default:expr, $($variant:ident = $value:expr),*) => {
+        #[derive(Debug, Clone, Copy, PartialEq, FromPrimitive)]
         #[allow(non_camel_case_types)]
         pub enum $name {
             /// Asserted when the RX FIFO is filled above FIFO_CFG.FIFO_THR. De-asserted
@@ -101,11 +184,33 @@ macro_rules! gpio_output {
             RESERVED_63 = 63,
             $($variant = $value),+
         }
+
+        impl Default for $name {
+            fn default() -> Self {
+                $default
+            }
+        }
+
+        impl From<GpioOutput> for $name {
+            fn from(value: GpioOutput) -> Self {
+                FromPrimitive::from_u8(value as u8).unwrap()
+            }
+        }
+
+        impl TryFrom<$name> for GpioOutput {
+            type Error = ();
+
+            fn try_from(value: $name) -> Result<Self, Self::Error> {
+                FromPrimitive::from_u8(value as u8).ok_or(())
+            }
+        }
     }
 }
 
 gpio_output!(
     Gpio0Output,
+    Gpio0CustomOutput,
+    Gpio0Output::EXT_OSC_EN,
     AGC_UPDATE_14 = 14,
     TXONCCA_FAILED = 15,
     DSSS_DATA1 = 18,
@@ -121,6 +226,8 @@ gpio_output!(
 
 gpio_output!(
     Gpio1Output,
+    Gpio1CustomOutput,
+    Gpio1Output::HIGHZ,
     AGC_HOLD = 14,
     CCA_STATUS = 15,
     DSSS_CLK = 18,
@@ -136,6 +243,8 @@ gpio_output!(
 
 gpio_output!(
     Gpio2Output,
+    Gpio2CustomOutput,
+    Gpio2Output::PKT_CRC_OK,
     RSSI_UPDATE = 14,
     TXONCCA_DONE = 15,
     DSSS_DATA0 = 18,
@@ -151,6 +260,8 @@ gpio_output!(
 
 gpio_output!(
     Gpio3Output,
+    Gpio3CustomOutput,
+    Gpio3Output::PKT_SYNC_RXTX,
     RSSI_UPDATE = 14,
     CCA_STATUS = 15,
     DSSS_CLK = 18,
@@ -163,3 +274,33 @@ gpio_output!(
     CRC_FAILED = 43,
     ADC_CLOCK = 46
 );
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default() {
+        assert_eq!(Gpio0Output::EXT_OSC_EN, Gpio0Output::default());
+        assert_eq!(Gpio1Output::HIGHZ, Gpio1Output::default());
+        assert_eq!(Gpio2Output::PKT_CRC_OK, Gpio2Output::default());
+        assert_eq!(Gpio3Output::PKT_SYNC_RXTX, Gpio3Output::default());
+    }
+
+    #[test]
+    fn can_use_shared() {
+        assert_eq!(2, Gpio0Output::TXFIFO_THR as u8);
+    }
+
+    #[test]
+    fn can_convert() {
+        assert_eq!(Gpio0Output::TXFIFO_THR, GpioOutput::TXFIFO_THR.into());
+        assert_eq!(
+            GpioOutput::TXFIFO_THR,
+            Gpio0Output::TXFIFO_THR.try_into().unwrap()
+        );
+
+        let shared: Result<GpioOutput, ()> = Gpio0Output::LOCK.try_into();
+        assert!(shared.is_err());
+    }
+}
