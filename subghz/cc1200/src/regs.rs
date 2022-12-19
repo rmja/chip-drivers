@@ -2,7 +2,7 @@ use core::mem::transmute;
 
 use bitfield::bitfield;
 
-use crate::gpio::{Gpio3Output, Gpio2Output, Gpio1Output, Gpio0Output};
+use crate::gpio::{Gpio0Output, Gpio1Output, Gpio2Output, Gpio3Output};
 
 bitfield! {
     #[derive(Clone, Copy)]
