@@ -1,0 +1,14 @@
+[package]
+name = "at25010b-driver"
+version = "0.1.0"
+edition = "2021"
+description = "AT25010, AT25020, and AT25040 (and B series) Serial EEPROM driver"
+
+[dependencies]
+async-trait = "0.1"
+bitfield = "0.14"
+futures = { version = "0.3", default-features = false }
+
+[dev-dependencies]
+mockall = "0.11"
+tokio = { version = "1", features = ["macros", "rt", "time"] }
