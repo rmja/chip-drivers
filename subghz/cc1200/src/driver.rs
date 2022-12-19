@@ -2,7 +2,7 @@ use crate::{
     errors::*,
     opcode::{ExtReg, Opcode, Reg, Strobe, OPCODE_MAX},
     statusbyte::{State, StatusByte},
-    traits, PartNumber, Rssi, TX_FIFO_SIZE, RX_FIFO_SIZE,
+    traits, PartNumber, Rssi, RX_FIFO_SIZE, TX_FIFO_SIZE, ConfigPatch,
 };
 use alloc::vec;
 use futures::future::{self, Either};
@@ -131,6 +131,12 @@ impl<Spi: traits::Spi, Pins: traits::Pins, Timer: traits::Timer> Driver<Spi, Pin
         self.spi.deselect();
 
         self.last_status = None;
+    }
+
+    /// Write a configuration patch to chip.
+    /// This action _does not_ update `last_status`.
+    pub async fn write_patch<'a, 'patch, R: Reg>(&'a mut self, patch: ConfigPatch<'patch, R>) where 'a: 'patch {
+        self.write_regs(patch.first, patch.values).await;
     }
 
     /// Modify register values.

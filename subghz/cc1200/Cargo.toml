@@ -2,10 +2,11 @@
 name = "cc1200-driver"
 version = "0.1.0"
 edition = "2021"
+description = "CC1200 low power and high performance wireless transceiver driver"
 
 [dependencies]
 async-trait = "0.1"
 bitfield = "0.14"
-futures = { version = "0.3.0", default-features = false }
+futures = { version = "0.3", default-features = false }
 num-derive = "0.3"
 num-traits = { version = "0.2", default-features = false }

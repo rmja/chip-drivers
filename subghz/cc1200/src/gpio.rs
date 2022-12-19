@@ -10,7 +10,7 @@ pub enum Gpio {
 }
 
 impl Gpio {
-    pub fn iocfg_reg(self) -> PriReg {
+    pub const fn iocfg_reg(self) -> PriReg {
         match self {
             Gpio::Gpio0 => PriReg::IOCFG0,
             Gpio::Gpio1 => PriReg::IOCFG1,

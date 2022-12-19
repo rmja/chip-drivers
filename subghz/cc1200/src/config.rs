@@ -2,6 +2,7 @@ use core::ops::Index;
 
 use crate::opcode::Reg;
 
+#[derive(Clone, Copy)]
 pub struct ConfigPatch<'a, R: Reg> {
     pub first: R,
     pub values: &'a [u8],
