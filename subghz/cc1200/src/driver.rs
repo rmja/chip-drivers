@@ -2,7 +2,7 @@ use crate::{
     errors::*,
     opcode::{ExtReg, Opcode, Reg, Strobe, OPCODE_MAX},
     statusbyte::{State, StatusByte},
-    traits, PartNumber, Rssi,
+    traits, PartNumber, Rssi, TX_FIFO_SIZE, RX_FIFO_SIZE,
 };
 use alloc::vec;
 use futures::future::{self, Either};
@@ -14,9 +14,6 @@ pub struct Driver<Spi: traits::Spi, Pins: traits::Pins, Timer: traits::Timer> {
     last_status: Option<StatusByte>,
     pub rssi_offset: Rssi,
 }
-
-pub const RX_FIFO_SIZE: usize = 128;
-pub const TX_FIFO_SIZE: usize = 128;
 
 impl<Spi: traits::Spi, Pins: traits::Pins, Timer: traits::Timer> Driver<Spi, Pins, Timer> {
     pub fn new(spi: Spi, pins: Pins, timer: Timer) -> Self {

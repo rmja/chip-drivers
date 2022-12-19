@@ -23,6 +23,9 @@ pub enum PartNumber {
 
 pub type Rssi = i8;
 
+pub const RX_FIFO_SIZE: usize = 128;
+pub const TX_FIFO_SIZE: usize = 128;
+
 pub use self::{
     config::ConfigPatch,
     driver::Driver,
