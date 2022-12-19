@@ -240,7 +240,7 @@ impl<Spi: traits::Spi, Pins: traits::Pins, Timer: traits::Timer> Driver<Spi, Pin
 
     /// Wait for the xtal to stabilize.
     async fn wait_for_xtal(&mut self) -> Result<(), TimeoutError> {
-        let rising = self.pins.miso_wait_low();
+        let rising = self.spi.miso_wait_low();
         let timeout = self.timer.sleep_millis(2_000);
 
         // Wait for any of the two futures to complete.
@@ -262,7 +262,7 @@ impl<Spi: traits::Spi, Pins: traits::Pins, Timer: traits::Timer> Driver<Spi, Pin
         self.last_status = Some(StatusByte(opcode_rx[0]));
         if strobe == Strobe::SRES {
             // When SRES strobe is issued the CSn pin must be kept low until the SO pin goes low again.
-            self.pins.miso_wait_low().await;
+            self.spi.miso_wait_low().await;
         }
         self.spi.deselect();
     }
