@@ -1,10 +1,11 @@
 #![cfg_attr(not(test), no_std)]
+#![allow(incomplete_features)]
+#![feature(async_fn_in_trait, impl_trait_projections)]
 
 extern crate alloc;
 
-pub mod traits;
-mod opcode;
 mod driver;
+mod opcode;
 
 #[derive(Clone, Copy)]
 pub enum PartNumber {

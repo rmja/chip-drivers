@@ -1,14 +1,15 @@
 [package]
-name = "at25010b-driver"
+name = "at25010-driver"
 version = "0.1.0"
 edition = "2021"
 description = "AT25010, AT25020, and AT25040 (and B series) Serial EEPROM driver"
 
 [dependencies]
-async-trait = "0.1"
 bitfield = "0.14"
+embedded-hal-async = "0.2.0-alpha.0"
 futures = { version = "0.3", default-features = false }
 
 [dev-dependencies]
+embedded-hal-async-mocks = { path = "../../embedded-hal-async-mocks" }
 mockall = "0.11"
 tokio = { version = "1", features = ["macros", "rt", "time"] }

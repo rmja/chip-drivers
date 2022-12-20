@@ -1,5 +1,9 @@
-use crate::{opcode::Opcode, traits, PartNumber};
+use crate::{opcode::Opcode, PartNumber};
 use bitfield::bitfield;
+use embedded_hal_async::{
+    delay,
+    spi::{self, transaction},
+};
 
 const PAGE_SIZE: usize = 8;
 
@@ -19,25 +23,31 @@ bitfield! {
 #[derive(Debug)]
 pub struct WriteProtectError;
 
-pub struct Driver<Spi: traits::Spi, Timer: traits::Timer> {
+const INITIAL_TIMEOUT_MS: u32 = 3; // Wait at least 3 ms
+const RETRY_INTERVAL_US: u32 = 100;
+
+pub struct Driver<Spi, SpiBus, Delay>
+where
+    Spi: spi::SpiDevice<Bus = SpiBus>,
+    SpiBus: spi::SpiBus,
+    Delay: delay::DelayUs,
+{
     spi: Spi,
-    timer: Timer,
+    delay: Delay,
     part_number: PartNumber,
 }
 
-impl<Spi, Timer> Driver<Spi, Timer>
+impl<Spi, SpiBus, Delay> Driver<Spi, SpiBus, Delay>
 where
-    Spi: traits::Spi,
-    Timer: traits::Timer,
+    Spi: spi::SpiDevice<Bus = SpiBus>,
+    SpiBus: spi::SpiBus,
+    Delay: delay::DelayUs,
 {
-    const INITIAL_TIMEOUT_US: u32 = 3_000; // Wait at least 3 ms
-    const RETRY_INTERVAL_US: u32 = 100;
-
-    pub fn new(spi: Spi, timer: Timer, part_number: PartNumber) -> Self {
+    pub fn new(spi: Spi, delay: Delay, part_number: PartNumber) -> Self {
         Self {
             part_number,
             spi,
-            timer,
+            delay,
         }
     }
 
@@ -45,31 +55,30 @@ where
     pub async fn read(&mut self, origin: u16, buffer: &mut [u8]) {
         assert!(origin + buffer.len() as u16 <= capacity(self.part_number));
 
-        self.spi.select();
-        self.spi
-            .write(&[Opcode::READ(origin).as_u8(), (origin & 0xFF) as u8])
-            .await;
-        self.spi.read(buffer).await;
-        self.spi.deselect();
+        transaction!(&mut self.spi, move |bus| async move {
+            let opcode = [Opcode::READ(origin).as_u8(), (origin & 0xFF) as u8];
+            bus.write(&opcode).await?;
+            bus.read(buffer).await?;
+            Ok(())
+        })
+        .await
+        .unwrap();
     }
 
     /// Write a sequence of bytes to the EEPROM.
     pub async fn write(&mut self, origin: u16, buffer: &[u8]) -> Result<(), WriteProtectError> {
         assert!(origin + buffer.len() as u16 <= capacity(self.part_number));
 
-        let t_cs = min_tcs_ns(self.part_number);
+        let t_cs_us = (min_tcs_ns(self.part_number) + 999) / 1000;
 
         // Disable write protection.
-        self.spi.select();
-        self.spi.write(&[Opcode::WREN.as_u8()]).await;
-        self.spi.deselect();
+        self.enable_write().await;
 
         // Wait until we can send a new spi command.
-        self.timer.sleep_nanos(t_cs).await;
+        self.delay.delay_us(t_cs_us).await.unwrap();
 
         // See if write was enabled (it may have been disabled by the WP pin).
         let sr = self.read_status_register().await;
-
         if !sr.wel() {
             return Err(WriteProtectError);
         }
@@ -83,7 +92,7 @@ where
         assert!(incomplete_first_page.len() < 8);
         if incomplete_first_page.len() > 0 {
             // Wait until we can send a new spi command.
-            self.timer.sleep_nanos(t_cs).await;
+            self.delay.delay_us(t_cs_us).await.unwrap();
 
             self.write_page(address, incomplete_first_page).await;
             address += incomplete_first_page.len() as u16;
@@ -94,14 +103,11 @@ where
 
         for page in remaining_pages.chunks(PAGE_SIZE) {
             if !write_enabled {
-                // Enable write.
-                self.spi.select();
-                self.spi.write(&[Opcode::WREN.as_u8()]).await;
-                self.spi.deselect();
+                self.enable_write().await;
             }
 
             // Wait until we can send a new spi command.
-            self.timer.sleep_nanos(t_cs).await;
+            self.delay.delay_us(t_cs_us).await.unwrap();
 
             self.write_page(address as u16, page).await;
             address += page.len() as u16;
@@ -115,24 +121,38 @@ where
         Ok(())
     }
 
+    async fn enable_write(&mut self) {
+        const TX: [u8; 1] = [Opcode::WREN.as_u8()];
+        self.spi.write(&TX).await.unwrap();
+    }
+
+    async fn read_status_register(&mut self) -> StatusRegister {
+        const TX: [u8; 2] = [Opcode::RDSR.as_u8(), 0x00];
+        let mut rx: [u8; 2] = [0x00, 0x00];
+        self.spi.transfer(&mut rx, &TX).await.unwrap();
+        StatusRegister(rx[1])
+    }
+
     async fn write_page(&mut self, address: u16, buffer: &[u8]) {
         let len = buffer.len();
         assert!(len > 0);
         assert!(len <= PAGE_SIZE - (address as usize % PAGE_SIZE));
 
-        self.spi.select();
-        self.spi
-            .write(&[Opcode::WRITE(address).as_u8(), (address & 0xFF) as u8])
-            .await;
-        self.spi.write(buffer).await;
-        self.spi.deselect();
+        transaction!(&mut self.spi, move |bus| async move {
+            bus.write(&[Opcode::WRITE(address).as_u8(), (address & 0xFF) as u8])
+                .await?;
+            bus.write(buffer).await?;
+            Ok(())
+        })
+        .await
+        .unwrap();
 
         // Wait for idle.
-        self.timer.sleep_micros(Self::INITIAL_TIMEOUT_US).await;
+        self.delay.delay_ms(INITIAL_TIMEOUT_MS).await.unwrap();
         let sr = self.read_status_register().await;
         if sr.bsy() {
             loop {
-                self.timer.sleep_micros(Self::RETRY_INTERVAL_US).await;
+                self.delay.delay_us(RETRY_INTERVAL_US).await.unwrap();
 
                 let sr = self.read_status_register().await;
                 if !sr.bsy() {
@@ -140,17 +160,6 @@ where
                 }
             }
         }
-    }
-
-    async fn read_status_register(&mut self) -> StatusRegister {
-        const CMD: [u8; 2] = [Opcode::RDSR.as_u8(), 0x00];
-        let mut rx: [u8; 2] = [0x00, 0x00];
-
-        self.spi.select();
-        self.spi.transfer(&CMD, &mut rx).await;
-        self.spi.deselect();
-
-        StatusRegister(rx[1])
     }
 }
 
@@ -182,7 +191,7 @@ const fn min_tcs_ns(kind: PartNumber) -> u32 {
 mod tests {
     use mockall::Sequence;
 
-    use crate::traits::{MockSpi, MockTimer};
+    use embedded_hal_async_mocks::{delay::MockDelay, spi::MockSpiDevice};
 
     use super::*;
 
@@ -190,10 +199,14 @@ mod tests {
     async fn write_starting_at_page_boundary() {
         // Given
         let mut seq = Sequence::new();
-        let mut spi = MockSpi::new();
+        let mut spi = MockSpiDevice::new();
+        let mut expected_transactions = 0;
 
         expect_write_wren(&mut spi, &mut seq);
+        expected_transactions += 1;
+
         expect_read_status_register(&mut spi, &mut seq, StatusRegister(0x02));
+        expected_transactions += 1;
 
         expect_write_page(
             &mut spi,
@@ -202,17 +215,19 @@ mod tests {
             &[0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80],
         );
         expect_read_status_register(&mut spi, &mut seq, StatusRegister(0x00));
+        expected_transactions += 2;
 
         expect_write_wren(&mut spi, &mut seq);
         expect_write_page(&mut spi, &mut seq, 0x10, &[0x90]);
         expect_read_status_register(&mut spi, &mut seq, StatusRegister(0x00));
+        expected_transactions += 3;
 
-        let mut timer = MockTimer::new();
-        timer.expect_sleep_nanos().withf(|_| true).return_const(());
-        timer.expect_sleep_micros().withf(|_| true).return_const(());
+        let mut delay = MockDelay::new();
+        delay.expect_delay_us().withf(|_| true).return_const(Ok(()));
+        delay.expect_delay_ms().withf(|_| true).return_const(Ok(()));
 
         // When
-        let mut driver = Driver::new(spi, timer, PartNumber::At25010b);
+        let mut driver = Driver::new(spi, delay, PartNumber::At25010b);
 
         driver
             .write(
@@ -223,13 +238,14 @@ mod tests {
             .unwrap();
 
         // Then
+        assert_eq!(expected_transactions, driver.spi.transactions());
     }
 
     #[tokio::test]
     async fn write_starting_inside_page() {
         // Given
         let mut seq = Sequence::new();
-        let mut spi = MockSpi::new();
+        let mut spi = MockSpiDevice::new();
 
         expect_write_wren(&mut spi, &mut seq);
         expect_read_status_register(&mut spi, &mut seq, StatusRegister(0x02));
@@ -246,12 +262,12 @@ mod tests {
         );
         expect_read_status_register(&mut spi, &mut seq, StatusRegister(0x00));
 
-        let mut timer = MockTimer::new();
-        timer.expect_sleep_nanos().withf(|_| true).return_const(());
-        timer.expect_sleep_micros().withf(|_| true).return_const(());
+        let mut delay = MockDelay::new();
+        delay.expect_delay_us().withf(|_| true).return_const(Ok(()));
+        delay.expect_delay_ms().withf(|_| true).return_const(Ok(()));
 
         // When
-        let mut driver = Driver::new(spi, timer, PartNumber::At25010b);
+        let mut driver = Driver::new(spi, delay, PartNumber::At25010b);
 
         driver
             .write(
@@ -264,67 +280,48 @@ mod tests {
         // Then
     }
 
-    fn expect_write_wren(spi: &mut MockSpi, seq: &mut Sequence) {
-        spi.expect_select()
-            .times(1)
-            .in_sequence(seq)
-            .return_const(());
-        spi.expect_write()
+    fn expect_write_wren(spi: &mut MockSpiDevice, seq: &mut Sequence) {
+        spi.bus
+            .expect_write()
             .withf(|tx| tx == &[Opcode::WREN.as_u8()])
             .times(1)
             .in_sequence(seq)
-            .return_const(());
-        spi.expect_deselect()
-            .times(1)
-            .in_sequence(seq)
-            .return_const(());
+            .return_const(Ok(()));
     }
 
     fn expect_read_status_register(
-        spi: &mut MockSpi,
+        spi: &mut MockSpiDevice,
         seq: &mut Sequence,
         returning: StatusRegister,
     ) {
-        spi.expect_select()
+        spi.bus
+            .expect_transfer()
+            .withf(|_, tx| tx == &[Opcode::RDSR.as_u8(), 0x00])
             .times(1)
             .in_sequence(seq)
-            .return_const(());
-        spi.expect_transfer()
-            .withf(|tx, _| tx == &[Opcode::RDSR.as_u8(), 0x00])
-            .times(1)
-            .in_sequence(seq)
-            .returning(move |_tx, rx| {
+            .returning(move |rx, _tx| {
                 rx[1] = returning.0;
+                Ok(())
             });
-        spi.expect_deselect()
-            .times(1)
-            .in_sequence(seq)
-            .return_const(());
     }
 
     fn expect_write_page(
-        spi: &mut MockSpi,
+        spi: &mut MockSpiDevice,
         seq: &mut Sequence,
         address: u16,
         expected: &'static [u8],
     ) {
-        spi.expect_select()
-            .times(1)
-            .in_sequence(seq)
-            .return_const(());
-        spi.expect_write()
+        spi.bus
+            .expect_write()
             .withf(move |tx| tx == &[Opcode::WRITE(address).as_u8(), (address & 0xFF) as u8])
             .times(1)
             .in_sequence(seq)
-            .return_const(());
-        spi.expect_write()
+            .return_const(Ok(()));
+        spi.bus
+            .expect_write()
             .withf(move |tx| tx == expected)
             .times(1)
             .in_sequence(seq)
-            .return_const(());
-        spi.expect_deselect()
-            .times(1)
-            .in_sequence(seq)
-            .return_const(());
+            .return_const(Ok(()));
     }
 }

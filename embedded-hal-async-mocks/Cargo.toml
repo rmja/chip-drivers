@@ -1,0 +1,9 @@
+[package]
+name = "embedded-hal-async-mocks"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+embedded-hal-async = "0.2.0-alpha.0"
+futures = { version = "0.3", default-features = false }
+mockall = "0.11"
