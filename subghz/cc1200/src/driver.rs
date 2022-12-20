@@ -2,25 +2,41 @@ use crate::{
     errors::*,
     opcode::{ExtReg, Opcode, Reg, Strobe, OPCODE_MAX},
     statusbyte::{State, StatusByte},
-    traits, PartNumber, Rssi, RX_FIFO_SIZE, TX_FIFO_SIZE, ConfigPatch,
+    traits, ConfigPatch, PartNumber, Rssi, RX_FIFO_SIZE, TX_FIFO_SIZE,
 };
 use alloc::vec;
-use futures::future::{self, Either};
+use embedded_hal_async::{delay, spi, spi_transaction};
+use futures::{
+    future::{self, Either},
+    pin_mut,
+};
 
-pub struct Driver<Spi: traits::Spi, Pins: traits::Pins, Timer: traits::Timer> {
+pub struct Driver<Spi, SpiBus, Delay, Pins>
+where
+    Spi: spi::SpiDevice<Bus = SpiBus>,
+    SpiBus: spi::SpiBus,
+    Delay: delay::DelayUs,
+    Pins: traits::Pins,
+{
     spi: Spi,
+    delay: Delay,
     pins: Pins,
-    timer: Timer,
     last_status: Option<StatusByte>,
     pub rssi_offset: Rssi,
 }
 
-impl<Spi: traits::Spi, Pins: traits::Pins, Timer: traits::Timer> Driver<Spi, Pins, Timer> {
-    pub fn new(spi: Spi, pins: Pins, timer: Timer) -> Self {
+impl<Spi, SpiBus, Delay, Pins> Driver<Spi, SpiBus, Delay, Pins>
+where
+    Spi: spi::SpiDevice<Bus = SpiBus>,
+    SpiBus: spi::SpiBus,
+    Delay: delay::DelayUs,
+    Pins: traits::Pins,
+{
+    pub fn new(spi: Spi, delay: Delay, pins: Pins) -> Self {
         Self {
             spi,
             pins,
-            timer,
+            delay,
             last_status: None,
             rssi_offset: -99, // Default offset defined in users guide
         }
@@ -31,21 +47,29 @@ impl<Spi: traits::Spi, Pins: traits::Pins, Timer: traits::Timer> Driver<Spi, Pin
         future::ready(()).await
     }
 
+    /// Send a hardware reset to chip and wait for it to become available.
     pub async fn hw_reset(&mut self) -> Result<(), TimeoutError> {
         // Reset chip.
         self.pins.clear_reset(); // Trigger chip reset pin.
-        self.timer.sleep_millis(2).await;
+        self.delay.delay_ms(2).await.unwrap();
         self.pins.set_reset(); // Release chip reset pin.
 
         // Wait for chip to become available.
-        self.spi.select();
-        self.timer.sleep_millis(1).await; // Wait 1ms until the chip has had a chance to set the SO pin high.
-        let result = self.wait_for_xtal().await;
-        self.spi.deselect();
-
+        let delay = &mut self.delay;
+        let stabilized = spi_transaction!(&mut self.spi, move |bus| async move {
+            delay.delay_ms(1).await.unwrap(); // Wait 1ms until the chip has had a chance to set the SO pin high.
+            let stabilized = wait_for_xtal(bus, delay).await;
+            Ok(stabilized)
+        })
+        .await
+        .unwrap();
         self.last_status = None;
 
-        result
+        if stabilized {
+            Ok(())
+        } else {
+            Err(TimeoutError)
+        }
     }
 
     /// Get the spi status returned by the last register read or strobe.
@@ -74,10 +98,8 @@ impl<Spi: traits::Spi, Pins: traits::Pins, Timer: traits::Timer> Driver<Spi, Pin
         let mut rx_buffer = [0; OPCODE_MAX + 1];
         let rx = &mut rx_buffer[..tx.len()];
 
-        self.spi.select();
-        self.spi.transfer(tx, rx).await;
+        self.spi.transfer(rx, tx).await.unwrap();
         self.last_status = Some(StatusByte(rx[0]));
-        self.spi.deselect();
 
         rx[rx.len() - 1]
     }
@@ -94,11 +116,15 @@ impl<Spi: traits::Spi, Pins: traits::Pins, Timer: traits::Timer> Driver<Spi, Pin
         let mut opcode_rx_buffer = [0; OPCODE_MAX];
         let opcode_rx = &mut opcode_rx_buffer[..opcode_tx.len()];
 
-        self.spi.select();
-        self.spi.transfer(opcode_tx, opcode_rx).await;
-        self.last_status = Some(StatusByte(opcode_rx[0]));
-        self.spi.read(buffer).await;
-        self.spi.deselect();
+        let status = spi_transaction!(&mut self.spi, |bus| async {
+            bus.transfer(opcode_rx, opcode_tx).await?;
+            let status = StatusByte(opcode_rx[0]);
+            bus.read(buffer).await?;
+            Ok(status)
+        })
+        .await
+        .unwrap();
+        self.last_status = Some(status);
     }
 
     /// Write a single register value to chip.
@@ -109,9 +135,7 @@ impl<Spi: traits::Spi, Pins: traits::Pins, Timer: traits::Timer> Driver<Spi, Pin
         let tx = &mut tx_buffer[0..opcode_len + 1];
         tx[opcode_len] = value;
 
-        self.spi.select();
-        self.spi.write(tx).await;
-        self.spi.deselect();
+        self.spi.write(tx).await.unwrap();
 
         self.last_status = None;
     }
@@ -125,17 +149,22 @@ impl<Spi: traits::Spi, Pins: traits::Pins, Timer: traits::Timer> Driver<Spi, Pin
             .assign(&mut opcode_tx_buffer);
         let opcode_tx = &opcode_tx_buffer[..opcode_len];
 
-        self.spi.select();
-        self.spi.write(opcode_tx).await;
-        self.spi.write(values).await;
-        self.spi.deselect();
-
+        spi_transaction!(&mut self.spi, |bus| async {
+            bus.write(opcode_tx).await?;
+            bus.write(values).await?;
+            Ok(())
+        })
+        .await
+        .unwrap();
         self.last_status = None;
     }
 
     /// Write a configuration patch to chip.
     /// This action _does not_ update `last_status`.
-    pub async fn write_patch<'a, 'patch, R: Reg>(&'a mut self, patch: ConfigPatch<'patch, R>) where 'a: 'patch {
+    pub async fn write_patch<'a, 'patch, R: Reg>(&'a mut self, patch: ConfigPatch<'patch, R>)
+    where
+        'a: 'patch,
+    {
         self.write_regs(patch.first, patch.values).await;
     }
 
@@ -151,8 +180,6 @@ impl<Spi: traits::Spi, Pins: traits::Pins, Timer: traits::Timer> Driver<Spi, Pin
         self.read_regs(first, &mut buf).await;
         configure(&mut buf);
         self.write_regs(first, &buf).await;
-
-        self.last_status = None;
     }
 
     /// Read the current RSSI level.
@@ -163,10 +190,8 @@ impl<Spi: traits::Spi, Pins: traits::Pins, Timer: traits::Timer> Driver<Spi, Pin
 
         let mut rx = [0; 3];
 
-        self.spi.select();
-        self.spi.transfer(&tx, &mut rx).await;
+        self.spi.transfer(&mut rx, &tx).await.unwrap();
         self.last_status = Some(StatusByte(rx[0]));
-        self.spi.deselect();
 
         self.map_rssi(rx[2])
     }
@@ -181,11 +206,15 @@ impl<Spi: traits::Spi, Pins: traits::Pins, Timer: traits::Timer> Driver<Spi, Pin
 
         let mut opcode_rx = [0];
 
-        self.spi.select();
-        self.spi.transfer(&opcode_tx, &mut opcode_rx).await;
-        self.last_status = Some(StatusByte(opcode_rx[0]));
-        self.spi.read(buffer).await;
-        self.spi.deselect();
+        let status = spi_transaction!(&mut self.spi, |bus| async {
+            bus.transfer(&mut opcode_rx, &opcode_tx).await?;
+            let status = StatusByte(opcode_rx[0]);
+            bus.read(buffer).await?;
+            Ok(status)
+        })
+        .await
+        .unwrap();
+        self.last_status = Some(status);
     }
 
     /// Read the RSSI and RX fifo in one transaction.
@@ -203,11 +232,15 @@ impl<Spi: traits::Spi, Pins: traits::Pins, Timer: traits::Timer> Driver<Spi, Pin
 
         let mut rx = [0; 3 + 1];
 
-        self.spi.select();
-        self.spi.transfer(&tx, &mut rx).await;
-        self.last_status = Some(StatusByte(rx[0]));
-        self.spi.read(buffer).await;
-        self.spi.deselect();
+        let status = spi_transaction!(&mut self.spi, |bus| async {
+            bus.transfer(&mut rx, &tx).await?;
+            let status = StatusByte(rx[0]);
+            bus.read(buffer).await?;
+            Ok(status)
+        })
+        .await
+        .unwrap();
+        self.last_status = Some(status);
 
         self.map_rssi(rx[2])
     }
@@ -222,11 +255,15 @@ impl<Spi: traits::Spi, Pins: traits::Pins, Timer: traits::Timer> Driver<Spi, Pin
 
         let mut opcode_rx = [0];
 
-        self.spi.select();
-        self.spi.transfer(&opcode_tx, &mut opcode_rx).await;
-        self.last_status = Some(StatusByte(opcode_rx[0]));
-        self.spi.write(buffer).await;
-        self.spi.deselect();
+        let status = spi_transaction!(&mut self.spi, |bus| async {
+            bus.transfer(&mut opcode_rx, &opcode_tx).await?;
+            let status = StatusByte(opcode_rx[0]);
+            bus.write(buffer).await?;
+            Ok(status)
+        })
+        .await
+        .unwrap();
+        self.last_status = Some(status);
     }
 
     // Map the RSSI1 register field to an rssi value.
@@ -238,18 +275,6 @@ impl<Spi: traits::Spi, Pins: traits::Pins, Timer: traits::Timer> Driver<Spi, Pin
         }
     }
 
-    /// Wait for the xtal to stabilize.
-    async fn wait_for_xtal(&mut self) -> Result<(), TimeoutError> {
-        let rising = self.spi.miso_wait_low();
-        let timeout = self.timer.sleep_millis(2_000);
-
-        // Wait for any of the two futures to complete.
-        match future::select(rising, timeout).await {
-            Either::Left(_) => Ok(()),
-            Either::Right(_) => Err(TimeoutError),
-        }
-    }
-
     /// Strobe a command to the chip.
     /// This action _does_ update `last_status`.
     pub async fn strobe(&mut self, strobe: Strobe) {
@@ -257,14 +282,19 @@ impl<Spi: traits::Spi, Pins: traits::Pins, Timer: traits::Timer> Driver<Spi, Pin
         assert_eq!(1, Opcode::Strobe(strobe).assign(&mut opcode_tx));
         let mut opcode_rx = [0];
 
-        self.spi.select();
-        self.spi.transfer(&opcode_tx, &mut opcode_rx).await;
-        self.last_status = Some(StatusByte(opcode_rx[0]));
-        if strobe == Strobe::SRES {
-            // When SRES strobe is issued the CSn pin must be kept low until the SO pin goes low again.
-            self.spi.miso_wait_low().await;
-        }
-        self.spi.deselect();
+        let status = spi_transaction!(&mut self.spi, |bus| async {
+            bus.transfer(&mut opcode_rx, &opcode_tx).await?;
+
+            if strobe == Strobe::SRES {
+                // When SRES strobe is issued the CSn pin must be kept low until the SO pin goes low again.
+                miso_wait_low(bus).await?;
+            }
+
+            Ok(StatusByte(opcode_rx[0]))
+        })
+        .await
+        .unwrap();
+        self.last_status = Some(status);
     }
 
     /// Strobe a command to the chip, and continue to do so until `pred` is satisfied.
@@ -279,16 +309,21 @@ impl<Spi: traits::Spi, Pins: traits::Pins, Timer: traits::Timer> Driver<Spi, Pin
         assert_eq!(1, Opcode::Strobe(strobe).assign(&mut opcode_tx));
         let mut opcode_rx = [0];
 
-        self.spi.select();
-        loop {
-            self.spi.transfer(&opcode_tx, &mut opcode_rx).await;
-            self.last_status = Some(StatusByte(opcode_rx[0]));
+        let status = spi_transaction!(&mut self.spi, |bus| async {
+            let mut status;
+            loop {
+                bus.transfer(&mut opcode_rx, &opcode_tx).await?;
+                status = StatusByte(opcode_rx[0]);
 
-            if pred(self.last_status.unwrap()) {
-                break;
+                if pred(status) {
+                    break;
+                }
             }
-        }
-        self.spi.deselect();
+            Ok(status)
+        })
+        .await
+        .unwrap();
+        self.last_status = Some(status);
     }
 
     /// Strobe a command to the chip, and continue to do so until the chip enters the IDLE state.
@@ -296,5 +331,32 @@ impl<Spi: traits::Spi, Pins: traits::Pins, Timer: traits::Timer> Driver<Spi, Pin
     pub async fn strobe_until_idle(&mut self, strobe: Strobe) {
         self.strobe_until(strobe, |status| status.state() == State::IDLE)
             .await;
+    }
+}
+
+/// Wait for the xtal to stabilize.
+async fn wait_for_xtal(spi: &mut impl spi::SpiBus, delay: &mut impl delay::DelayUs) -> bool {
+    let rising_future = miso_wait_low(spi);
+    let timeout_future = delay.delay_ms(2_000);
+    pin_mut!(rising_future);
+    pin_mut!(timeout_future);
+
+    // Wait for any of the two futures to complete.
+    match future::select(rising_future, timeout_future).await {
+        Either::Left((rising, _)) => {
+            rising.unwrap();
+            true
+        }
+        Either::Right(_) => false,
+    }
+}
+
+async fn miso_wait_low<SpiBus: spi::SpiBus>(bus: &mut SpiBus) -> Result<(), SpiBus::Error> {
+    loop {
+        let mut buffer = [0u8];
+        bus.read(&mut buffer).await?;
+        if buffer[0] & 1 == 0 {
+            return Ok(());
+        }
     }
 }

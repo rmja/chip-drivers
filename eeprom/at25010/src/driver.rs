@@ -1,9 +1,6 @@
 use crate::{opcode::Opcode, PartNumber};
 use bitfield::bitfield;
-use embedded_hal_async::{
-    delay,
-    spi::{self, transaction},
-};
+use embedded_hal_async::{delay, spi, spi_transaction};
 
 const PAGE_SIZE: usize = 8;
 
@@ -55,7 +52,7 @@ where
     pub async fn read(&mut self, origin: u16, buffer: &mut [u8]) {
         assert!(origin + buffer.len() as u16 <= capacity(self.part_number));
 
-        transaction!(&mut self.spi, move |bus| async move {
+        spi_transaction!(&mut self.spi, |bus| async {
             let opcode = [Opcode::READ(origin).as_u8(), (origin & 0xFF) as u8];
             bus.write(&opcode).await?;
             bus.read(buffer).await?;
@@ -138,7 +135,7 @@ where
         assert!(len > 0);
         assert!(len <= PAGE_SIZE - (address as usize % PAGE_SIZE));
 
-        transaction!(&mut self.spi, move |bus| async move {
+        spi_transaction!(&mut self.spi, |bus| async {
             bus.write(&[Opcode::WRITE(address).as_u8(), (address & 0xFF) as u8])
                 .await?;
             bus.write(buffer).await?;
