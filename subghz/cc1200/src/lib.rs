@@ -1,4 +1,6 @@
 #![cfg_attr(not(test), no_std)]
+#![allow(incomplete_features)]
+#![feature(inherent_associated_types)]
 
 extern crate alloc;
 extern crate bitfield;
@@ -8,12 +10,12 @@ extern crate num_derive;
 
 mod config;
 mod driver;
-mod errors;
 pub mod gpio;
 mod opcode;
 pub mod regs;
 mod statusbyte;
 pub mod traits;
+mod error;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum PartNumber {
@@ -29,7 +31,7 @@ pub const TX_FIFO_SIZE: usize = 128;
 pub use self::{
     config::ConfigPatch,
     driver::Driver,
-    errors::*,
+    error::DriverError,
     opcode::{ExtReg, PriReg, Reg, Strobe},
     statusbyte::{State, StatusByte},
 };
