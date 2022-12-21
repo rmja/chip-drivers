@@ -42,6 +42,7 @@ where
         }
     }
 
+    /// Initialize chip by releasing reset pin.
     pub async fn init(&mut self) {
         self.pins.set_reset(); // Release chip reset pin.
         future::ready(()).await

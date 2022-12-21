@@ -5,6 +5,7 @@ use mockall::mock;
 pub struct DelayError;
 
 mock! {
+    #[derive(Debug)]
     pub Delay {}
 
     impl delay::DelayUs for Delay {
