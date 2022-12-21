@@ -6,6 +6,7 @@ pub enum DriverError<Spi: embedded_hal_async::spi::Error, T: embedded_hal_async:
     Delay(<T as embedded_hal_async::delay::DelayUs>::Error),
 }
 
+// Explicit implementation of Debug because DelayUs may not implement Debug even thoug DelayUs::Error does.
 impl<Spi, T> core::fmt::Debug for crate::DriverError<Spi, T>
 where
     Spi: embedded_hal_async::spi::Error,
