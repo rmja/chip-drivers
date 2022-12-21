@@ -6,9 +6,10 @@ bitfield! {
     #[derive(Clone, Copy)]
     pub struct StatusByte(u8);
     /// Stays high until power and crystal have stabilized. Should always be low when using the SPI interface.
-    pub chip_rdy, _: 7;
+    pub chip_rdyn, _: 7;
     /// Indicates the current main state machine mode.
     state_bits, _: 6, 4;
+    reserved, _: 3, 0;
 }
 
 #[allow(non_camel_case_types)]
@@ -28,6 +29,11 @@ impl StatusByte {
     pub fn state(self) -> State {
         unsafe { transmute(self.state_bits()) }
     }
+
+    /// true if the chip is ready, false otherwise
+    pub fn chip_rdy(self) -> bool {
+        !self.chip_rdyn()
+    }
 }
 
 #[cfg(test)]
@@ -41,6 +47,6 @@ pub mod tests {
 
         // Then
         assert_eq!(State::RX_FIFO_ERROR, byte.state());
-        assert_eq!(true, byte.chip_rdy());
+        assert_eq!(true, byte.chip_rdyn());
     }
 }

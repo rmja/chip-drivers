@@ -51,26 +51,27 @@ where
     }
 
     /// Send a hardware reset to chip and wait for it to become available.
+    /// This action _does_ update `last_status`.
     pub async fn hw_reset(&mut self) -> Result<(), Self::Error> {
-        // Reset chip.
+        // Send reset chip sequence
         self.pins.clear_reset(); // Trigger chip reset pin.
         self.delay.delay_ms(2).await.map_err(DriverError::Delay)?;
         self.pins.set_reset(); // Release chip reset pin.
 
-        // Wait for chip to become available.
+        // The chip reset sequence was sent - wait for chip to become available.
+
         let delay = &mut self.delay;
-        let stabilized = spi_transaction!(&mut self.spi, move |bus| async move {
+        let status = spi_transaction!(&mut self.spi, move |bus| async move {
             // Wait 1ms until the chip has had a chance to set the SO pin high.
             // We must unwrap as the transaction can only return `SpiBus::Error`.
             delay.delay_ms(1).await.unwrap();
-            let stabilized = Self::wait_for_xtal(bus, delay).await?;
-            Ok(stabilized)
+            Self::wait_for_xtal(bus, delay).await
         })
         .await
         .map_err(DriverError::Spi)?;
-        self.last_status = None;
+        self.last_status = status;
 
-        if stabilized {
+        if let Some(status) = status && status.chip_rdy() {
             Ok(())
         } else {
             Err(DriverError::Timeout)
@@ -223,13 +224,11 @@ where
     pub async fn read_fifo(&mut self, buffer: &mut [u8]) -> Result<(), Self::Error> {
         assert!(buffer.len() <= RX_FIFO_SIZE);
 
-        let mut opcode_tx = [0];
-        assert_eq!(1, Opcode::ReadFifoBurst.assign(&mut opcode_tx));
-
+        const OPCODE_TX: [u8; 1] = [Opcode::ReadFifoBurst.as_u8()];
         let mut opcode_rx = [0];
 
         let status = spi_transaction!(&mut self.spi, |bus| async {
-            bus.transfer(&mut opcode_rx, &opcode_tx).await?;
+            bus.transfer(&mut opcode_rx, &OPCODE_TX).await?;
             let status = StatusByte(opcode_rx[0]);
             bus.read(buffer).await?;
             Ok(status)
@@ -274,13 +273,11 @@ where
     pub async fn write_fifo(&mut self, buffer: &[u8]) -> Result<(), Self::Error> {
         assert!(buffer.len() <= TX_FIFO_SIZE);
 
-        let mut opcode_tx = [0];
-        assert_eq!(1, Opcode::WriteFifoBurst.assign(&mut opcode_tx));
-
+        const OPCODE_TX: [u8; 1] = [Opcode::WriteFifoBurst.as_u8()];
         let mut opcode_rx = [0];
 
         let status = spi_transaction!(&mut self.spi, |bus| async {
-            bus.transfer(&mut opcode_rx, &opcode_tx).await?;
+            bus.transfer(&mut opcode_rx, &OPCODE_TX).await?;
             let status = StatusByte(opcode_rx[0]);
             bus.write(buffer).await?;
             Ok(status)
@@ -303,8 +300,7 @@ where
     /// Strobe a command to the chip.
     /// This action _does_ update `last_status`.
     pub async fn strobe(&mut self, strobe: Strobe) -> Result<(), Self::Error> {
-        let mut opcode_tx = [0];
-        assert_eq!(1, Opcode::Strobe(strobe).assign(&mut opcode_tx));
+        let opcode_tx = [Opcode::Strobe(strobe).as_u8()];
         let mut opcode_rx = [0];
 
         let status = spi_transaction!(&mut self.spi, |bus| async {
@@ -335,8 +331,7 @@ where
     {
         assert_ne!(Strobe::SRES, strobe);
 
-        let mut opcode_tx = [0];
-        assert_eq!(1, Opcode::Strobe(strobe).assign(&mut opcode_tx));
+        let opcode_tx = [Opcode::Strobe(strobe).as_u8()];
         let mut opcode_rx = [0];
 
         let status = spi_transaction!(&mut self.spi, |bus| async {
@@ -365,37 +360,40 @@ where
     }
 
     /// Wait for the xtal to stabilize.
-    async fn wait_for_xtal(spi: &mut SpiBus, delay: &mut Delay) -> Result<bool, SpiBus::Error> {
-        let rising_future = Self::miso_wait_low(spi);
+    async fn wait_for_xtal(
+        spi: &mut SpiBus,
+        delay: &mut Delay,
+    ) -> Result<Option<StatusByte>, SpiBus::Error> {
+        let ready_future = Self::miso_wait_low(spi);
         let timeout_future = delay.delay_ms(2_000);
-        pin_mut!(rising_future);
+        pin_mut!(ready_future);
         pin_mut!(timeout_future);
 
         // Wait for any of the two futures to complete.
-        match future::select(rising_future, timeout_future).await {
-            Either::Left((rising, _)) => {
-                // Ensure no spi bus error
-                rising?;
-
+        match future::select(ready_future, timeout_future).await {
+            Either::Left((status, _)) => {
                 // The xtal is stabilized
-                Ok(true)
+                Ok(Some(status?))
             }
             Either::Right((timeout, _)) => {
                 // Ensure that the timeout result was ok
                 timeout.unwrap();
 
                 // We have timeout - the xtal did not stabilize in time
-                Ok(false)
+                Ok(None)
             }
         }
     }
 
-    async fn miso_wait_low(bus: &mut SpiBus) -> Result<(), SpiBus::Error> {
+    async fn miso_wait_low(bus: &mut SpiBus) -> Result<StatusByte, SpiBus::Error> {
+        const OPCODE_TX: [u8; 1] = [Opcode::Strobe(Strobe::SNOP).as_u8()];
+        let mut opcode_rx = [0];
+
         loop {
-            let mut buffer = [0u8];
-            bus.read(&mut buffer).await?;
-            if buffer[0] & 1 == 0 {
-                return Ok(());
+            bus.transfer(&mut opcode_rx, &OPCODE_TX).await?;
+            let status = StatusByte(opcode_rx[0]);
+            if status.chip_rdy() {
+                return Ok(status);
             }
         }
     }

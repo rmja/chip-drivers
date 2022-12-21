@@ -2,7 +2,12 @@ use core::mem::transmute;
 
 use bitfield::bitfield;
 
-use crate::gpio::{Gpio0Output, Gpio1Output, Gpio2Output, Gpio3Output};
+use crate::gpio::{Gpio0Output, Gpio1Output, Gpio2Output, Gpio3Output, GpioOutput};
+
+pub trait Iocfg {
+    fn gpio_cfg(&self) -> Option<GpioOutput>;
+    fn set_gpio_cfg(&mut self, value: GpioOutput);
+}
 
 bitfield! {
     #[derive(Clone, Copy)]
@@ -15,6 +20,16 @@ bitfield! {
 impl Iocfg3 {
     pub fn gpio3_cfg(&self) -> Gpio3Output {
         unsafe { transmute(self.gpio3_cfg_bits()) }
+    }
+}
+
+impl Iocfg for Iocfg3 {
+    fn gpio_cfg(&self) -> Option<GpioOutput> {
+        self.gpio3_cfg().try_into().ok()
+    }
+
+    fn set_gpio_cfg(&mut self, value: GpioOutput) {
+        self.set_gpio3_cfg(value as u8);
     }
 }
 
@@ -32,6 +47,16 @@ impl Iocfg2 {
     }
 }
 
+impl Iocfg for Iocfg2 {
+    fn gpio_cfg(&self) -> Option<GpioOutput> {
+        self.gpio2_cfg().try_into().ok()
+    }
+
+    fn set_gpio_cfg(&mut self, value: GpioOutput) {
+        self.set_gpio2_cfg(value as u8);
+    }
+}
+
 bitfield! {
     #[derive(Clone, Copy)]
     pub struct Iocfg1(u8);
@@ -46,6 +71,16 @@ impl Iocfg1 {
     }
 }
 
+impl Iocfg for Iocfg1 {
+    fn gpio_cfg(&self) -> Option<GpioOutput> {
+        self.gpio1_cfg().try_into().ok()
+    }
+
+    fn set_gpio_cfg(&mut self, value: GpioOutput) {
+        self.set_gpio1_cfg(value as u8);
+    }
+}
+
 bitfield! {
     #[derive(Clone, Copy)]
     pub struct Iocfg0(u8);
@@ -57,6 +92,16 @@ bitfield! {
 impl Iocfg0 {
     pub fn gpio0_cfg(&self) -> Gpio0Output {
         unsafe { transmute(self.gpio0_cfg_bits()) }
+    }
+}
+
+impl Iocfg for Iocfg0 {
+    fn gpio_cfg(&self) -> Option<GpioOutput> {
+        self.gpio0_cfg().try_into().ok()
+    }
+
+    fn set_gpio_cfg(&mut self, value: GpioOutput) {
+        self.set_gpio0_cfg(value as u8);
     }
 }
 

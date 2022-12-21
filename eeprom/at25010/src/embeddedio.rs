@@ -67,7 +67,7 @@ where
             self.position as usize + buf.len(),
             self.driver.capacity() as usize,
         );
-        self.driver.read(self.position, &mut buf[..length]).await;
+        self.driver.read(self.position, &mut buf[..length]).await?;
         self.position += length as u16;
         Ok(length)
     }

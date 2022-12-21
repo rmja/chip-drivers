@@ -27,23 +27,7 @@ pub enum Opcode {
 
 impl Opcode {
     pub fn assign(&self, buffer: &mut [u8]) -> usize {
-        const SINGLE_WRITE: u8 = 0x00;
-        const BURST_WRITE: u8 = 0x40;
-        const SINGLE_READ: u8 = 0x80;
-        const BURST_READ: u8 = 0xC0;
-        buffer[0] = match *self {
-            Opcode::WriteSingle(reg) => SINGLE_WRITE | reg as u8,
-            Opcode::WriteBurst(reg) => BURST_WRITE | reg as u8,
-            Opcode::ReadSingle(reg) => SINGLE_READ | reg as u8,
-            Opcode::ReadBurst(reg) => BURST_READ | reg as u8,
-            Opcode::WriteExtSingle(_) => SINGLE_WRITE | PriReg::EXTENDED_ADDRESS as u8,
-            Opcode::WriteExtBurst(_) => BURST_WRITE | PriReg::EXTENDED_ADDRESS as u8,
-            Opcode::ReadExtSingle(_) => SINGLE_READ | PriReg::EXTENDED_ADDRESS as u8,
-            Opcode::ReadExtBurst(_) => BURST_READ | PriReg::EXTENDED_ADDRESS as u8,
-            Opcode::Strobe(strobe) => strobe as u8,
-            Opcode::WriteFifoBurst => BURST_WRITE | 0x3F,
-            Opcode::ReadFifoBurst => BURST_READ | 0x3F,
-        };
+        buffer[0] = self.as_u8();
 
         match *self {
             Opcode::WriteExtSingle(reg) => {
@@ -63,6 +47,27 @@ impl Opcode {
                 2
             }
             _ => 1,
+        }
+    }
+
+    pub const fn as_u8(&self) -> u8 {
+        const SINGLE_WRITE: u8 = 0x00;
+        const BURST_WRITE: u8 = 0x40;
+        const SINGLE_READ: u8 = 0x80;
+        const BURST_READ: u8 = 0xC0;
+
+        match *self {
+            Opcode::WriteSingle(reg) => SINGLE_WRITE | reg as u8,
+            Opcode::WriteBurst(reg) => BURST_WRITE | reg as u8,
+            Opcode::ReadSingle(reg) => SINGLE_READ | reg as u8,
+            Opcode::ReadBurst(reg) => BURST_READ | reg as u8,
+            Opcode::WriteExtSingle(_) => SINGLE_WRITE | PriReg::EXTENDED_ADDRESS as u8,
+            Opcode::WriteExtBurst(_) => BURST_WRITE | PriReg::EXTENDED_ADDRESS as u8,
+            Opcode::ReadExtSingle(_) => SINGLE_READ | PriReg::EXTENDED_ADDRESS as u8,
+            Opcode::ReadExtBurst(_) => BURST_READ | PriReg::EXTENDED_ADDRESS as u8,
+            Opcode::Strobe(strobe) => strobe as u8,
+            Opcode::WriteFifoBurst => BURST_WRITE | 0x3F,
+            Opcode::ReadFifoBurst => BURST_READ | 0x3F,
         }
     }
 }

@@ -1,6 +1,8 @@
 #![cfg_attr(not(test), no_std)]
 #![allow(incomplete_features)]
 #![feature(inherent_associated_types)]
+#![feature(let_chains)]
+#![feature(const_trait_impl)]
 
 extern crate alloc;
 extern crate bitfield;

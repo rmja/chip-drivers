@@ -1,22 +1,37 @@
 use crate::opcode::PriReg;
 use num_traits::FromPrimitive;
 
-#[derive(Copy, Clone)]
-pub enum Gpio {
-    Gpio0,
-    Gpio1,
-    Gpio2,
-    Gpio3,
+/// CC1200 GPIO marker trait
+#[const_trait]
+pub trait Gpio {
+    fn iocfg_reg() -> PriReg;
 }
 
-impl Gpio {
-    pub const fn iocfg_reg(self) -> PriReg {
-        match self {
-            Gpio::Gpio0 => PriReg::IOCFG0,
-            Gpio::Gpio1 => PriReg::IOCFG1,
-            Gpio::Gpio2 => PriReg::IOCFG2,
-            Gpio::Gpio3 => PriReg::IOCFG3,
-        }
+pub struct Gpio0;
+impl const Gpio for Gpio0 {
+    fn iocfg_reg() -> PriReg {
+        PriReg::IOCFG0
+    }
+}
+
+pub struct Gpio1;
+impl const Gpio for Gpio1 {
+    fn iocfg_reg() -> PriReg {
+        PriReg::IOCFG1
+    }
+}
+
+pub struct Gpio2;
+impl const Gpio for Gpio2 {
+    fn iocfg_reg() -> PriReg {
+        PriReg::IOCFG2
+    }
+}
+
+pub struct Gpio3;
+impl const Gpio for Gpio3 {
+    fn iocfg_reg() -> PriReg {
+        PriReg::IOCFG3
     }
 }
 
@@ -99,6 +114,14 @@ pub enum GpioOutput {
     RESERVED_61 = 61,
     RESERVED_62 = 62,
     RESERVED_63 = 63,
+}
+
+impl TryFrom<u8> for GpioOutput {
+    type Error = ();
+
+    fn try_from(value: u8) -> Result<GpioOutput, Self::Error> {
+        FromPrimitive::from_u8(value).ok_or(())
+    }
 }
 
 macro_rules! gpio_output {
@@ -194,6 +217,14 @@ macro_rules! gpio_output {
         impl From<GpioOutput> for $name {
             fn from(value: GpioOutput) -> Self {
                 FromPrimitive::from_u8(value as u8).unwrap()
+            }
+        }
+
+        impl TryFrom<u8> for $name {
+            type Error = ();
+
+            fn try_from(value: u8) -> Result<Self, Self::Error> {
+                FromPrimitive::from_u8(value).ok_or(())
             }
         }
 
