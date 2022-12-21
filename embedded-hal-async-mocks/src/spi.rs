@@ -9,7 +9,7 @@ impl spi::Error for SpiError {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct MockSpiDevice {
     pub bus: MockSpiBus,
     transactions: usize,

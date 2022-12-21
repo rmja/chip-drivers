@@ -18,7 +18,7 @@ impl<R: Reg> ConfigPatch<'_, R> {
     /// Get a register value, or None if the register is not part of the configuration.
     pub fn get(&self, reg: R) -> Option<u8> {
         let index = reg.as_u8() as usize - self.first.as_u8() as usize;
-        self.values.get(index).map(|v| *v)
+        self.values.get(index).copied()
     }
 }
 

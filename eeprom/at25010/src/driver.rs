@@ -105,7 +105,7 @@ where
             buffer.split_at((PAGE_SIZE - offset_in_first_page) % PAGE_SIZE);
 
         assert!(incomplete_first_page.len() < 8);
-        if incomplete_first_page.len() > 0 {
+        if !incomplete_first_page.is_empty() {
             // Wait until we can send a new spi command.
             self.delay
                 .delay_us(t_cs_us)
@@ -131,7 +131,7 @@ where
                 .await
                 .map_err(DriverError::Delay)?;
 
-            self.write_page(address as u16, page).await?;
+            self.write_page(address, page).await?;
             address += page.len() as u16;
 
             // Write is auto-disabled after sending a WRITE command.

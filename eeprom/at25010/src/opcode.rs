@@ -1,4 +1,5 @@
 #[allow(dead_code)]
+#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
 pub(crate) enum Opcode {
     /// Set write enable latch
     WREN,
@@ -15,16 +16,16 @@ pub(crate) enum Opcode {
 }
 
 impl Opcode {
-    pub const fn as_u8(self) -> u8 {
+    pub const fn as_u8(&self) -> u8 {
         const A8: u8 = 0b1000;
         match self {
             Opcode::WREN => 0b110,
             Opcode::WRDI => 0b100,
             Opcode::RDSR => 0b101,
             Opcode::WRSR => 0b001,
-            Opcode::READ(addr) if addr > 0xFF => A8 | 0b011,
+            Opcode::READ(addr) if *addr > 0xFF => A8 | 0b011,
             Opcode::READ(_) => 0b011,
-            Opcode::WRITE(addr) if addr > 0xFF => A8 | 0b010,
+            Opcode::WRITE(addr) if *addr > 0xFF => A8 | 0b010,
             Opcode::WRITE(_) => 0b010,
         }
     }
