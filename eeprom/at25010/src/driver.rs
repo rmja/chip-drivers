@@ -1,4 +1,4 @@
-use crate::{opcode::Opcode, Error, PartNumber};
+use crate::{opcode::Opcode, DriverError, PartNumber};
 use bitfield::bitfield;
 use embedded_hal_async::{delay, spi, spi_transaction};
 
@@ -37,7 +37,7 @@ where
     SpiBus: spi::SpiBus,
     Delay: delay::DelayUs,
 {
-    type Error = Error<Spi::Error, Delay>;
+    type Error = DriverError<Spi::Error, Delay>;
 
     pub fn new(spi: Spi, delay: Delay, part_number: PartNumber) -> Self {
         Self {
@@ -62,7 +62,7 @@ where
     /// Read a sequence of bytes from the EEPROM.
     pub async fn read(&mut self, origin: u16, buffer: &mut [u8]) -> Result<(), Self::Error> {
         if origin as usize + buffer.len() > self.capacity() as usize {
-            return Err(Error::Capacity);
+            return Err(DriverError::Capacity);
         }
 
         spi_transaction!(&mut self.spi, |bus| async {
@@ -72,13 +72,13 @@ where
             Ok(())
         })
         .await
-        .map_err(Error::Spi)
+        .map_err(DriverError::Spi)
     }
 
     /// Write a sequence of bytes to the EEPROM.
     pub async fn write(&mut self, origin: u16, buffer: &[u8]) -> Result<(), Self::Error> {
         if origin as usize + buffer.len() > self.capacity() as usize {
-            return Err(Error::Capacity);
+            return Err(DriverError::Capacity);
         }
 
         let t_cs_us = (min_tcs_ns(self.part_number) + 999) / 1000;
@@ -87,12 +87,12 @@ where
         self.enable_write().await?;
 
         // Wait until we can send a new spi command.
-        self.delay.delay_us(t_cs_us).await.map_err(Error::Delay)?;
+        self.delay.delay_us(t_cs_us).await.map_err(DriverError::Delay)?;
 
         // See if write was enabled (it may have been disabled by the WP pin).
         let sr = self.read_status_register().await?;
         if !sr.wel() {
-            return Err(Error::WriteProtection);
+            return Err(DriverError::WriteProtection);
         }
 
         let mut address = origin;
@@ -104,7 +104,7 @@ where
         assert!(incomplete_first_page.len() < 8);
         if incomplete_first_page.len() > 0 {
             // Wait until we can send a new spi command.
-            self.delay.delay_us(t_cs_us).await.map_err(Error::Delay)?;
+            self.delay.delay_us(t_cs_us).await.map_err(DriverError::Delay)?;
 
             self.write_page(address, incomplete_first_page).await?;
             address += incomplete_first_page.len() as u16;
@@ -120,7 +120,7 @@ where
             }
 
             // Wait until we can send a new spi command.
-            self.delay.delay_us(t_cs_us).await.map_err(Error::Delay)?;
+            self.delay.delay_us(t_cs_us).await.map_err(DriverError::Delay)?;
 
             self.write_page(address as u16, page).await?;
             address += page.len() as u16;
@@ -139,14 +139,14 @@ where
         self.delay
             .delay_ms(INITIAL_TIMEOUT_MS)
             .await
-            .map_err(Error::Delay)?;
+            .map_err(DriverError::Delay)?;
         let sr = self.read_status_register().await?;
         if sr.bsy() {
             loop {
                 self.delay
                     .delay_us(RETRY_INTERVAL_US)
                     .await
-                    .map_err(Error::Delay)?;
+                    .map_err(DriverError::Delay)?;
 
                 let sr = self.read_status_register().await?;
                 if !sr.bsy() {
@@ -160,14 +160,14 @@ where
 
     async fn enable_write(&mut self) -> Result<(), Self::Error> {
         const TX: [u8; 1] = [Opcode::WREN.as_u8()];
-        self.spi.write(&TX).await.map_err(Error::Spi)?;
+        self.spi.write(&TX).await.map_err(DriverError::Spi)?;
         Ok(())
     }
 
     async fn read_status_register(&mut self) -> Result<StatusRegister, Self::Error> {
         const TX: [u8; 2] = [Opcode::RDSR.as_u8(), 0x00];
         let mut rx: [u8; 2] = [0x00, 0x00];
-        self.spi.transfer(&mut rx, &TX).await.map_err(Error::Spi)?;
+        self.spi.transfer(&mut rx, &TX).await.map_err(DriverError::Spi)?;
         Ok(StatusRegister(rx[1]))
     }
 
@@ -183,7 +183,7 @@ where
             Ok(())
         })
         .await
-        .map_err(Error::Spi)
+        .map_err(DriverError::Spi)
     }
 }
 

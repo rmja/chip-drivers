@@ -1,7 +1,7 @@
 use embedded_hal_async::{delay, spi};
 use embedded_io::{self, asynch, Error, ErrorKind, Io, SeekFrom};
 
-use crate::Driver;
+use crate::{Driver, DriverError};
 
 pub struct StatefulDriver<Spi, SpiBus, Delay>
 where
@@ -13,7 +13,7 @@ where
     position: u16,
 }
 
-impl<Spi, T> Error for crate::Error<Spi, T>
+impl<Spi, T> Error for DriverError<Spi, T>
 where
     Spi: embedded_hal_async::spi::Error,
     T: embedded_hal_async::delay::DelayUs,
@@ -29,7 +29,7 @@ where
     SpiBus: spi::SpiBus,
     Delay: delay::DelayUs,
 {
-    type Error = crate::Error<Spi::Error, Delay>;
+    type Error = DriverError<Spi::Error, Delay>;
 }
 
 impl<Spi, SpiBus, Delay> asynch::Seek for StatefulDriver<Spi, SpiBus, Delay>
@@ -48,7 +48,7 @@ where
         assert!(pos >= 0);
         let pos = pos as u64;
         if pos > self.driver.capacity() as u64 {
-            return Err(crate::Error::Capacity);
+            return Err(DriverError::Capacity);
         }
 
         self.position = pos as u16;
