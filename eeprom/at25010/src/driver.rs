@@ -83,6 +83,9 @@ where
 
         let t_cs_us = (min_tcs_ns(self.part_number) + 999) / 1000;
 
+        // Wait for a possible previous write to complete.
+        self.flush().await?;
+
         // Disable write protection.
         self.enable_write().await?;
 
@@ -144,6 +147,11 @@ where
     }
 
     pub async fn flush(&mut self) -> Result<(), Self::Error> {
+        let sr = self.read_status_register().await?;
+        if !sr.bsy() {
+            return Ok(());
+        }
+
         // Wait for idle.
         self.delay
             .delay_ms(INITIAL_TIMEOUT_MS)
@@ -226,6 +234,9 @@ mod tests {
         let mut spi = MockSpiDevice::new();
         let mut expected_transactions = 0;
 
+        expect_read_status_register(&mut spi, &mut seq, StatusRegister(0x00));
+        expected_transactions += 1;
+
         expect_write_wren(&mut spi, &mut seq);
         expected_transactions += 1;
 
@@ -271,6 +282,9 @@ mod tests {
         let mut seq = Sequence::new();
         let mut spi = MockSpiDevice::new();
         let mut expected_transactions = 0;
+
+        expect_read_status_register(&mut spi, &mut seq, StatusRegister(0x00));
+        expected_transactions += 1;
 
         expect_write_wren(&mut spi, &mut seq);
         expect_read_status_register(&mut spi, &mut seq, StatusRegister(0x02));
