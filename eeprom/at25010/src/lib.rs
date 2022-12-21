@@ -8,8 +8,8 @@ extern crate alloc;
 mod driver;
 #[cfg(feature = "embedded-io")]
 pub mod embeddedio;
-mod opcode;
 mod error;
+mod opcode;
 
 #[derive(Clone, Copy)]
 pub enum PartNumber {

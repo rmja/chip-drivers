@@ -10,12 +10,12 @@ extern crate num_derive;
 
 mod config;
 mod driver;
+mod error;
 pub mod gpio;
 mod opcode;
 pub mod regs;
 mod statusbyte;
 pub mod traits;
-mod error;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum PartNumber {

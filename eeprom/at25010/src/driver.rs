@@ -87,7 +87,10 @@ where
         self.enable_write().await?;
 
         // Wait until we can send a new spi command.
-        self.delay.delay_us(t_cs_us).await.map_err(DriverError::Delay)?;
+        self.delay
+            .delay_us(t_cs_us)
+            .await
+            .map_err(DriverError::Delay)?;
 
         // See if write was enabled (it may have been disabled by the WP pin).
         let sr = self.read_status_register().await?;
@@ -104,7 +107,10 @@ where
         assert!(incomplete_first_page.len() < 8);
         if incomplete_first_page.len() > 0 {
             // Wait until we can send a new spi command.
-            self.delay.delay_us(t_cs_us).await.map_err(DriverError::Delay)?;
+            self.delay
+                .delay_us(t_cs_us)
+                .await
+                .map_err(DriverError::Delay)?;
 
             self.write_page(address, incomplete_first_page).await?;
             address += incomplete_first_page.len() as u16;
@@ -120,7 +126,10 @@ where
             }
 
             // Wait until we can send a new spi command.
-            self.delay.delay_us(t_cs_us).await.map_err(DriverError::Delay)?;
+            self.delay
+                .delay_us(t_cs_us)
+                .await
+                .map_err(DriverError::Delay)?;
 
             self.write_page(address as u16, page).await?;
             address += page.len() as u16;
@@ -167,7 +176,10 @@ where
     async fn read_status_register(&mut self) -> Result<StatusRegister, Self::Error> {
         const TX: [u8; 2] = [Opcode::RDSR.as_u8(), 0x00];
         let mut rx: [u8; 2] = [0x00, 0x00];
-        self.spi.transfer(&mut rx, &TX).await.map_err(DriverError::Spi)?;
+        self.spi
+            .transfer(&mut rx, &TX)
+            .await
+            .map_err(DriverError::Spi)?;
         Ok(StatusRegister(rx[1]))
     }
 
