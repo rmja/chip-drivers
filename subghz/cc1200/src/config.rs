@@ -8,7 +8,7 @@ pub struct ConfigPatch<'a, R: Reg> {
     pub values: &'a [u8],
 }
 
-impl<R: Reg> ConfigPatch<'_, R> {
+impl<R: ~const Reg> ConfigPatch<'_, R> {
     /// Get whether the configuration contains values for all registers.
     pub fn is_full(&self) -> bool {
         self.first == R::FIRST
@@ -16,13 +16,13 @@ impl<R: Reg> ConfigPatch<'_, R> {
     }
 
     /// Get a register value, or None if the register is not part of the configuration.
-    pub fn get(&self, reg: R) -> Option<u8> {
+    pub const fn get(&self, reg: R) -> Option<u8> {
         let index = reg.as_u8() as usize - self.first.as_u8() as usize;
         self.values.get(index).copied()
     }
 }
 
-impl<R: Reg> Index<R> for ConfigPatch<'_, R> {
+impl<R: ~const Reg> const Index<R> for ConfigPatch<'_, R> {
     type Output = u8;
 
     fn index(&self, index: R) -> &Self::Output {

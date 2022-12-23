@@ -73,6 +73,7 @@ impl Opcode {
 }
 
 /// Register marker trait
+#[const_trait]
 pub trait Reg: Copy + PartialEq {
     const FIRST: Self;
     const LAST: Self;
@@ -82,7 +83,7 @@ pub trait Reg: Copy + PartialEq {
     fn get_write_opcode(self, burst: bool) -> Opcode;
 }
 
-impl Reg for PriReg {
+impl const Reg for PriReg {
     const FIRST: Self = Self::IOCFG0;
     const LAST: Self = Self::PKT_LEN;
 
@@ -107,7 +108,7 @@ impl Reg for PriReg {
     }
 }
 
-impl Reg for ExtReg {
+impl const Reg for ExtReg {
     const FIRST: Self = Self::IF_MIX_CFG;
     const LAST: Self = Self::PA_CFG3;
 
