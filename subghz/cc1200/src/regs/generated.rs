@@ -222,6 +222,7 @@ impl SyncCfg1 {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum SyncModeValue {
     /// No sync word
     NoSyncWord = 0b000,
@@ -306,6 +307,7 @@ impl SyncCfg0 {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum StrictSyncCheckValue {
     /// Strict sync word check level 1
     StrictSyncWordCheckLevel1 = 0b00,
@@ -373,6 +375,7 @@ impl ModcfgDevE {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ModFormatValue {
     /// 2-FSK
     Fsk2 = 0b000,
@@ -443,6 +446,7 @@ impl DcfiltCfg {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DcfiltBwSettleValue {
     /// 8 samples
     Samples8 = 0b000,
@@ -503,6 +507,7 @@ impl PreambleCfg1 {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum NumPreambleValue {
     /// No preamble
     NoPreamble = 0b0000,
@@ -538,6 +543,7 @@ pub enum NumPreambleValue {
     Reserved_1111 = 0b1111,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PreambleWordValue {
     /// 10101010 (0xAA)
     Pattern10101010 = 0b00,
@@ -591,6 +597,7 @@ impl PreambleCfg0 {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PqtValidTimeoutValue {
     /// 11 symbols
     Symbols11 = 0b000,
@@ -681,6 +688,7 @@ impl Iqic {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum IqicBlenSettleValue {
     /// 8 samples
     Samples8 = 0b00,
@@ -692,6 +700,7 @@ pub enum IqicBlenSettleValue {
     Samples256 = 0b11,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum IqicBlenValue {
     /// 8 samples
     Samples8 = 0b00,
@@ -703,6 +712,7 @@ pub enum IqicBlenValue {
     Samples256 = 0b11,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum IqicImgchLevelThrValue {
     /// > 256
     Above256 = 0b00,
@@ -746,6 +756,7 @@ impl ChanBw {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AdcCicDecfactValue {
     /// Decimation factor 12
     DecimationFactor12 = 0b00,
@@ -846,6 +857,7 @@ impl Mdmcfg1 {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DvgaGainValue {
     /// 0 dB DVGA (preferred setting for RX filter bandwidth < 100 kHz)
     Db0 = 0b00,
@@ -929,6 +941,7 @@ impl Mdmcfg0 {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TransparentIntfactValue {
     /// 1x transparent signal interpolated one time before output (reset)
     OneTime = 0b00,
@@ -1097,6 +1110,7 @@ impl AgcCfg3 {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AgcSyncBehaviourValue {
     /// No AGC gain freeze. Keep computing/updating RSSI
     NoAgcGainFreeze_000 = 0b000,
@@ -1160,6 +1174,7 @@ impl AgcCfg2 {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FePerformanceModeValue {
     /// Optimized linearity mode
     OptimizedLinearityMode = 0b00,
@@ -1222,6 +1237,7 @@ impl AgcCfg1 {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AgcWinSizeValue {
     /// 8 samples
     Samples8 = 0b000,
@@ -1241,6 +1257,7 @@ pub enum AgcWinSizeValue {
     Reserved_111 = 0b111,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AgcSettleWaitValue {
     /// 24 samples
     Samples24 = 0b000,
@@ -1323,6 +1340,7 @@ impl AgcCfg0 {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AgcHystLevelValue {
     /// 2 dB
     Db2 = 0b00,
@@ -1334,6 +1352,7 @@ pub enum AgcHystLevelValue {
     Db10 = 0b11,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AgcSlewrateLimitValue {
     /// 60 dB
     Db60 = 0b00,
@@ -1345,6 +1364,7 @@ pub enum AgcSlewrateLimitValue {
     Db9 = 0b11,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum RssiValidCntValue {
     /// 1
     Count1 = 0b00,
@@ -1356,6 +1376,7 @@ pub enum RssiValidCntValue {
     Count9 = 0b11,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AgcAskDecayValue {
     /// 1200 samples
     Samples1200 = 0b00,
@@ -1461,6 +1482,7 @@ impl SettlingCfg {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FsAutocalValue {
     /// Never (manually calibrate using SCAL strobe)
     Never = 0b00,
@@ -1513,6 +1535,7 @@ impl FsCfg {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FsdBandselectValue {
     /// Not in use
     NotInUse_0000 = 0b0000,
@@ -1598,6 +1621,7 @@ impl WorCfg1 {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum WorResValue {
     /// High resolution
     HighResolution = 0b00,
@@ -1669,6 +1693,7 @@ impl WorCfg0 {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum RxDutyCycleModeValue {
     /// RXDCM disabled
     RxdcmDisabled = 0b00,
@@ -1680,6 +1705,7 @@ pub enum RxDutyCycleModeValue {
     Rxdcm2 = 0b11,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum RcModeValue {
     /// RCOSC calibration disabled
     RcoscCalibrationDisabled_00 = 0b00,
@@ -1814,6 +1840,7 @@ impl PktCfg2 {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CcaModeValue {
     /// Always give a clear channel indication
     AlwaysGiveAClearChannelIndication = 0b000,
@@ -1833,6 +1860,7 @@ pub enum CcaModeValue {
     Reserved_111 = 0b111,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PktFormatValue {
     /// Normal mode / FIFO mode (MDMCFG1.FIFO_EN must be set to 1 and MDMCFG0.TRANSPARENT_MODE_EN must be set to 0)
     NormalModeFifoMode = 0b00,
@@ -1923,6 +1951,7 @@ impl PktCfg1 {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AddrCheckCfgValue {
     /// No address check
     NoAddressCheck = 0b00,
@@ -1934,6 +1963,7 @@ pub enum AddrCheckCfgValue {
     AddressCheck0x00And0xffBroadcast = 0b11,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CrcCfgValue {
     /// CRC disabled for TX and RX
     CrcDisabledForTxAndRx = 0b00,
@@ -2000,6 +2030,7 @@ impl PktCfg0 {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum LengthConfigValue {
     /// Fixed packet length mode. Packet Length configured through the PKT_LEN register
     FixedPacketLengthMode = 0b00,
@@ -2057,6 +2088,7 @@ impl RfendCfg1 {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum RxoffModeValue {
     /// IDLE
     Idle = 0b00,
@@ -2129,6 +2161,7 @@ impl RfendCfg0 {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TxoffModeValue {
     /// IDLE
     Idle = 0b00,
@@ -2140,6 +2173,7 @@ pub enum TxoffModeValue {
     Rx = 0b11,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AntDivRxTermCfgValue {
     /// Antenna diversity and termination based on CS/PQT are disabled
     AntennaDiversityAndTerminationBasedOnCsPqtAreDisabled = 0b000,
@@ -2266,6 +2300,7 @@ impl AskCfg {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AgcAskBwValue {
     /// ASK BW scale factor = 0.28
     AskBwScaleFactorEqualPoint28 = 0b00,
@@ -2404,6 +2439,7 @@ impl FreqoffCfg {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FocCfgValue {
     /// FOC after channel filter (typical 0 - 1 preamble bytes for settling)
     FocAfterChannelFilter = 0b00,
@@ -2462,6 +2498,7 @@ impl TocCfg {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TocLimitValue {
     /// < 0.2 %
     Below2000Ppm = 0b00,
@@ -2619,6 +2656,7 @@ impl Mdmcfg2 {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum UpsamplerPValue {
     /// TX upsampler factor P = 1 (bypassed)
     TxUpsamplerFactorPEqual1 = 0b000,
@@ -2999,6 +3037,7 @@ impl FsDig0 {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum RxLpfBwValue {
     /// 200 kHz
     Khz200 = 0b00,
@@ -3010,6 +3049,7 @@ pub enum RxLpfBwValue {
     Khz500 = 0b11,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TxLpfBwValue {
     /// 200 kHz
     Khz200 = 0b00,
@@ -3139,6 +3179,7 @@ impl FsCal0 {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum LockCfgValue {
     /// Average the measurement over 512 cycles
     AverageTheMeasurementOver512Cycles = 0b00,
@@ -3712,6 +3753,7 @@ impl Ifamp {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum IfampBwValue {
     ///  300 kHz
     Khz300 = 0b00,
@@ -4315,6 +4357,7 @@ impl Marcstate {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Marc2pinStateValue {
     /// SETTLING
     Settling = 0b00,

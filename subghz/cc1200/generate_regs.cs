@@ -183,6 +183,7 @@ foreach (var register in definition.Register)
 
         foreach (var @enum in enums)
         {
+            Console.WriteLine($"#[derive(Debug, Clone, Copy, PartialEq)]");
             Console.WriteLine($"pub enum {@enum.Name} {{");
 
             var variantNames = @enum.Values.ToDictionary(x => x.NumberAsInt, x => GetEnumVariantName(@enum.Name, x));
