@@ -240,6 +240,36 @@ where
         Ok(())
     }
 
+    /// Skip bytes in the RX fifo.
+    /// This action _does_ update `last_status`.
+    pub async fn skip_fifo(&mut self, length: usize) -> Result<(), Self::Error> {
+        assert!(length <= RX_FIFO_SIZE);
+
+        const OPCODE_TX: [u8; 1] = [Opcode::ReadFifoBurst.as_u8()];
+        let mut opcode_rx = [0];
+
+        let status = spi_transaction!(&mut self.spi, |bus| async {
+            bus.transfer(&mut opcode_rx, &OPCODE_TX).await?;
+            let status = StatusByte(opcode_rx[0]);
+
+            let zeros = &[0; 16];
+            let mut length = length;
+            while length > zeros.len() {
+                bus.write(zeros).await?;
+                length -= zeros.len();
+            }
+
+            bus.write(&zeros[..length]).await?;
+
+            Ok(status)
+        })
+        .await
+        .map_err(DriverError::Spi)?;
+        self.last_status = Some(status);
+
+        Ok(())
+    }
+
     /// Read the RSSI and RX fifo in one transaction.
     /// This action _does_ update `last_status`.
     pub async fn read_rssi_and_fifo(&mut self, buffer: &mut [u8]) -> Result<Rssi, Self::Error> {
