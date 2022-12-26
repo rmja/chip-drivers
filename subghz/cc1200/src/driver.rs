@@ -1,9 +1,9 @@
 use crate::{
-    opcode::{ExtReg, Opcode, Reg, Strobe, OPCODE_MAX},
+    opcode::{Opcode, Strobe, OPCODE_MAX},
     statusbyte::{State, StatusByte},
+    regs::{self, Register, ext},
     traits, ConfigPatch, DriverError, PartNumber, Rssi, RX_FIFO_SIZE, TX_FIFO_SIZE,
 };
-use alloc::vec;
 use embedded_hal_async::{delay, spi, spi_transaction};
 use futures::{
     future::{self, Either},
@@ -87,7 +87,8 @@ where
     /// Read the chip part number.
     /// This action _does_ update `last_status`.
     pub async fn read_part_number(&mut self) -> Result<PartNumber, Self::Error> {
-        match self.read_reg(ExtReg::PARTNUMBER).await? {
+        let partnumber = self.read_reg::<regs::ext::Partnumber>().await?;
+        match partnumber.partnum() {
             0x20 => Ok(PartNumber::Cc1200),
             0x21 => Ok(PartNumber::Cc1201),
             _ => Err(DriverError::InvalidPartNumber),
@@ -96,9 +97,9 @@ where
 
     /// Read a single register value from chip.
     /// This action _does_ update `last_status`.
-    pub async fn read_reg<R: Reg>(&mut self, reg: R) -> Result<u8, Self::Error> {
+    pub async fn read_reg<R: Register>(&mut self) -> Result<R, Self::Error> {
         let mut tx_buffer = [0; OPCODE_MAX + 1];
-        let opcode_len = reg.get_read_opcode(false).assign(&mut tx_buffer);
+        let opcode_len = Opcode::ReadSingle(R::ADDRESS).assign(&mut tx_buffer);
         let tx = &tx_buffer[..opcode_len + 1];
 
         let mut rx_buffer = [0; OPCODE_MAX + 1];
@@ -107,19 +108,18 @@ where
         self.spi.transfer(rx, tx).await.map_err(DriverError::Spi)?;
         self.last_status = Some(StatusByte(rx[0]));
 
-        Ok(rx[rx.len() - 1])
+        Ok(R::from(rx[rx.len() - 1]))
     }
 
     /// Read a sequence of register values from chip.
     /// This action _does_ update `last_status`.
-    pub async fn read_regs<R: Reg>(
+    pub async fn read_regs(
         &mut self,
-        first: R,
+        first_address: u16,
         buffer: &mut [u8],
     ) -> Result<(), Self::Error> {
         let mut opcode_tx_buffer = [0; OPCODE_MAX];
-        let opcode_len = first
-            .get_read_opcode(buffer.len() > 1)
+        let opcode_len = Opcode::read(first_address, buffer.len() > 1)
             .assign(&mut opcode_tx_buffer);
         let opcode_tx = &opcode_tx_buffer[..opcode_len];
 
@@ -141,11 +141,11 @@ where
 
     /// Write a single register value to chip.
     /// This action _does not_ update `last_status`.
-    pub async fn write_reg<R: Reg>(&mut self, reg: R, value: u8) -> Result<(), Self::Error> {
+    pub async fn write_reg<R: Register>(&mut self, reg: R) -> Result<(), Self::Error> {
         let mut tx_buffer = [0; OPCODE_MAX + 1];
-        let opcode_len = reg.get_write_opcode(false).assign(&mut tx_buffer);
+        let opcode_len = Opcode::WriteSingle(R::ADDRESS).assign(&mut tx_buffer);
         let tx = &mut tx_buffer[0..opcode_len + 1];
-        tx[opcode_len] = value;
+        tx[opcode_len] = reg.value();
 
         self.spi.write(tx).await.map_err(DriverError::Spi)?;
 
@@ -156,10 +156,9 @@ where
 
     /// Write a sequence of register values to chip.
     /// This action _does not_ update `last_status`.
-    pub async fn write_regs<R: Reg>(&mut self, first: R, values: &[u8]) -> Result<(), Self::Error> {
+    pub async fn write_regs(&mut self, first_address: u16, values: &[u8]) -> Result<(), Self::Error> {
         let mut opcode_tx_buffer = [0; OPCODE_MAX];
-        let opcode_len = first
-            .get_write_opcode(values.len() > 1)
+        let opcode_len = Opcode::write(first_address, values.len() > 1)
             .assign(&mut opcode_tx_buffer);
         let opcode_tx = &opcode_tx_buffer[..opcode_len];
 
@@ -177,36 +176,21 @@ where
 
     /// Write a configuration patch to chip.
     /// This action _does not_ update `last_status`.
-    pub async fn write_patch<'a, 'patch, R: Reg>(
+    pub async fn write_patch<'a, 'patch>(
         &'a mut self,
-        patch: ConfigPatch<'patch, R>,
+        patch: ConfigPatch<'patch>,
     ) -> Result<(), Self::Error>
     where
         'a: 'patch,
     {
-        self.write_regs(patch.first, patch.values).await
-    }
-
-    /// Modify register values.
-    /// This action _does_ update `last_status`.
-    pub async fn modify_regs<R: Reg, F: FnOnce(&mut [u8])>(
-        &mut self,
-        first: R,
-        count: usize,
-        configure: F,
-    ) -> Result<(), Self::Error> {
-        let mut buf = vec![0; count];
-        self.read_regs(first, &mut buf).await?;
-        configure(&mut buf);
-        self.write_regs(first, &buf).await?;
-        Ok(())
+        self.write_regs(patch.first_address, patch.values).await
     }
 
     /// Read the current RSSI level.
     /// This action _does_ update `last_status`.
     pub async fn read_rssi(&mut self) -> Result<Rssi, Self::Error> {
         let mut tx = [0; 3];
-        assert_eq!(2, ExtReg::RSSI1.get_write_opcode(false).assign(&mut tx));
+        assert_eq!(2, Opcode::ReadSingle(ext::Rssi1::ADDRESS).assign(&mut tx));
 
         let mut rx = [0; 3];
 
@@ -238,6 +222,34 @@ where
         self.last_status = Some(status);
 
         Ok(())
+    }
+
+    /// Read from the RX fifo until condition is satisfied or until the buffer is full.
+    /// This action _does_ update `last_status`.
+    pub async fn read_fifo_until(&mut self, buffer: &mut [u8], get_available: impl Fn() -> usize) -> Result<usize, Self::Error> {
+        const OPCODE_TX: [u8; 1] = [Opcode::ReadFifoBurst.as_u8()];
+        let mut opcode_rx = [0];
+
+        let mut offset = 0;
+        let status = spi_transaction!(&mut self.spi, |bus| async {
+            bus.transfer(&mut opcode_rx, &OPCODE_TX).await?;
+            let status = StatusByte(opcode_rx[0]);
+            loop {
+                let length = usize::min(get_available(), buffer.len() - offset);
+                if length == 0 {
+                    // No more bytes are available or the buffer cannot hold any more bytes.
+                    break;
+                }
+                bus.read(&mut buffer[offset..offset+length]).await?;
+                offset += length;
+            }
+            Ok(status)
+        })
+        .await
+        .map_err(DriverError::Spi)?;
+        self.last_status = Some(status);
+
+        Ok(offset)
     }
 
     /// Skip bytes in the RX fifo.
@@ -278,7 +290,7 @@ where
         let mut tx = [0; 3 + 1];
         assert_eq!(
             2,
-            Opcode::ReadExtSingle(ExtReg::RSSI1).assign(&mut tx[0..2])
+            Opcode::ReadSingle(ext::Rssi1::ADDRESS).assign(&mut tx[0..2])
         );
         // RSSI is returned intx[2]
         assert_eq!(1, Opcode::ReadFifoBurst.assign(&mut tx[3..4]));

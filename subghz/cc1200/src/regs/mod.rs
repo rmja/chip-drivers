@@ -10,13 +10,13 @@ pub trait Iocfg {
     fn set_gpio_cfg(&mut self, value: GpioOutput);
 }
 
-impl Iocfg3 {
+impl pri::Iocfg3 {
     pub fn gpio3_cfg_value(&self) -> Gpio3Output {
         unsafe { transmute(self.gpio3_cfg()) }
     }
 }
 
-impl Iocfg for Iocfg3 {
+impl Iocfg for pri::Iocfg3 {
     fn gpio_cfg(&self) -> Option<GpioOutput> {
         self.gpio3_cfg().try_into().ok()
     }
@@ -26,13 +26,13 @@ impl Iocfg for Iocfg3 {
     }
 }
 
-impl Iocfg2 {
+impl pri::Iocfg2 {
     pub fn gpio2_cfg_value(&self) -> Gpio2Output {
         unsafe { transmute(self.gpio2_cfg()) }
     }
 }
 
-impl Iocfg for Iocfg2 {
+impl Iocfg for pri::Iocfg2 {
     fn gpio_cfg(&self) -> Option<GpioOutput> {
         self.gpio2_cfg().try_into().ok()
     }
@@ -42,13 +42,13 @@ impl Iocfg for Iocfg2 {
     }
 }
 
-impl Iocfg1 {
+impl pri::Iocfg1 {
     pub fn gpio1_cfg_value(&self) -> Gpio1Output {
         unsafe { transmute(self.gpio1_cfg()) }
     }
 }
 
-impl Iocfg for Iocfg1 {
+impl Iocfg for pri::Iocfg1 {
     fn gpio_cfg(&self) -> Option<GpioOutput> {
         self.gpio1_cfg().try_into().ok()
     }
@@ -58,13 +58,13 @@ impl Iocfg for Iocfg1 {
     }
 }
 
-impl Iocfg0 {
+impl pri::Iocfg0 {
     pub fn gpio0_cfg_value(&self) -> Gpio0Output {
         unsafe { transmute(self.gpio0_cfg()) }
     }
 }
 
-impl Iocfg for Iocfg0 {
+impl Iocfg for pri::Iocfg0 {
     fn gpio_cfg(&self) -> Option<GpioOutput> {
         self.gpio0_cfg().try_into().ok()
     }
@@ -74,7 +74,7 @@ impl Iocfg for Iocfg0 {
     }
 }
 
-impl FifoCfg {
+impl pri::FifoCfg {
     pub fn bytes_in_rxfifo(&self) -> u8 {
         self.fifo_thr() + 1
     }
@@ -100,7 +100,7 @@ mod tests {
 
     #[test]
     fn fifo_thr_rx() {
-        let mut fifocfg = FifoCfg(0);
+        let mut fifocfg = pri::FifoCfg(0);
         
         fifocfg.set_bytes_in_rxfifo(1);
         assert_eq!(1, fifocfg.bytes_in_rxfifo());
@@ -121,7 +121,7 @@ mod tests {
 
     #[test]
     fn fifo_thr_tx() {
-        let mut fifocfg = FifoCfg(0);
+        let mut fifocfg = pri::FifoCfg(0);
         
         fifocfg.set_bytes_in_txfifo(127);
         assert_eq!(127, fifocfg.bytes_in_txfifo());

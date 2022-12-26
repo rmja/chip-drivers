@@ -36,6 +36,6 @@ pub use self::{
     config::ConfigPatch,
     driver::Driver,
     error::DriverError,
-    opcode::{ExtReg, PriReg, Reg, Strobe},
+    opcode::Strobe,
     statusbyte::{State, StatusByte},
 };

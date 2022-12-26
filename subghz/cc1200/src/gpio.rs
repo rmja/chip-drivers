@@ -1,38 +1,34 @@
-use crate::opcode::PriReg;
 use num_traits::FromPrimitive;
+
+use crate::regs::{
+    pri::{Iocfg0, Iocfg1, Iocfg2, Iocfg3},
+    Register,
+};
 
 /// CC1200 GPIO marker trait
 #[const_trait]
 pub trait Gpio {
-    fn iocfg_reg() -> PriReg;
+    type Iocfg: Register;
 }
 
 pub struct Gpio0;
 impl const Gpio for Gpio0 {
-    fn iocfg_reg() -> PriReg {
-        PriReg::IOCFG0
-    }
+    type Iocfg = Iocfg0;
 }
 
 pub struct Gpio1;
 impl const Gpio for Gpio1 {
-    fn iocfg_reg() -> PriReg {
-        PriReg::IOCFG1
-    }
+    type Iocfg = Iocfg1;
 }
 
 pub struct Gpio2;
 impl const Gpio for Gpio2 {
-    fn iocfg_reg() -> PriReg {
-        PriReg::IOCFG2
-    }
+    type Iocfg = Iocfg2;
 }
 
 pub struct Gpio3;
 impl const Gpio for Gpio3 {
-    fn iocfg_reg() -> PriReg {
-        PriReg::IOCFG3
-    }
+    type Iocfg = Iocfg3;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, FromPrimitive)]
