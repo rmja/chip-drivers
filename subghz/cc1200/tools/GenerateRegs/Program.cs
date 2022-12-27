@@ -59,15 +59,16 @@ var knownVariantNames = new Dictionary<(string, int), string>
 
 var filename = "C:\\Program Files (x86)\\Texas Instruments\\SmartRF Tools\\SmartRF Studio 7\\config\\xml\\cc1200\\register_definition.xml";
 await using var file = File.OpenRead(filename);
-using var reader = XmlReader.Create(file, new XmlReaderSettings
+using var streamReader = new StreamReader(file, Encoding.UTF8);
+using var xmlReader = XmlReader.Create(streamReader, new XmlReaderSettings
 {
-    DtdProcessing = DtdProcessing.Ignore
+    DtdProcessing = DtdProcessing.Ignore,
 });
 var serializer = new XmlSerializer(typeof(RegisterDefinition), new[]
 {
     typeof(Register), typeof(Bitfield), typeof(Value)
 });
-var definition = (RegisterDefinition)serializer.Deserialize(reader)!;
+var definition = (RegisterDefinition)serializer.Deserialize(xmlReader)!;
 var trimDescriptionRegex = new Regex("<TABLE.*</TABLE>", RegexOptions.Singleline | RegexOptions.Compiled);
 
 Console.WriteLine($$"""
@@ -115,7 +116,12 @@ foreach (var register in definition.Register.Where(x => Convert.ToInt32(x.Addres
 
     foreach (var line in writer.ToString().Split(Environment.NewLine))
     {
-        Console.WriteLine("".PadLeft(4) + line);
+        if (line != "")
+        {
+            Console.Write("".PadLeft(4));
+        }
+
+        Console.WriteLine(line);
     }
 }
 Console.WriteLine("}");
@@ -125,9 +131,10 @@ void WriteRegister(StringBuilder writer, Register register)
     var structName = GetCamelCaseName(register.Name);
     var enums = new List<EnumGeneration>();
 
+    var registerDescription = TrimDescription(register.Description);
     writer.AppendLine($$"""
     bitfield! {
-        /// {{register.Description}}
+        /// {{registerDescription}}
         ///
         #[derive(Clone, Copy)]
         pub struct {{structName}}(u8);
@@ -146,10 +153,7 @@ void WriteRegister(StringBuilder writer, Register register)
         writer.AppendLine();
         if (!string.IsNullOrEmpty(bitfield.Description))
         {
-            var description = bitfield.Description.ReplaceLineEndings().Trim();
-            description = trimDescriptionRegex.Replace(description, "");
-
-            using var lineReader = new StringReader(description);
+            using var lineReader = new StringReader(TrimDescription(bitfield.Description));
             string? line;
             while ((line = lineReader.ReadLine()) != null)
             {
@@ -243,7 +247,8 @@ void WriteRegister(StringBuilder writer, Register register)
                     variantName += "_" + value.Number;
                 }
 
-                writer.AppendLine($"    /// {value.Brief}");
+                var variantDescription = TrimDescription(value.Brief);
+                writer.AppendLine($"    /// {variantDescription}");
                 writer.AppendLine($"    {variantName} = 0b{value.Number},");
             }
             writer.AppendLine($"}}");
@@ -286,6 +291,14 @@ void WriteRegister(StringBuilder writer, Register register)
 static string GetCamelCaseName(string name)
 {
     return string.Join("", name.Split('_').Select(x => x[0].ToString() + x.Substring(1).ToLowerInvariant()));
+}
+
+string TrimDescription(string description)
+{
+    description = description.ReplaceLineEndings().Trim();
+    description = trimDescriptionRegex.Replace(description, "");
+    description = description.Replace("\u0091", "").Replace("\u0092", "");
+    return description;
 }
 
 string GetEnumVariantName(string enumName, Value value)
@@ -356,7 +369,7 @@ public class Register
 {
     public string Name { get; set; } = default!;
     public string Address { get; set; } = default!;
-    public string? Description { get; set; }
+    public string Description { get; set; } = default!;
     [XmlElement("Bitfield")]
     public List<Bitfield> Bitfield { get; set; } = new();
     public string RegReset { get; set; } = default!;

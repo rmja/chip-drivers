@@ -306,7 +306,7 @@ pub mod pri {
         /// Sync word configuration. When SYNC_MODE = 000b, all samples (noise or data) received after RX mode is entered will either be put in the RX FIFO or output on a GPIO configured as SERIAL_RX. Note that when 4'ary modulation is used the sync word uses 2'ary modulation (the symbol rate is kept the same)
         sync_mode_bits, set_sync_mode_bits: 7, 5;
     
-        /// Soft decision sync word threshold. A sync word is accepted when the calculated sync word qualifier value (PQT_SYNC_ERR.SYNC_ERROR) is less than SYNC_THR/2). A low threshold value means a strict sync word qualifier (sync word must be of high quality to be accepted) while a high threshold value will accept sync word of a poorer quality (increased probability of detecting false sync words)
+        /// Soft decision sync word threshold. A sync word is accepted when the calculated sync word qualifier value (PQT_SYNC_ERR.SYNC_ERROR) is less than SYNC_THR/2). A low threshold value means a strict sync word qualifier (sync word must be of high quality to be accepted) while a high threshold value will accept sync word of a poorer quality (increased probability of detecting false sync words)
         pub sync_thr, set_sync_thr: 4, 0;
     }
     
@@ -747,7 +747,7 @@ pub mod pri {
         /// PQT start-up timer. PQT_VALID_TIMEOUT sets the number of symbols that must be received before PQT_VALID is asserted
         pqt_valid_timeout_bits, set_pqt_valid_timeout_bits: 6, 4;
     
-        /// Soft Decision PQT. A preamble is detected when the calculated preamble qualifier value (PQT_SYNC_ERR.PQT_ERROR) is less than PQT. A low threshold value means a strict preamble qualifier (preamble must be of high quality to be accepted) while a high threshold value will accept preamble of a poorer quality (increased probability of detecting false preamble)
+        /// Soft Decision PQT. A preamble is detected when the calculated preamble qualifier value (PQT_SYNC_ERR.PQT_ERROR) is less than PQT. A low threshold value means a strict preamble qualifier (preamble must be of high quality to be accepted) while a high threshold value will accept preamble of a poorer quality (increased probability of detecting false preamble)
         pub pqt, set_pqt: 3, 0;
     }
     
@@ -2292,11 +2292,11 @@ pub mod pri {
     pub enum PktFormatValue {
         /// Normal mode / FIFO mode (MDMCFG1.FIFO_EN must be set to 1 and MDMCFG0.TRANSPARENT_MODE_EN must be set to 0)
         NormalModeFifoMode = 0b00,
-        /// Synchronous serial mode (MDMCFG1.FIFO_EN must be set to 0 and MDMCFG0.TRANSPARENT_MODE_EN must be set to 0). This mode is only supported for 2ary modulations formats in TX. In RX, both 2'ary and 4ary modulation formats are supported
+        /// Synchronous serial mode (MDMCFG1.FIFO_EN must be set to 0 and MDMCFG0.TRANSPARENT_MODE_EN must be set to 0). This mode is only supported for 2ary modulations formats in TX. In RX, both 2'ary and 4ary modulation formats are supported
         SynchronousSerialMode = 0b01,
         /// Random mode. Send random data using PN9 generator (Set TXLAST != TXFIRST before strobing STX)
         RandomMode = 0b10,
-        /// Transparent serial mode (MDMCFG1.FIFO_EN must be set to 0 and MDMCFG0.TRANSPARENT_MODE_EN must be set to 1). This mode is only supported for 2ary modulations formats
+        /// Transparent serial mode (MDMCFG1.FIFO_EN must be set to 0 and MDMCFG0.TRANSPARENT_MODE_EN must be set to 1). This mode is only supported for 2ary modulations formats
         TransparentSerialMode = 0b11,
     }
     
@@ -2876,9 +2876,9 @@ pub mod ext {
         ///
         #[derive(Clone, Copy)]
         pub struct IfMixCfg(u8);
-    
+
         pub if_mix_cfg_not_used, _: 7, 5;
-    
+
         /// Intermediate frequency configuration. The decimation factor is given by CHAN_BW.ADC_CIC_DECFACT
         ///
         /// # Values
@@ -2894,42 +2894,42 @@ pub mod ext {
         ///
         /// The default value is 0x00
         pub cmix_cfg, set_cmix_cfg: 4, 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub if_mix_cfg_reserved1, set_if_mix_cfg_reserved1: 1;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub if_mix_cfg_reserved0, set_if_mix_cfg_reserved0: 0;
     }
-    
+
     impl const Register for IfMixCfg {
         const ADDRESS: u16 = 0x2F00;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for IfMixCfg {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for IfMixCfg {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Frequency Offset Correction Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct FreqoffCfg(u8);
-    
+
         pub freqoff_cfg_not_used, _: 7, 6;
-    
+
         /// Frequency offset correction enable
         ///
         /// # Values
@@ -2939,10 +2939,10 @@ pub mod ext {
         ///
         /// The default value is 0x01
         pub foc_en, set_foc_en: 5;
-    
+
         /// Frequency offset correction configuration. FOC_CFG != 00b enables a narrower RX filter BW than FOC_CFG = 00b but needs longer settle time. When FOC in FS is enabled, the device automatically switch to 'FOC after channel filter' when a sync word is detected.
         foc_cfg_bits, set_foc_cfg_bits: 4, 3;
-    
+
         /// FOC limit. This is the maximum frequency offset correction in the frequency synthesizer. Only valid when FOC_CFG != 00b
         ///
         /// # Values
@@ -2952,7 +2952,7 @@ pub mod ext {
         ///
         /// The default value is 0x00
         pub foc_limit, set_foc_limit: 2;
-    
+
         /// Frequency offset correction<BR/>
         /// MDMCFG0.TRANSPARENT_MODE_EN | FOC_KI_FACTOR
         ///
@@ -2970,17 +2970,17 @@ pub mod ext {
         /// The default value is 0x00
         pub foc_ki_factor, set_foc_ki_factor: 1, 0;
     }
-    
+
     impl FreqoffCfg {
         pub fn foc_cfg(&self) -> FocCfgValue {
             unsafe { transmute(self.foc_cfg_bits()) }
         }
-    
+
         pub fn set_foc_cfg(&mut self, value: FocCfgValue) {
             self.set_foc_cfg_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum FocCfgValue {
         /// FOC after channel filter (typical 0 - 1 preamble bytes for settling)
@@ -2992,36 +2992,36 @@ pub mod ext {
         /// FOC in FS enabled. Loop gain factor is 1/512 (typical 2 - 4 preamble bytes for settling)
         FocInFsEnabledFactorOneOver512 = 0b11,
     }
-    
+
     impl const Register for FreqoffCfg {
         const ADDRESS: u16 = 0x2F01;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FreqoffCfg {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FreqoffCfg {
         fn default() -> Self {
             Self(0x20)
         }
     }
-    
+
     bitfield! {
         /// Timing Offset Correction Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct TocCfg(u8);
-    
+
         /// Timing offset correction limit. TOC_LIMIT specifies maximum symbol rate offset the receiver is able to handle. TOC_LIMIT != 00b requires 2 - 4 bytes preamble for symbol rate offset compensation
         toc_limit_bits, set_toc_limit_bits: 7, 6;
-    
+
         /// When TOC_LIMIT = 0 the receiver uses a block based time offset error calculation algorithm where the block length is configurable through register TOC_CFG. Before a sync word is found (SYNC_EVENT is asserted) the TOC_PRE_SYNC_BLOCKLEN sets the actual block length used for the time offset algorithm<BR/>
         ///
         /// # Values
@@ -3030,7 +3030,7 @@ pub mod ext {
         ///
         /// The default value is 0x01
         pub toc_pre_sync_blocklen, set_toc_pre_sync_blocklen: 5, 3;
-    
+
         /// When TOC_LIMIT = 0 the receiver uses a block based time offset error calculation algorithm where the block length is configurable through register TOC_CFG. After a sync word is found (SYNC_EVENT is asserted) the TOC_POST_SYNC_BLOCKLEN sets the actual block length used for the time offset algorithm<BR/>
         ///
         /// # Values
@@ -3040,17 +3040,17 @@ pub mod ext {
         /// The default value is 0x03
         pub toc_post_sync_blocklen, set_toc_post_sync_blocklen: 2, 0;
     }
-    
+
     impl TocCfg {
         pub fn toc_limit(&self) -> TocLimitValue {
             unsafe { transmute(self.toc_limit_bits()) }
         }
-    
+
         pub fn set_toc_limit(&mut self, value: TocLimitValue) {
             self.set_toc_limit_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum TocLimitValue {
         /// < 0.2 %
@@ -3062,35 +3062,35 @@ pub mod ext {
         /// < 12 % (MDMCFG1.CARRIER_SENSE_GATE must be set)
         Below12Pct = 0b11,
     }
-    
+
     impl const Register for TocCfg {
         const ADDRESS: u16 = 0x2F02;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for TocCfg {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for TocCfg {
         fn default() -> Self {
             Self(0x0b)
         }
     }
-    
+
     bitfield! {
         /// MARC Spare
         ///
         #[derive(Clone, Copy)]
         pub struct MarcSpare(u8);
-    
+
         pub marc_spare_not_used, _: 7, 4;
-    
+
         /// High level commands used to accelerate AES operations on the FIFO content
         ///
         /// # Values
@@ -3103,35 +3103,35 @@ pub mod ext {
         /// The default value is 0x00
         pub aes_commands, set_aes_commands: 3, 0;
     }
-    
+
     impl const Register for MarcSpare {
         const ADDRESS: u16 = 0x2F03;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for MarcSpare {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for MarcSpare {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// External Clock Frequency Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct EcgCfg(u8);
-    
+
         pub ecg_cfg_not_used, _: 7, 5;
-    
+
         /// External clock frequency. Controls division factor
         ///
         /// # Values
@@ -3172,33 +3172,33 @@ pub mod ext {
         /// The default value is 0x00
         pub ext_clock_freq, set_ext_clock_freq: 4, 0;
     }
-    
+
     impl const Register for EcgCfg {
         const ADDRESS: u16 = 0x2F04;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for EcgCfg {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for EcgCfg {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// General Modem Parameter Configuration Reg. 2
         ///
         #[derive(Clone, Copy)]
         pub struct Mdmcfg2(u8);
-    
+
         /// Sets the resolution of an ASK bit transition (# of points). The following rule must be satisfied:<BR/>
         ///
         /// # Values
@@ -3212,15 +3212,15 @@ pub mod ext {
         ///
         /// The default value is 0x00
         pub ask_shape, set_ask_shape: 7, 6;
-    
+
         /// Symbol map configuration. Configures the modulated symbol mapping definition from data bit to modulated symbols. For 2'ary modulation schemes the symbol mapping definition is as follows:
         pub symbol_map_cfg, set_symbol_map_cfg: 5, 4;
-    
+
         /// UPSAMPLER_P configures the variable upsampling factor P for the TX upsampler. The total upsampling factor = 16*P. The upsampler factor P must satisfy the following:<BR/>
         /// Symbol Rate*16*P < f_xosc/4, , where P should be as large as possible<BR/>
         /// The upsampler reduces repetitive spectrum at 16*symbol rate
         upsampler_p_bits, set_upsampler_p_bits: 3, 1;
-    
+
         /// Custom frequency modulation enable
         ///
         /// # Values
@@ -3231,17 +3231,17 @@ pub mod ext {
         /// The default value is 0x00
         pub cfm_data_en, set_cfm_data_en: 0;
     }
-    
+
     impl Mdmcfg2 {
         pub fn upsampler_p(&self) -> UpsamplerPValue {
             unsafe { transmute(self.upsampler_p_bits()) }
         }
-    
+
         pub fn set_upsampler_p(&mut self, value: UpsamplerPValue) {
             self.set_upsampler_p_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum UpsamplerPValue {
         /// TX upsampler factor P = 1 (bypassed)
@@ -3261,35 +3261,35 @@ pub mod ext {
         /// Not used
         NotUsed = 0b111,
     }
-    
+
     impl const Register for Mdmcfg2 {
         const ADDRESS: u16 = 0x2F05;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Mdmcfg2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Mdmcfg2 {
         fn default() -> Self {
             Self(0x08)
         }
     }
-    
+
     bitfield! {
         /// External Control Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct ExtCtrl(u8);
-    
+
         pub ext_ctrl_not_used, _: 7, 3;
-    
+
         /// Pin control enable. Pin control reuses the SPI interface pins to execute SRX, STX, SPWD, and IDLE strobes
         ///
         /// # Values
@@ -3299,7 +3299,7 @@ pub mod ext {
         ///
         /// The default value is 0x00
         pub pin_ctrl_en, set_pin_ctrl_en: 2;
-    
+
         /// External 40k clock enable
         ///
         /// # Values
@@ -3309,7 +3309,7 @@ pub mod ext {
         ///
         /// The default value is 0x00
         pub ext_40k_clock_en, set_ext_40k_clock_en: 1;
-    
+
         /// Burst address increment enable
         ///
         /// # Values
@@ -3320,463 +3320,463 @@ pub mod ext {
         /// The default value is 0x01
         pub burst_addr_incr_en, set_burst_addr_incr_en: 0;
     }
-    
+
     impl const Register for ExtCtrl {
         const ADDRESS: u16 = 0x2F06;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for ExtCtrl {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for ExtCtrl {
         fn default() -> Self {
             Self(0x01)
         }
     }
-    
+
     bitfield! {
         /// RC Oscillator Calibration Fine
         ///
         #[derive(Clone, Copy)]
         pub struct RccalFine(u8);
-    
+
         pub rccal_fine_not_used, _: 7;
-    
+
         /// 40 kHz RCOSC calibrated fine value
         pub rcc_fine, set_rcc_fine: 6, 0;
     }
-    
+
     impl const Register for RccalFine {
         const ADDRESS: u16 = 0x2F07;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for RccalFine {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for RccalFine {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// RC Oscillator Calibration Coarse
         ///
         #[derive(Clone, Copy)]
         pub struct RccalCoarse(u8);
-    
+
         pub rccal_coarse_not_used, _: 7;
-    
+
         /// 40 kHz RCOSC calibrated coarse value
         pub rcc_coarse, set_rcc_coarse: 6, 0;
     }
-    
+
     impl const Register for RccalCoarse {
         const ADDRESS: u16 = 0x2F08;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for RccalCoarse {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for RccalCoarse {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// RC Oscillator Calibration Clock Offset
         ///
         #[derive(Clone, Copy)]
         pub struct RccalOffset(u8);
-    
+
         pub rccal_offset_not_used, _: 7, 5;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub rccal_offset_reserved4_0, set_rccal_offset_reserved4_0: 4, 0;
     }
-    
+
     impl const Register for RccalOffset {
         const ADDRESS: u16 = 0x2F09;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for RccalOffset {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for RccalOffset {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Frequency Offset MSB
         ///
         #[derive(Clone, Copy)]
         pub struct Freqoff1(u8);
-    
+
         /// Frequency offset [15:8]. Updated by user or SAFC strobe. The value is in two's complement format
         pub freq_off_15_8, set_freq_off_15_8: 7, 0;
     }
-    
+
     impl const Register for Freqoff1 {
         const ADDRESS: u16 = 0x2F0A;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Freqoff1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Freqoff1 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Frequency Offset LSB
         ///
         #[derive(Clone, Copy)]
         pub struct Freqoff0(u8);
-    
+
         /// Frequency offset [7:0]. Updated by user or SAFC strobe. The value is in two's complement format
         pub freq_off_7_0, set_freq_off_7_0: 7, 0;
     }
-    
+
     impl const Register for Freqoff0 {
         const ADDRESS: u16 = 0x2F0B;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Freqoff0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Freqoff0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Frequency Configuration [23:16]
         ///
         #[derive(Clone, Copy)]
         pub struct Freq2(u8);
-    
+
         /// Frequency [23:16]<BR/>
         /// f_RF = f_vco/LO Divider [Hz] where f_vco = (FREQ/(2^16)*f_xosc) + (FREQOFF/(2^18)*f_xosc) [Hz] and the LO Divider is given by FS_CFG.FSD_BANDSELECT
         pub freq_23_16, set_freq_23_16: 7, 0;
     }
-    
+
     impl const Register for Freq2 {
         const ADDRESS: u16 = 0x2F0C;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Freq2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Freq2 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Frequency Configuration [15:8]
         ///
         #[derive(Clone, Copy)]
         pub struct Freq1(u8);
-    
+
         /// Frequency [15:8]. See FREQ2
         pub freq_15_8, set_freq_15_8: 7, 0;
     }
-    
+
     impl const Register for Freq1 {
         const ADDRESS: u16 = 0x2F0D;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Freq1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Freq1 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Frequency Configuration [7:0]
         ///
         #[derive(Clone, Copy)]
         pub struct Freq0(u8);
-    
+
         /// Frequency [7:0]. See FREQ2
         pub freq_7_0, set_freq_7_0: 7, 0;
     }
-    
+
     impl const Register for Freq0 {
         const ADDRESS: u16 = 0x2F0E;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Freq0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Freq0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Analog to Digital Converter Configuration Reg. 2
         ///
         #[derive(Clone, Copy)]
         pub struct IfAdc2(u8);
-    
+
         pub if_adc2_not_used, _: 7, 4;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub if_adc2_reserved3_0, set_if_adc2_reserved3_0: 3, 0;
     }
-    
+
     impl const Register for IfAdc2 {
         const ADDRESS: u16 = 0x2F0F;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for IfAdc2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for IfAdc2 {
         fn default() -> Self {
             Self(0x02)
         }
     }
-    
+
     bitfield! {
         /// Analog to Digital Converter Configuration Reg. 1
         ///
         #[derive(Clone, Copy)]
         pub struct IfAdc1(u8);
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub if_adc1_reserved7_6, set_if_adc1_reserved7_6: 7, 6;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub if_adc1_reserved5_4, set_if_adc1_reserved5_4: 5, 4;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub if_adc1_reserved3_2, set_if_adc1_reserved3_2: 3, 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub if_adc1_reserved1_0, set_if_adc1_reserved1_0: 1, 0;
     }
-    
+
     impl const Register for IfAdc1 {
         const ADDRESS: u16 = 0x2F10;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for IfAdc1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for IfAdc1 {
         fn default() -> Self {
             Self(0x5a)
         }
     }
-    
+
     bitfield! {
         /// Analog to Digital Converter Configuration Reg. 0
         ///
         #[derive(Clone, Copy)]
         pub struct IfAdc0(u8);
-    
+
         pub if_adc0_not_used, _: 7, 6;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub if_adc0_reserved5_3, set_if_adc0_reserved5_3: 5, 3;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub if_adc0_reserved2_1, set_if_adc0_reserved2_1: 2, 1;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub if_adc0_reserved0, set_if_adc0_reserved0: 0;
     }
-    
+
     impl const Register for IfAdc0 {
         const ADDRESS: u16 = 0x2F11;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for IfAdc0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for IfAdc0 {
         fn default() -> Self {
             Self(0x1a)
         }
     }
-    
+
     bitfield! {
         /// Frequency Synthesizer Digital Reg. 1
         ///
         #[derive(Clone, Copy)]
         pub struct FsDig1(u8);
-    
+
         pub fs_dig1_not_used, _: 7, 6;
-    
+
         /// Loop-filter switch configuration 1
         pub fsd_lpf_switch1_en, set_fsd_lpf_switch1_en: 5;
-    
+
         /// Loop-filter switch configuration 2
         pub fsd_lpf_switch2_en, set_fsd_lpf_switch2_en: 4;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_dig1_reserved3_2, set_fs_dig1_reserved3_2: 3, 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_dig1_reserved1, set_fs_dig1_reserved1: 1;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_dig1_reserved0, set_fs_dig1_reserved0: 0;
     }
-    
+
     impl const Register for FsDig1 {
         const ADDRESS: u16 = 0x2F12;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsDig1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsDig1 {
         fn default() -> Self {
             Self(0x08)
         }
     }
-    
+
     bitfield! {
         /// Frequency Synthesizer Digital Reg. 0
         ///
         #[derive(Clone, Copy)]
         pub struct FsDig0(u8);
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_dig0_reserved7_6, set_fs_dig0_reserved7_6: 7, 6;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_dig0_reserved5_4, set_fs_dig0_reserved5_4: 5, 4;
-    
+
         /// FS loop bandwidth in RX
         rx_lpf_bw_bits, set_rx_lpf_bw_bits: 3, 2;
-    
+
         /// FS loop bandwidth in TX
         tx_lpf_bw_bits, set_tx_lpf_bw_bits: 1, 0;
     }
-    
+
     impl FsDig0 {
         pub fn rx_lpf_bw(&self) -> RxLpfBwValue {
             unsafe { transmute(self.rx_lpf_bw_bits()) }
         }
-    
+
         pub fn set_rx_lpf_bw(&mut self, value: RxLpfBwValue) {
             self.set_rx_lpf_bw_bits(value as u8);
         }
         pub fn tx_lpf_bw(&self) -> TxLpfBwValue {
             unsafe { transmute(self.tx_lpf_bw_bits()) }
         }
-    
+
         pub fn set_tx_lpf_bw(&mut self, value: TxLpfBwValue) {
             self.set_tx_lpf_bw_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum RxLpfBwValue {
         /// 200 kHz
@@ -3788,7 +3788,7 @@ pub mod ext {
         /// 500 kHz
         Khz500 = 0b11,
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum TxLpfBwValue {
         /// 200 kHz
@@ -3800,36 +3800,36 @@ pub mod ext {
         /// 500 kHz
         Khz500 = 0b11,
     }
-    
+
     impl const Register for FsDig0 {
         const ADDRESS: u16 = 0x2F13;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsDig0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsDig0 {
         fn default() -> Self {
             Self(0x5a)
         }
     }
-    
+
     bitfield! {
         /// Frequency Synthesizer Calibration Reg. 3
         ///
         #[derive(Clone, Copy)]
         pub struct FsCal3(u8);
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_cal3_reserved7, set_fs_cal3_reserved7: 7;
-    
+
         /// KVCO high resolution enable
         ///
         /// # Values
@@ -3839,130 +3839,130 @@ pub mod ext {
         ///
         /// The default value is 0x00
         pub kvco_high_res_cfg, set_kvco_high_res_cfg: 6;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_cal3_reserved5_4, set_fs_cal3_reserved5_4: 5, 4;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_cal3_reserved3_0, set_fs_cal3_reserved3_0: 3, 0;
     }
-    
+
     impl const Register for FsCal3 {
         const ADDRESS: u16 = 0x2F14;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsCal3 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsCal3 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Frequency Synthesizer Calibration Reg. 2
         ///
         #[derive(Clone, Copy)]
         pub struct FsCal2(u8);
-    
+
         pub fs_cal2_not_used, _: 7, 6;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_cal2_reserved5_0, set_fs_cal2_reserved5_0: 5, 0;
     }
-    
+
     impl const Register for FsCal2 {
         const ADDRESS: u16 = 0x2F15;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsCal2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsCal2 {
         fn default() -> Self {
             Self(0x20)
         }
     }
-    
+
     bitfield! {
         /// Frequency Synthesizer Calibration Reg. 1
         ///
         #[derive(Clone, Copy)]
         pub struct FsCal1(u8);
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_cal1_reserved7_6, set_fs_cal1_reserved7_6: 7, 6;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_cal1_reserved5_4, set_fs_cal1_reserved5_4: 5, 4;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_cal1_reserved3_2, set_fs_cal1_reserved3_2: 3, 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_cal1_reserved1_0, set_fs_cal1_reserved1_0: 1, 0;
     }
-    
+
     impl const Register for FsCal1 {
         const ADDRESS: u16 = 0x2F16;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsCal1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsCal1 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Frequency Synthesizer Calibration Reg. 0
         ///
         #[derive(Clone, Copy)]
         pub struct FsCal0(u8);
-    
+
         pub fs_cal0_not_used, _: 7, 4;
-    
+
         /// Out of lock detector average time
         lock_cfg_bits, set_lock_cfg_bits: 3, 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_cal0_reserved1_0, set_fs_cal0_reserved1_0: 1, 0;
     }
-    
+
     impl FsCal0 {
         pub fn lock_cfg(&self) -> LockCfgValue {
             unsafe { transmute(self.lock_cfg_bits()) }
         }
-    
+
         pub fn set_lock_cfg(&mut self, value: LockCfgValue) {
             self.set_lock_cfg_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum LockCfgValue {
         /// Average the measurement over 512 cycles
@@ -3974,508 +3974,508 @@ pub mod ext {
         /// Infinite average
         InfiniteAverage = 0b11,
     }
-    
+
     impl const Register for FsCal0 {
         const ADDRESS: u16 = 0x2F17;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsCal0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsCal0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Frequency Synthesizer Charge Pump Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct FsChp(u8);
-    
+
         pub fs_chp_not_used, _: 7, 6;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_chp_reserved5_0, set_fs_chp_reserved5_0: 5, 0;
     }
-    
+
     impl const Register for FsChp {
         const ADDRESS: u16 = 0x2F18;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsChp {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsChp {
         fn default() -> Self {
             Self(0x28)
         }
     }
-    
+
     bitfield! {
         /// Frequency Synthesizer Divide by 2
         ///
         #[derive(Clone, Copy)]
         pub struct FsDivtwo(u8);
-    
+
         pub fs_divtwo_not_used, _: 7, 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_divtwo_reserved1_0, set_fs_divtwo_reserved1_0: 1, 0;
     }
-    
+
     impl const Register for FsDivtwo {
         const ADDRESS: u16 = 0x2F19;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsDivtwo {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsDivtwo {
         fn default() -> Self {
             Self(0x01)
         }
     }
-    
+
     bitfield! {
         /// FS Digital Synthesizer Module Configuration Reg. 1
         ///
         #[derive(Clone, Copy)]
         pub struct FsDsm1(u8);
-    
+
         pub fs_dsm1_not_used, _: 7, 3;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_dsm1_reserved2, set_fs_dsm1_reserved2: 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_dsm1_reserved1_0, set_fs_dsm1_reserved1_0: 1, 0;
     }
-    
+
     impl const Register for FsDsm1 {
         const ADDRESS: u16 = 0x2F1A;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsDsm1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsDsm1 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// FS Digital Synthesizer Module Configuration Reg. 0
         ///
         #[derive(Clone, Copy)]
         pub struct FsDsm0(u8);
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_dsm0_reserved7_4, set_fs_dsm0_reserved7_4: 7, 4;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_dsm0_reserved3, set_fs_dsm0_reserved3: 3;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_dsm0_reserved2_0, set_fs_dsm0_reserved2_0: 2, 0;
     }
-    
+
     impl const Register for FsDsm0 {
         const ADDRESS: u16 = 0x2F1B;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsDsm0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsDsm0 {
         fn default() -> Self {
             Self(0x03)
         }
     }
-    
+
     bitfield! {
         /// Frequency Synthesizer Divider Chain Configuration Reg. 1
         ///
         #[derive(Clone, Copy)]
         pub struct FsDvc1(u8);
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_dvc1_reserved7_6, set_fs_dvc1_reserved7_6: 7, 6;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_dvc1_reserved5_4, set_fs_dvc1_reserved5_4: 5, 4;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_dvc1_reserved3_2, set_fs_dvc1_reserved3_2: 3, 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_dvc1_reserved1_0, set_fs_dvc1_reserved1_0: 1, 0;
     }
-    
+
     impl const Register for FsDvc1 {
         const ADDRESS: u16 = 0x2F1C;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsDvc1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsDvc1 {
         fn default() -> Self {
             Self(0xff)
         }
     }
-    
+
     bitfield! {
         /// Frequency Synthesizer Divider Chain Configuration Reg. 0
         ///
         #[derive(Clone, Copy)]
         pub struct FsDvc0(u8);
-    
+
         pub fs_dvc0_not_used, _: 7, 5;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_dvc0_reserved4_3, set_fs_dvc0_reserved4_3: 4, 3;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_dvc0_reserved2_0, set_fs_dvc0_reserved2_0: 2, 0;
     }
-    
+
     impl const Register for FsDvc0 {
         const ADDRESS: u16 = 0x2F1D;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsDvc0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsDvc0 {
         fn default() -> Self {
             Self(0x1f)
         }
     }
-    
+
     bitfield! {
         /// Frequency Synthesizer Local Bias Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct FsLbi(u8);
-    
+
         pub fs_lbi_not_used, _: 7, 0;
     }
-    
+
     impl const Register for FsLbi {
         const ADDRESS: u16 = 0x2F1E;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsLbi {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsLbi {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Frequency Synthesizer Phase Frequency Detector Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct FsPfd(u8);
-    
+
         pub fsd_pfd_not_used, _: 7;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_pfd_reserved6_4, set_fs_pfd_reserved6_4: 6, 4;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_pfd_reserved3_2, set_fs_pfd_reserved3_2: 3, 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_pfd_reserved1_0, set_fs_pfd_reserved1_0: 1, 0;
     }
-    
+
     impl const Register for FsPfd {
         const ADDRESS: u16 = 0x2F1F;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsPfd {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsPfd {
         fn default() -> Self {
             Self(0x51)
         }
     }
-    
+
     bitfield! {
         /// Frequency Synthesizer Prescaler Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct FsPre(u8);
-    
+
         pub fs_pre_not_used, _: 7;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_pre_reserved6_5, set_fs_pre_reserved6_5: 6, 5;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_pre_reserved4_3, set_fs_pre_reserved4_3: 4, 3;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_pre_reserved2_0, set_fs_pre_reserved2_0: 2, 0;
     }
-    
+
     impl const Register for FsPre {
         const ADDRESS: u16 = 0x2F20;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsPre {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsPre {
         fn default() -> Self {
             Self(0x2c)
         }
     }
-    
+
     bitfield! {
         /// Frequency Synthesizer Divider Regulator Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct FsRegDivCml(u8);
-    
+
         pub fs_reg_div_cml_not_used, _: 7, 5;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_reg_div_cml_reserved4_2, set_fs_reg_div_cml_reserved4_2: 4, 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_reg_div_cml_reserved1_0, set_fs_reg_div_cml_reserved1_0: 1, 0;
     }
-    
+
     impl const Register for FsRegDivCml {
         const ADDRESS: u16 = 0x2F21;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsRegDivCml {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsRegDivCml {
         fn default() -> Self {
             Self(0x11)
         }
     }
-    
+
     bitfield! {
         /// Frequency Synthesizer Spare
         ///
         #[derive(Clone, Copy)]
         pub struct FsSpare(u8);
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_spare_reserved7_0, set_fs_spare_reserved7_0: 7, 0;
     }
-    
+
     impl const Register for FsSpare {
         const ADDRESS: u16 = 0x2F22;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsSpare {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsSpare {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// FS Voltage Controlled Oscillator Configuration Reg. 4
         ///
         #[derive(Clone, Copy)]
         pub struct FsVco4(u8);
-    
+
         pub fs_vco4_not_used, _: 7, 5;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_vco4_reserved4_0, set_fs_vco4_reserved4_0: 4, 0;
     }
-    
+
     impl const Register for FsVco4 {
         const ADDRESS: u16 = 0x2F23;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsVco4 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsVco4 {
         fn default() -> Self {
             Self(0x14)
         }
     }
-    
+
     bitfield! {
         /// FS Voltage Controlled Oscillator Configuration Reg. 3
         ///
         #[derive(Clone, Copy)]
         pub struct FsVco3(u8);
-    
+
         pub fs_vco3_not_used, _: 7, 1;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_vco3_reserved0, set_fs_vco3_reserved0: 0;
     }
-    
+
     impl const Register for FsVco3 {
         const ADDRESS: u16 = 0x2F24;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsVco3 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsVco3 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// FS Voltage Controlled Oscillator Configuration Reg. 2
         ///
         #[derive(Clone, Copy)]
         pub struct FsVco2(u8);
-    
+
         pub fs_vco2_not_used, _: 7;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_vco2_reserved6_0, set_fs_vco2_reserved6_0: 6, 0;
     }
-    
+
     impl const Register for FsVco2 {
         const ADDRESS: u16 = 0x2F25;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsVco2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsVco2 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// FS Voltage Controlled Oscillator Configuration Reg. 1
         ///
         #[derive(Clone, Copy)]
         pub struct FsVco1(u8);
-    
+
         /// VCO VCDAC configuration. Used in open-loop CAL mode.  Note that avdd is the internal VCO regulated voltage
         ///
         /// # Values
@@ -4485,527 +4485,527 @@ pub mod ext {
         ///
         /// The default value is 0x00
         pub fsd_vcdac, set_fsd_vcdac: 7, 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_vco1_reserved1_0, set_fs_vco1_reserved1_0: 1, 0;
     }
-    
+
     impl const Register for FsVco1 {
         const ADDRESS: u16 = 0x2F26;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsVco1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsVco1 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// FS Voltage Controlled Oscillator Configuration Reg. 0
         ///
         #[derive(Clone, Copy)]
         pub struct FsVco0(u8);
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_vco0_reserved7, set_fs_vco0_reserved7: 7;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_vco0_reserved6_2, set_fs_vco0_reserved6_2: 6, 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fs_vco0_reserved1_0, set_fs_vco0_reserved1_0: 1, 0;
     }
-    
+
     impl const Register for FsVco0 {
         const ADDRESS: u16 = 0x2F27;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsVco0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsVco0 {
         fn default() -> Self {
             Self(0x81)
         }
     }
-    
+
     bitfield! {
         /// Global Bias Configuration Reg. 6
         ///
         #[derive(Clone, Copy)]
         pub struct Gbias6(u8);
-    
+
         pub gbias6_not_used, _: 7, 6;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub gbias6_reserved5_0, set_gbias6_reserved5_0: 5, 0;
     }
-    
+
     impl const Register for Gbias6 {
         const ADDRESS: u16 = 0x2F28;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Gbias6 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Gbias6 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Global Bias Configuration Reg. 5
         ///
         #[derive(Clone, Copy)]
         pub struct Gbias5(u8);
-    
+
         pub gbias5_not_used, _: 7, 4;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub gbias5_reserved3_0, set_gbias5_reserved3_0: 3, 0;
     }
-    
+
     impl const Register for Gbias5 {
         const ADDRESS: u16 = 0x2F29;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Gbias5 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Gbias5 {
         fn default() -> Self {
             Self(0x02)
         }
     }
-    
+
     bitfield! {
         /// Global Bias Configuration Reg. 4
         ///
         #[derive(Clone, Copy)]
         pub struct Gbias4(u8);
-    
+
         pub gbias4_not_used, _: 7, 6;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub gbias4_reserved5_0, set_gbias4_reserved5_0: 5, 0;
     }
-    
+
     impl const Register for Gbias4 {
         const ADDRESS: u16 = 0x2F2A;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Gbias4 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Gbias4 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Global Bias Configuration Reg. 3
         ///
         #[derive(Clone, Copy)]
         pub struct Gbias3(u8);
-    
+
         pub gbias3_not_used, _: 7, 6;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub gbias3_reserved5_0, set_gbias3_reserved5_0: 5, 0;
     }
-    
+
     impl const Register for Gbias3 {
         const ADDRESS: u16 = 0x2F2B;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Gbias3 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Gbias3 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Global Bias Configuration Reg. 2
         ///
         #[derive(Clone, Copy)]
         pub struct Gbias2(u8);
-    
+
         pub gbias2_not_used, _: 7;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub gbias2_reserved6_3, set_gbias2_reserved6_3: 6, 3;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub gbias2_reserved2_0, set_gbias2_reserved2_0: 2, 0;
     }
-    
+
     impl const Register for Gbias2 {
         const ADDRESS: u16 = 0x2F2C;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Gbias2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Gbias2 {
         fn default() -> Self {
             Self(0x10)
         }
     }
-    
+
     bitfield! {
         /// Global Bias Configuration Reg. 1
         ///
         #[derive(Clone, Copy)]
         pub struct Gbias1(u8);
-    
+
         pub gbias1_not_used, _: 7, 5;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub gbias1_reserved4_0, set_gbias1_reserved4_0: 4, 0;
     }
-    
+
     impl const Register for Gbias1 {
         const ADDRESS: u16 = 0x2F2D;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Gbias1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Gbias1 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Global Bias Configuration Reg. 0
         ///
         #[derive(Clone, Copy)]
         pub struct Gbias0(u8);
-    
+
         pub gbias0_not_used, _: 7, 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub gbias0_reserved1, set_gbias0_reserved1: 1;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub gbias0_reserved0, set_gbias0_reserved0: 0;
     }
-    
+
     impl const Register for Gbias0 {
         const ADDRESS: u16 = 0x2F2E;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Gbias0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Gbias0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Intermediate Frequency Amplifier Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct Ifamp(u8);
-    
+
         pub ifamp_not_used, _: 7, 4;
-    
+
         /// Single side bandwidth control bits covering frequency range from 300 kHz to 1500 kHz. Single Side BW > f_IF+(RX Filter BW/2)
         ifamp_bw_bits, set_ifamp_bw_bits: 3, 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub ifamp_reserved1_0, set_ifamp_reserved1_0: 1, 0;
     }
-    
+
     impl Ifamp {
         pub fn ifamp_bw(&self) -> IfampBwValue {
             unsafe { transmute(self.ifamp_bw_bits()) }
         }
-    
+
         pub fn set_ifamp_bw(&mut self, value: IfampBwValue) {
             self.set_ifamp_bw_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum IfampBwValue {
-        ///  300 kHz
+        /// 300 kHz
         Khz300 = 0b00,
-        ///  600 kHz
+        /// 600 kHz
         Khz600 = 0b01,
         /// 1000 kHz
         Khz1000 = 0b10,
         /// 1500 kHz
         Khz1500 = 0b11,
     }
-    
+
     impl const Register for Ifamp {
         const ADDRESS: u16 = 0x2F2F;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Ifamp {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Ifamp {
         fn default() -> Self {
             Self(0x01)
         }
     }
-    
+
     bitfield! {
         /// Low Noise Amplifier Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct Lna(u8);
-    
+
         pub lna_not_used, _: 7, 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub lna_reserved1_0, set_lna_reserved1_0: 1, 0;
     }
-    
+
     impl const Register for Lna {
         const ADDRESS: u16 = 0x2F30;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Lna {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Lna {
         fn default() -> Self {
             Self(0x01)
         }
     }
-    
+
     bitfield! {
         /// RX Mixer Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct Rxmix(u8);
-    
+
         pub rxmix_not_used, _: 7, 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub rxmix_reserved1_0, set_rxmix_reserved1_0: 1, 0;
     }
-    
+
     impl const Register for Rxmix {
         const ADDRESS: u16 = 0x2F31;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Rxmix {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Rxmix {
         fn default() -> Self {
             Self(0x01)
         }
     }
-    
+
     bitfield! {
         /// Crystal Oscillator Configuration Reg. 5
         ///
         #[derive(Clone, Copy)]
         pub struct Xosc5(u8);
-    
+
         pub xosc5_not_used, _: 7, 4;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub xosc5_reserved3_0, set_xosc5_reserved3_0: 3, 0;
     }
-    
+
     impl const Register for Xosc5 {
         const ADDRESS: u16 = 0x2F32;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Xosc5 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Xosc5 {
         fn default() -> Self {
             Self(0x0c)
         }
     }
-    
+
     bitfield! {
         /// Crystal Oscillator Configuration Reg. 4
         ///
         #[derive(Clone, Copy)]
         pub struct Xosc4(u8);
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub xosc4_reserved7_0, set_xosc4_reserved7_0: 7, 0;
     }
-    
+
     impl const Register for Xosc4 {
         const ADDRESS: u16 = 0x2F33;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Xosc4 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Xosc4 {
         fn default() -> Self {
             Self(0xa0)
         }
     }
-    
+
     bitfield! {
         /// Crystal Oscillator Configuration Reg. 3
         ///
         #[derive(Clone, Copy)]
         pub struct Xosc3(u8);
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub xosc3_reserved7_2, set_xosc3_reserved7_2: 7, 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub xosc3_reserved1_0, set_xosc3_reserved1_0: 1, 0;
     }
-    
+
     impl const Register for Xosc3 {
         const ADDRESS: u16 = 0x2F34;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Xosc3 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Xosc3 {
         fn default() -> Self {
             Self(0x03)
         }
     }
-    
+
     bitfield! {
         /// Crystal Oscillator Configuration Reg. 2
         ///
         #[derive(Clone, Copy)]
         pub struct Xosc2(u8);
-    
+
         pub xosc2_not_used, _: 7, 4;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub xosc2_reserved3_2, set_xosc2_reserved3_2: 3, 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub xosc2_reserved1, set_xosc2_reserved1: 1;
-    
+
         ///
         /// # Values
         ///
@@ -5015,38 +5015,38 @@ pub mod ext {
         /// The default value is 0x00
         pub xosc_core_pd_override, set_xosc_core_pd_override: 0;
     }
-    
+
     impl const Register for Xosc2 {
         const ADDRESS: u16 = 0x2F35;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Xosc2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Xosc2 {
         fn default() -> Self {
             Self(0x04)
         }
     }
-    
+
     bitfield! {
         /// Crystal Oscillator Configuration Reg. 1
         ///
         #[derive(Clone, Copy)]
         pub struct Xosc1(u8);
-    
+
         pub xosc1_not_used, _: 7, 3;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub xosc1_reserved2, set_xosc1_reserved2: 2;
-    
+
         /// XOSC buffer select. Selects internal XOSC buffer for RF PLL
         ///
         /// # Values
@@ -5056,570 +5056,570 @@ pub mod ext {
         ///
         /// The default value is 0x00
         pub xosc_buf_sel, set_xosc_buf_sel: 1;
-    
+
         /// XOSC is stable (has finished settling)
         pub xosc_stable, _: 0;
     }
-    
+
     impl const Register for Xosc1 {
         const ADDRESS: u16 = 0x2F36;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Xosc1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Xosc1 {
         fn default() -> Self {
             Self(0x01)
         }
     }
-    
+
     bitfield! {
         /// Crystal Oscillator Configuration Reg. 0
         ///
         #[derive(Clone, Copy)]
         pub struct Xosc0(u8);
-    
+
         pub xosc0_not_used, _: 7, 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub xosc0_reserved1, _: 1;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub xosc0_reserved0, _: 0;
     }
-    
+
     impl const Register for Xosc0 {
         const ADDRESS: u16 = 0x2F37;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Xosc0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Xosc0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Analog Spare
         ///
         #[derive(Clone, Copy)]
         pub struct AnalogSpare(u8);
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub analog_spare_reserved7_0, set_analog_spare_reserved7_0: 7, 0;
     }
-    
+
     impl const Register for AnalogSpare {
         const ADDRESS: u16 = 0x2F38;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AnalogSpare {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AnalogSpare {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Power Amplifier Configuration Reg. 3
         ///
         #[derive(Clone, Copy)]
         pub struct PaCfg3(u8);
-    
+
         pub pa_cfg3_not_used, _: 7, 3;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub pa_cfg3_reserved2_0, set_pa_cfg3_reserved2_0: 2, 0;
     }
-    
+
     impl const Register for PaCfg3 {
         const ADDRESS: u16 = 0x2F39;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for PaCfg3 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for PaCfg3 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// eWOR Timer Counter Value MSB
         ///
         #[derive(Clone, Copy)]
         pub struct WorTime1(u8);
-    
+
         /// eWOR timer counter value [15:8]
         pub wor_status_15_8, _: 7, 0;
     }
-    
+
     impl const Register for WorTime1 {
         const ADDRESS: u16 = 0x2F64;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for WorTime1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for WorTime1 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// eWOR Timer Counter Value LSB
         ///
         #[derive(Clone, Copy)]
         pub struct WorTime0(u8);
-    
+
         /// eWOR timer counter value [7:0]
         pub wor_status_7_0, _: 7, 0;
     }
-    
+
     impl const Register for WorTime0 {
         const ADDRESS: u16 = 0x2F65;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for WorTime0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for WorTime0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// eWOR Timer Capture Value MSB
         ///
         #[derive(Clone, Copy)]
         pub struct WorCapture1(u8);
-    
+
         /// eWOR timer capture value [15:8]. Capture timer value on sync detect to simplify timer re-synchronization
         pub wor_capture_15_8, _: 7, 0;
     }
-    
+
     impl const Register for WorCapture1 {
         const ADDRESS: u16 = 0x2F66;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for WorCapture1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for WorCapture1 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// eWOR Timer Capture Value LSB
         ///
         #[derive(Clone, Copy)]
         pub struct WorCapture0(u8);
-    
+
         /// eWOR timer capture Value [7:0]. Capture timer value on sync detect to simplify timer re-synchronization
         pub wor_capture_7_0, _: 7, 0;
     }
-    
+
     impl const Register for WorCapture0 {
         const ADDRESS: u16 = 0x2F67;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for WorCapture0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for WorCapture0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// MARC Built-In Self-Test
         ///
         #[derive(Clone, Copy)]
         pub struct Bist(u8);
-    
+
         pub bist_not_used, _: 7, 4;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub bist_reserved3, set_bist_reserved3: 3;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub bist_reserved2, _: 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub bist_reserved1, _: 1;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub bist_reserved0, set_bist_reserved0: 0;
     }
-    
+
     impl const Register for Bist {
         const ADDRESS: u16 = 0x2F68;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Bist {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Bist {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// DC Filter Offset I MSB
         ///
         #[derive(Clone, Copy)]
         pub struct DcfiltoffsetI1(u8);
-    
+
         /// DC compensation, real value [15:8]
         pub dcfilt_offset_i_15_8, set_dcfilt_offset_i_15_8: 7, 0;
     }
-    
+
     impl const Register for DcfiltoffsetI1 {
         const ADDRESS: u16 = 0x2F69;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for DcfiltoffsetI1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for DcfiltoffsetI1 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// DC Filter Offset I LSB
         ///
         #[derive(Clone, Copy)]
         pub struct DcfiltoffsetI0(u8);
-    
+
         /// DC compensation, real value [7:0]
         pub dcfilt_offset_i_7_0, set_dcfilt_offset_i_7_0: 7, 0;
     }
-    
+
     impl const Register for DcfiltoffsetI0 {
         const ADDRESS: u16 = 0x2F6A;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for DcfiltoffsetI0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for DcfiltoffsetI0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// DC Filter Offset Q MSB
         ///
         #[derive(Clone, Copy)]
         pub struct DcfiltoffsetQ1(u8);
-    
+
         /// DC compensation, imaginary value [15:8]
         pub dcfilt_offset_q_15_8, set_dcfilt_offset_q_15_8: 7, 0;
     }
-    
+
     impl const Register for DcfiltoffsetQ1 {
         const ADDRESS: u16 = 0x2F6B;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for DcfiltoffsetQ1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for DcfiltoffsetQ1 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// DC Filter Offset Q LSB
         ///
         #[derive(Clone, Copy)]
         pub struct DcfiltoffsetQ0(u8);
-    
+
         /// DC compensation, imaginary value [7:0]
         pub dcfilt_offset_q_7_0, set_dcfilt_offset_q_7_0: 7, 0;
     }
-    
+
     impl const Register for DcfiltoffsetQ0 {
         const ADDRESS: u16 = 0x2F6C;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for DcfiltoffsetQ0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for DcfiltoffsetQ0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// IQ Imbalance Value I MSB
         ///
         #[derive(Clone, Copy)]
         pub struct IqieI1(u8);
-    
+
         /// IQ imbalance value, real part [15:8]
         pub iqie_i_15_8, set_iqie_i_15_8: 7, 0;
     }
-    
+
     impl const Register for IqieI1 {
         const ADDRESS: u16 = 0x2F6D;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for IqieI1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for IqieI1 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// IQ Imbalance Value I LSB
         ///
         #[derive(Clone, Copy)]
         pub struct IqieI0(u8);
-    
+
         /// IQ imbalance value, real part [7:0]
         pub iqie_i_7_0, set_iqie_i_7_0: 7, 0;
     }
-    
+
     impl const Register for IqieI0 {
         const ADDRESS: u16 = 0x2F6E;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for IqieI0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for IqieI0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// IQ Imbalance Value Q MSB
         ///
         #[derive(Clone, Copy)]
         pub struct IqieQ1(u8);
-    
+
         /// IQ imbalance value, imaginary part [15:8]
         pub iqie_q_15_8, set_iqie_q_15_8: 7, 0;
     }
-    
+
     impl const Register for IqieQ1 {
         const ADDRESS: u16 = 0x2F6F;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for IqieQ1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for IqieQ1 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// IQ Imbalance Value Q LSB
         ///
         #[derive(Clone, Copy)]
         pub struct IqieQ0(u8);
-    
+
         /// IQ imbalance value, imaginary part [7:0]
         pub iqie_q_7_0, set_iqie_q_7_0: 7, 0;
     }
-    
+
     impl const Register for IqieQ0 {
         const ADDRESS: u16 = 0x2F70;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for IqieQ0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for IqieQ0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Received Signal Strength Indicator Reg. 1
         ///
         #[derive(Clone, Copy)]
         pub struct Rssi1(u8);
-    
+
         /// Received signal strength indicator. 8 MSB of RSSI[11:0]. RSSI[11:0] is a two's complement number with 0.0625 dB resolution hence ranging from -128 to 127 dBm. A value of -128 dBm indicates that the RSSI is invalid. To get a correct RSSI value a calibrated RSSI offset value should be subtracted from the value given by RSSI[11:0]. This RSSI offset value can either be subtracted from RSSI[11:0] manually or the offset can be written to AGC_GAIN_ADJUST.GAIN_ADJUSTMENT meaning that RSSI[11:0] will give a correct value directly
         pub rssi_11_4, _: 7, 0;
     }
-    
+
     impl const Register for Rssi1 {
         const ADDRESS: u16 = 0x2F71;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Rssi1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Rssi1 {
         fn default() -> Self {
             Self(0x80)
         }
     }
-    
+
     bitfield! {
         /// Received Signal Strength Indicator Reg.0
         ///
         #[derive(Clone, Copy)]
         pub struct Rssi0(u8);
-    
+
         pub rssi0_not_used, _: 7;
-    
+
         /// Received signal strength indicator. 4 LSB of RSSI[11:0]. See RSSI1.RSSI_11_4
         pub rssi_3_0, _: 6, 3;
-    
+
         /// Carrier sense
         ///
         /// # Values
@@ -5629,7 +5629,7 @@ pub mod ext {
         ///
         /// The default value is 0x00
         pub carrier_sense, _: 2;
-    
+
         /// Carrier sense valid
         ///
         /// # Values
@@ -5639,7 +5639,7 @@ pub mod ext {
         ///
         /// The default value is 0x00
         pub carrier_sense_valid, _: 1;
-    
+
         /// RSSI valid
         ///
         /// # Values
@@ -5650,47 +5650,47 @@ pub mod ext {
         /// The default value is 0x00
         pub rssi_valid, _: 0;
     }
-    
+
     impl const Register for Rssi0 {
         const ADDRESS: u16 = 0x2F72;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Rssi0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Rssi0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// MARC State
         ///
         #[derive(Clone, Copy)]
         pub struct Marcstate(u8);
-    
+
         pub marcstate_not_used, _: 7;
-    
+
         /// MARC 2 pin state value
         marc_2pin_state_bits, _: 6, 5;
-    
+
         pub marc_state, _: 4, 0;
     }
-    
+
     impl Marcstate {
         pub fn marc_2pin_state(&self) -> Marc2pinStateValue {
             unsafe { transmute(self.marc_2pin_state_bits()) }
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum Marc2pinStateValue {
         /// SETTLING
@@ -5702,33 +5702,33 @@ pub mod ext {
         /// RX
         Rx = 0b11,
     }
-    
+
     impl const Register for Marcstate {
         const ADDRESS: u16 = 0x2F73;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Marcstate {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Marcstate {
         fn default() -> Self {
             Self(0x41)
         }
     }
-    
+
     bitfield! {
         /// Link Quality Indicator Value
         ///
         #[derive(Clone, Copy)]
         pub struct LqiVal(u8);
-    
+
         /// CRC OK. Asserted in RX when PKT_CFG1.CRC_CFG = 1 or 10b and a good packet is received. This signal is always on if the radio is in TX or if the radio is in RX and PKT_CFG1.CRC_CFG = 0. The signal is de-asserted when RX mode is entered and PKT_CFG1.CRC_CFG != 0
         ///
         /// # Values
@@ -5738,70 +5738,70 @@ pub mod ext {
         ///
         /// The default value is 0x00
         pub pkt_crc_ok, _: 7;
-    
+
         /// Link quality indicator. 0 when not valid. A low value indicates a better link than what a high value does
         pub lqi, _: 6, 0;
     }
-    
+
     impl const Register for LqiVal {
         const ADDRESS: u16 = 0x2F74;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for LqiVal {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for LqiVal {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Preamble and Sync Word Error
         ///
         #[derive(Clone, Copy)]
         pub struct PqtSyncErr(u8);
-    
+
         /// Preamble qualifier value. The actual preamble qualifier value can be greater than 15 but since PQT_ERROR is only 4 bits wide PQT_ERROR = MIN[actual PQT qualifier value] modulo 16. This means that if PQT _ERROR = 0001b the actual preamble qualifier value is either 1 or 17. When a sync word is detected (SYNC_EVENT is asserted) the PQT_ERROR register field is not updated again before RX mode is re-entered. As long as the radio is in RX searching for a sync word the register field will be updated continuously
         pub pqt_error, _: 7, 4;
-    
+
         /// Sync word qualifier value. The actual sync word qualifier value can be greater than 15 but since SYNC_ERROR is only 4 bits wide SYNC_ERROR = FLOOR[actual sync word qualifier value/2] modulo 16. This means that if SYNC_ERROR = 0001b the actual sync word qualifier value is either 2, 3, 34, or 35. When a sync word is received (SYNC_EVENT is asserted) the SYNC_ERROR register field is not updated again before RX mode is re-entered. As long as the radio is in RX searching for a sync word the register field will be updated continuously
         pub sync_error, _: 3, 0;
     }
-    
+
     impl const Register for PqtSyncErr {
         const ADDRESS: u16 = 0x2F75;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for PqtSyncErr {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for PqtSyncErr {
         fn default() -> Self {
             Self(0xff)
         }
     }
-    
+
     bitfield! {
         /// Demodulator Status
         ///
         #[derive(Clone, Copy)]
         pub struct DemStatus(u8);
-    
+
         /// RSSI step found during packet reception (after the assertion of SYNC_EVENT). The RSSI step is 10 or 16 dB and is configured through AGC_CFG1.RSSI_STEP_THR
         ///
         /// # Values
@@ -5811,7 +5811,7 @@ pub mod ext {
         ///
         /// The default value is 0x00
         pub rssi_step_found, _: 7;
-    
+
         /// Collision found. Asserted if a new preamble is found and the RSSI has increased 10 or 16 dB during packet reception (depending on AGC_CFG1.RSSI_STEP_THR). MDMCFG1.COLLISION_DETECT_EN must be 1
         ///
         /// # Values
@@ -5821,7 +5821,7 @@ pub mod ext {
         ///
         /// The default value is 0x00
         pub collision_found, _: 6;
-    
+
         /// DualSync Detect. Only valid when SYNC_CFG0.SYNC_MODE = 111b. When SYNC_EVENT is asserted this bit can be checked to see which sync word is found
         ///
         /// # Values
@@ -5831,10 +5831,10 @@ pub mod ext {
         ///
         /// The default value is 0x00
         pub sync_low0_high1, _: 5;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub dem_status_reserved4_1, _: 4, 1;
-    
+
         /// Image found detector
         ///
         /// # Values
@@ -5845,126 +5845,126 @@ pub mod ext {
         /// The default value is 0x00
         pub image_found, _: 0;
     }
-    
+
     impl const Register for DemStatus {
         const ADDRESS: u16 = 0x2F76;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for DemStatus {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for DemStatus {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Frequency Offset Estimate MSB
         ///
         #[derive(Clone, Copy)]
         pub struct FreqoffEst1(u8);
-    
+
         /// Frequency offset estimate [15:8] MSB<BR/>
         /// Frequency Offset Estimate = FREOFF_EST*f_xosc/LO Divider/2^18.0 [Hz]. The value is in two's complement format. The LO divider value can be found in FS_CFG.FSD_BANDSELECT register field
         pub freqoff_est_15_8, _: 7, 0;
     }
-    
+
     impl const Register for FreqoffEst1 {
         const ADDRESS: u16 = 0x2F77;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FreqoffEst1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FreqoffEst1 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Frequency Offset Estimate LSB
         ///
         #[derive(Clone, Copy)]
         pub struct FreqoffEst0(u8);
-    
+
         /// See FREQOFF_EST1
         pub freqoff_est_7_0, _: 7, 0;
     }
-    
+
     impl const Register for FreqoffEst0 {
         const ADDRESS: u16 = 0x2F78;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FreqoffEst0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FreqoffEst0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Automatic Gain Control Reg. 3
         ///
         #[derive(Clone, Copy)]
         pub struct AgcGain3(u8);
-    
+
         pub agc_gain3_not_used, _: 7;
-    
+
         /// AGC front end gain. Actual applied gain with 1 dB resolution
         pub agc_front_end_gain, _: 6, 0;
     }
-    
+
     impl const Register for AgcGain3 {
         const ADDRESS: u16 = 0x2F79;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AgcGain3 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AgcGain3 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Automatic Gain Control Reg. 2
         ///
         #[derive(Clone, Copy)]
         pub struct AgcGain2(u8);
-    
+
         /// Override AGC gain control
         ///
         /// # Values
@@ -5974,207 +5974,207 @@ pub mod ext {
         ///
         /// The default value is 0x01
         pub agc_drives_fe_gain, set_agc_drives_fe_gain: 7;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub agc_gain2_reserved6_3, set_agc_gain2_reserved6_3: 6, 3;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub agc_gain2_reserved2_0, set_agc_gain2_reserved2_0: 2, 0;
     }
-    
+
     impl const Register for AgcGain2 {
         const ADDRESS: u16 = 0x2F7A;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AgcGain2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AgcGain2 {
         fn default() -> Self {
             Self(0xd1)
         }
     }
-    
+
     bitfield! {
         /// Automatic Gain Control Reg. 1
         ///
         #[derive(Clone, Copy)]
         pub struct AgcGain1(u8);
-    
+
         pub agc_gain1_not_used, _: 7, 5;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub agc_gain1_reserved4_3, set_agc_gain1_reserved4_3: 4, 3;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub agc_gain1_reserved2_0, set_agc_gain1_reserved2_0: 2, 0;
     }
-    
+
     impl const Register for AgcGain1 {
         const ADDRESS: u16 = 0x2F7B;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AgcGain1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AgcGain1 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Automatic Gain Control Reg. 0
         ///
         #[derive(Clone, Copy)]
         pub struct AgcGain0(u8);
-    
+
         pub agc_gain0_not_used, _: 7;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub agc_gain0_reserved6_5, set_agc_gain0_reserved6_5: 6, 5;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub agc_gain0_reserved4_0, set_agc_gain0_reserved4_0: 4, 0;
     }
-    
+
     impl const Register for AgcGain0 {
         const ADDRESS: u16 = 0x2F7C;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AgcGain0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AgcGain0 {
         fn default() -> Self {
             Self(0x3f)
         }
     }
-    
+
     bitfield! {
         /// Custom Frequency Modulation RX Data
         ///
         #[derive(Clone, Copy)]
         pub struct CfmRxDataOut(u8);
-    
+
         /// 8-bit signed soft-decision symbol data, either from normal receiver or transparent receiver. Can be read using burst mode to do custom demodulation<BR/>
         /// f_offset = f_dev*CFM_RX_DATA/64 [Hz] (two's complement format)<BR/>
         /// f_dev is the programmed frequency deviation
         pub cfm_rx_data, _: 7, 0;
     }
-    
+
     impl const Register for CfmRxDataOut {
         const ADDRESS: u16 = 0x2F7D;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for CfmRxDataOut {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for CfmRxDataOut {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Custom Frequency Modulation TX Data
         ///
         #[derive(Clone, Copy)]
         pub struct CfmTxDataIn(u8);
-    
+
         /// 8-bit signed soft TX data input register for custom SW controlled modulation. Can be accessed using burst mode to get arbitrary modulation<BR/>
         /// f_offset = f_dev*CFM_TX_DATA/64 [Hz] (two's complement format). f_dev is the programmed frequency deviation
         pub cfm_tx_data, set_cfm_tx_data: 7, 0;
     }
-    
+
     impl const Register for CfmTxDataIn {
         const ADDRESS: u16 = 0x2F7E;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for CfmTxDataIn {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for CfmTxDataIn {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// ASK Soft Decision Output
         ///
         #[derive(Clone, Copy)]
         pub struct AskSoftRxData(u8);
-    
+
         pub ask_soft_not_used, _: 7, 6;
-    
+
         /// The OOK/ASK receiver use a max peak magnitude tracker and low peak magnitude tracker to estimate ASK_THRESHOLD. The ASK_THRESHOLD is used to do hard decision of OOK/ASK symbols<BR/>
         /// ASK_SOFT = +16 when magnitude is = ASK_THRESHOLD<BR/>
         /// ASK_SOFT = -16 when magnitude is = ASK_THRESHOLD
         pub ask_soft, _: 5, 0;
     }
-    
+
     impl const Register for AskSoftRxData {
         const ADDRESS: u16 = 0x2F7F;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AskSoftRxData {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AskSoftRxData {
         fn default() -> Self {
             Self(0x30)
         }
     }
-    
+
     bitfield! {
         /// Random Number Generator Value
         ///
         #[derive(Clone, Copy)]
         pub struct Rndgen(u8);
-    
+
         /// Random number generator enable
         ///
         /// # Values
@@ -6184,193 +6184,193 @@ pub mod ext {
         ///
         /// The default value is 0x00
         pub rndgen_en, set_rndgen_en: 7;
-    
+
         /// Random number value. Number generated by 7 bit LFSR register (X7+X6+1). Number will be further randomized when in RX by XORing the feedback with receiver noise
         pub rndgen_value, _: 6, 0;
     }
-    
+
     impl const Register for Rndgen {
         const ADDRESS: u16 = 0x2F80;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Rndgen {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Rndgen {
         fn default() -> Self {
             Self(0x7f)
         }
     }
-    
+
     bitfield! {
         /// Signal Magnitude after CORDIC [16]
         ///
         #[derive(Clone, Copy)]
         pub struct Magn2(u8);
-    
+
         pub magn_not_used, _: 7, 1;
-    
+
         /// Instantaneous signal magnitude after CORDIC, 17-bit [16]
         pub magn_16, _: 0;
     }
-    
+
     impl const Register for Magn2 {
         const ADDRESS: u16 = 0x2F81;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Magn2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Magn2 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Signal Magnitude after CORDIC [15:8]
         ///
         #[derive(Clone, Copy)]
         pub struct Magn1(u8);
-    
+
         /// Instantaneous signal magnitude after CORDIC, 17-bit [15:8]
         pub magn_15_8, _: 7, 0;
     }
-    
+
     impl const Register for Magn1 {
         const ADDRESS: u16 = 0x2F82;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Magn1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Magn1 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Signal Magnitude after CORDIC [7:0]
         ///
         #[derive(Clone, Copy)]
         pub struct Magn0(u8);
-    
+
         /// Instantaneous signal magnitude after CORDIC, 17-bit [7:0]
         pub magn_7_0, _: 7, 0;
     }
-    
+
     impl const Register for Magn0 {
         const ADDRESS: u16 = 0x2F83;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Magn0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Magn0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Signal Angular after CORDIC [9:8]
         ///
         #[derive(Clone, Copy)]
         pub struct Ang1(u8);
-    
+
         pub ang1_not_used, _: 7, 2;
-    
+
         /// Instantaneous signal angular after CORDIC, 10-bit [9:8]
         pub angular_9_8, _: 1, 0;
     }
-    
+
     impl const Register for Ang1 {
         const ADDRESS: u16 = 0x2F84;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Ang1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Ang1 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Signal Angular after CORDIC [7:0]
         ///
         #[derive(Clone, Copy)]
         pub struct Ang0(u8);
-    
+
         /// Instantaneous signal angular after CORDIC, 10-bit [7:0]
         pub angular_7_0, _: 7, 0;
     }
-    
+
     impl const Register for Ang0 {
         const ADDRESS: u16 = 0x2F85;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Ang0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Ang0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Channel Filter Data Real Part [16]
         ///
         #[derive(Clone, Copy)]
         pub struct ChfiltI2(u8);
-    
+
         pub chfilt_i2_not_used, _: 7, 2;
-    
+
         ///
         /// # Values
         ///
@@ -6379,239 +6379,239 @@ pub mod ext {
         ///
         /// The default value is 0x01
         pub chfilt_startup_valid, _: 1;
-    
+
         /// Channel filter data, real part, 17-bit [16]
         pub chfilt_i_16, _: 0;
     }
-    
+
     impl const Register for ChfiltI2 {
         const ADDRESS: u16 = 0x2F86;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for ChfiltI2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for ChfiltI2 {
         fn default() -> Self {
             Self(0x02)
         }
     }
-    
+
     bitfield! {
         /// Channel Filter Data Real Part [15:8]
         ///
         #[derive(Clone, Copy)]
         pub struct ChfiltI1(u8);
-    
+
         /// Channel filter data, real part, 17-bit [15:8]
         pub chfilt_i_15_8, _: 7, 0;
     }
-    
+
     impl const Register for ChfiltI1 {
         const ADDRESS: u16 = 0x2F87;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for ChfiltI1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for ChfiltI1 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Channel Filter Data Real Part [7:0]
         ///
         #[derive(Clone, Copy)]
         pub struct ChfiltI0(u8);
-    
+
         /// Channel filter data, real part, 17-bit [7:0]
         pub chfilt_i_7_0, _: 7, 0;
     }
-    
+
     impl const Register for ChfiltI0 {
         const ADDRESS: u16 = 0x2F88;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for ChfiltI0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for ChfiltI0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Channel Filter Data Imaginary Part [16]
         ///
         #[derive(Clone, Copy)]
         pub struct ChfiltQ2(u8);
-    
+
         pub chfilt_q2_not_used, _: 7, 1;
-    
+
         /// Channel filter data, imaginary part, 17-bit [16]
         pub chfilt_q_16, _: 0;
     }
-    
+
     impl const Register for ChfiltQ2 {
         const ADDRESS: u16 = 0x2F89;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for ChfiltQ2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for ChfiltQ2 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Channel Filter Data Imaginary Part [15:8]
         ///
         #[derive(Clone, Copy)]
         pub struct ChfiltQ1(u8);
-    
+
         /// Channel filter data, imaginary part, 17-bit [15:8]
         pub chfilt_q_15_8, _: 7, 0;
     }
-    
+
     impl const Register for ChfiltQ1 {
         const ADDRESS: u16 = 0x2F8A;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for ChfiltQ1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for ChfiltQ1 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Channel Filter Data Imaginary Part [7:0]
         ///
         #[derive(Clone, Copy)]
         pub struct ChfiltQ0(u8);
-    
+
         /// Channel filter data, imaginary part, 17-bit [7:0]
         pub chfilt_q_7_0, _: 7, 0;
     }
-    
+
     impl const Register for ChfiltQ0 {
         const ADDRESS: u16 = 0x2F8B;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for ChfiltQ0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for ChfiltQ0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// General Purpose Input/Output Status
         ///
         #[derive(Clone, Copy)]
         pub struct GpioStatus(u8);
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub gpio_status_reserved7_4, _: 7, 4;
-    
+
         /// State of GPIO pins. SERIAL_STATUS.IOC_SYNC_PINS_EN must be 1
         pub gpio_state, _: 3, 0;
     }
-    
+
     impl const Register for GpioStatus {
         const ADDRESS: u16 = 0x2F8C;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for GpioStatus {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for GpioStatus {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Frequency Synthesizer Calibration Control
         ///
         #[derive(Clone, Copy)]
         pub struct FscalCtrl(u8);
-    
+
         pub fscal_ctrl_not_used, _: 7;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fscal_ctrl_reserved6, set_fscal_ctrl_reserved6: 6;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fscal_ctrl_reserved5, set_fscal_ctrl_reserved5: 5;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fscal_ctrl_reserved4, set_fscal_ctrl_reserved4: 4;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fscal_ctrl_reserved3, set_fscal_ctrl_reserved3: 3;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fscal_ctrl_reserved2_1, set_fscal_ctrl_reserved2_1: 2, 1;
-    
+
         /// Out of lock indicator (FS_CFG.FS_LOCK_EN must be 1). The state of this signal is only valid in RX, TX, and FSTXON state
         ///
         /// # Values
@@ -6622,63 +6622,63 @@ pub mod ext {
         /// The default value is 0x01
         pub lock, _: 0;
     }
-    
+
     impl const Register for FscalCtrl {
         const ADDRESS: u16 = 0x2F8D;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FscalCtrl {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FscalCtrl {
         fn default() -> Self {
             Self(0x01)
         }
     }
-    
+
     bitfield! {
         /// Frequency Synthesizer Phase Adjust
         ///
         #[derive(Clone, Copy)]
         pub struct PhaseAdjust(u8);
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub phase_adjust_reserved7_0, _: 7, 0;
     }
-    
+
     impl const Register for PhaseAdjust {
         const ADDRESS: u16 = 0x2F8E;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for PhaseAdjust {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for PhaseAdjust {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Part Number
         ///
         #[derive(Clone, Copy)]
         pub struct Partnumber(u8);
-    
+
         /// Chip ID
         ///
         /// # Values
@@ -6689,65 +6689,65 @@ pub mod ext {
         /// The default value is 0x00
         pub partnum, _: 7, 0;
     }
-    
+
     impl const Register for Partnumber {
         const ADDRESS: u16 = 0x2F8F;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Partnumber {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Partnumber {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Part Revision
         ///
         #[derive(Clone, Copy)]
         pub struct Partversion(u8);
-    
+
         /// Chip revision
         pub partver, _: 7, 0;
     }
-    
+
     impl const Register for Partversion {
         const ADDRESS: u16 = 0x2F90;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Partversion {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Partversion {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Serial Status
         ///
         #[derive(Clone, Copy)]
         pub struct SerialStatus(u8);
-    
+
         pub serial_status_not_used, _: 7, 6;
-    
+
         /// Configures which memory to access when using direct memory access
         ///
         /// # Values
@@ -6757,150 +6757,150 @@ pub mod ext {
         ///
         /// The default value is 0x00
         pub spi_direct_access_cfg, set_spi_direct_access_cfg: 5;
-    
+
         /// Internal 40 kHz RC oscillator clock
         pub clk40, _: 4;
-    
+
         /// Enable synchronizer for IO pins. Required for transparent TX and for reading GPIO_STATUS.GPIO_STATE
         pub ioc_sync_pins_en, set_ioc_sync_pins_en: 3;
-    
+
         /// Modulator soft data clock (16 times higher than the programmed symbol rate)
         pub cfm_tx_data_clk, _: 2;
-    
+
         /// Serial RX data
         pub serial_rx, _: 1;
-    
+
         /// Serial RX data clock
         pub serial_rx_clk, _: 0;
     }
-    
+
     impl const Register for SerialStatus {
         const ADDRESS: u16 = 0x2F91;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for SerialStatus {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for SerialStatus {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Modem Status Reg. 1
         ///
         #[derive(Clone, Copy)]
         pub struct ModemStatus1(u8);
-    
+
         /// Asserted simultaneously as SYNC_EVENT. De-asserted when an SRX strobe has been issued
         pub sync_found, _: 7;
-    
+
         /// Asserted when number of bytes is greater than the RX FIFO threshold. De-asserted when the RX FIFO is empty
         pub rxfifo_full, _: 6;
-    
+
         /// Asserted when number of bytes is greater than the RX FIFO threshold. De-asserted when the RX FIFO is drained below (or is equal) to the same threshold
         pub rxfifo_thr, _: 5;
-    
+
         /// High when no bytes reside in the RX FIFO
         pub rxfifo_empty, _: 4;
-    
+
         /// Asserted when the RX FIFO has overflowed (the radio has received more bytes after the RXFIFO is full). De-asserted when the RX FIFO is flushed
         pub rxfifo_overflow, _: 3;
-    
+
         /// Asserted if the user try to read from an empty RX FIFO. De-asserted when the RX FIFO is flushed
         pub rxfifo_underflow, _: 2;
-    
+
         /// Asserted when a preamble is detected (the preamble qualifier value is less than the programmed PQT threshold). The signal will stay asserted as long as a preamble is present but will de-assert on sync found (SYNC_EVENT asserted). If the preamble disappears, the signal will de-assert after a timeout defined by the sync word length + 10 symbols after preamble was lost
         pub pqt_reached, _: 1;
-    
+
         /// Asserted after 11, 12, 13, 14,1 5, 17, 24, or 32 bits are received (depending on the PREAMBLE_CFG0.PQT_VALID_TIMEOUT setting) or after a preamble is detected
         pub pqt_valid, _: 0;
     }
-    
+
     impl const Register for ModemStatus1 {
         const ADDRESS: u16 = 0x2F92;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for ModemStatus1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for ModemStatus1 {
         fn default() -> Self {
             Self(0x01)
         }
     }
-    
+
     bitfield! {
         /// Modem Status Reg. 0
         ///
         #[derive(Clone, Copy)]
         pub struct ModemStatus0(u8);
-    
+
         pub modem_status0_not_used, _: 7;
-    
+
         /// Internal FEC overflow has occurred
         pub feec_rx_overflow, _: 6;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub modem_status0_reserved5, _: 5;
-    
+
         /// Last bit of sync word has been sent
         pub sync_sent, _: 4;
-    
+
         /// Asserted when the TX FIFO is full. De-asserted when the number of bytes is below threshold
         pub txfifo_full, _: 3;
-    
+
         /// Asserted when number of bytes is greater than or equal to the TX FIFO threshold
         pub txfifo_thr, _: 2;
-    
+
         /// Asserted when the TX FIFO has overflowed (The user have tried to write to a full TX FIFO). De-asserted when the TX FIFO is flushed
         pub txfifo_overflow, _: 1;
-    
+
         /// Asserted when the TX FIFO has underflowed (TX FIFO is empty before the complete packet is sent). De-asserted when the TX FIFO is flushed
         pub txfifo_underflow, _: 0;
     }
-    
+
     impl const Register for ModemStatus0 {
         const ADDRESS: u16 = 0x2F93;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for ModemStatus0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for ModemStatus0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// MARC Status Reg. 1
         ///
         #[derive(Clone, Copy)]
         pub struct MarcStatus1(u8);
-    
+
         /// This register should be read to find what caused the MCU_WAKEUP signal to be asserted
         ///
         /// # Values
@@ -6923,38 +6923,38 @@ pub mod ext {
         /// The default value is 0x00
         pub marc_status_out, _: 7, 0;
     }
-    
+
     impl const Register for MarcStatus1 {
         const ADDRESS: u16 = 0x2F94;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for MarcStatus1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for MarcStatus1 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// MARC Status Reg. 0
         ///
         #[derive(Clone, Copy)]
         pub struct MarcStatus0(u8);
-    
+
         pub marc_status0_not_used, _: 7, 4;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub marc_status0_reserved3, _: 3;
-    
+
         /// This bit can be read after the TXONCCA_DONE signal has been asserted
         ///
         /// # Values
@@ -6964,437 +6964,437 @@ pub mod ext {
         ///
         /// The default value is 0x00
         pub txoncca_failed, _: 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub marc_status0_reserved1, _: 1;
-    
+
         /// RCOSC has been calibrated at least once
         pub rcc_cal_valid, _: 0;
     }
-    
+
     impl const Register for MarcStatus0 {
         const ADDRESS: u16 = 0x2F95;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for MarcStatus0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for MarcStatus0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Power Amplifier Intermediate Frequency Amplifier Test
         ///
         #[derive(Clone, Copy)]
         pub struct PaIfampTest(u8);
-    
+
         pub pa_ifamp_test_not_used, _: 7, 5;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub pa_ifamp_test_reserved4, set_pa_ifamp_test_reserved4: 4;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub pa_ifamp_test_reserved3, set_pa_ifamp_test_reserved3: 3;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub pa_ifamp_test_reserved2, set_pa_ifamp_test_reserved2: 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub pa_ifamp_test_reserved1, set_pa_ifamp_test_reserved1: 1;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub pa_ifamp_test_reserved0, set_pa_ifamp_test_reserved0: 0;
     }
-    
+
     impl const Register for PaIfampTest {
         const ADDRESS: u16 = 0x2F96;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for PaIfampTest {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for PaIfampTest {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Frequency Synthesizer Test
         ///
         #[derive(Clone, Copy)]
         pub struct FsrfTest(u8);
-    
+
         pub fsrf_test_not_used, _: 7;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fsrf_test_reserved6, set_fsrf_test_reserved6: 6;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fsrf_test_reserved5_4, set_fsrf_test_reserved5_4: 5, 4;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fsrf_test_reserved3, set_fsrf_test_reserved3: 3;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub fsrf_test_reserved2_0, set_fsrf_test_reserved2_0: 2, 0;
     }
-    
+
     impl const Register for FsrfTest {
         const ADDRESS: u16 = 0x2F97;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsrfTest {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsrfTest {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Frequency Synthesizer Prescaler Test
         ///
         #[derive(Clone, Copy)]
         pub struct PreTest(u8);
-    
+
         pub pre_test_not_used, _: 7, 5;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub pre_test_reserved4, set_pre_test_reserved4: 4;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub pre_test_reserved3_0, set_pre_test_reserved3_0: 3, 0;
     }
-    
+
     impl const Register for PreTest {
         const ADDRESS: u16 = 0x2F98;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for PreTest {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for PreTest {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Frequency Synthesizer Prescaler Override
         ///
         #[derive(Clone, Copy)]
         pub struct PreOvr(u8);
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub pre_ovr_reserved7_4, set_pre_ovr_reserved7_4: 7, 4;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub pre_ovr_reserved3_0, set_pre_ovr_reserved3_0: 3, 0;
     }
-    
+
     impl const Register for PreOvr {
         const ADDRESS: u16 = 0x2F99;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for PreOvr {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for PreOvr {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Analog to Digital Converter Test
         ///
         #[derive(Clone, Copy)]
         pub struct AdcTest(u8);
-    
+
         pub adc_test_not_used, _: 7, 6;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub adc_test_reserved5, set_adc_test_reserved5: 5;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub adc_test_reserved4_0, set_adc_test_reserved4_0: 4, 0;
     }
-    
+
     impl const Register for AdcTest {
         const ADDRESS: u16 = 0x2F9A;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AdcTest {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AdcTest {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Digital Divider Chain Test
         ///
         #[derive(Clone, Copy)]
         pub struct DvcTest(u8);
-    
+
         pub dvc_test_not_used, _: 7, 5;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub dvc_test_reserved4_0, set_dvc_test_reserved4_0: 4, 0;
     }
-    
+
     impl const Register for DvcTest {
         const ADDRESS: u16 = 0x2F9B;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for DvcTest {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for DvcTest {
         fn default() -> Self {
             Self(0x0b)
         }
     }
-    
+
     bitfield! {
         /// Analog Test
         ///
         #[derive(Clone, Copy)]
         pub struct Atest(u8);
-    
+
         pub atest_not_used, _: 7;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub atest_reserved6, set_atest_reserved6: 6;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub atest_reserved5_0, set_atest_reserved5_0: 5, 0;
     }
-    
+
     impl const Register for Atest {
         const ADDRESS: u16 = 0x2F9C;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Atest {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Atest {
         fn default() -> Self {
             Self(0x40)
         }
     }
-    
+
     bitfield! {
         /// Analog Test LVDS
         ///
         #[derive(Clone, Copy)]
         pub struct AtestLvds(u8);
-    
+
         pub atest_lvds_not_used, _: 7, 6;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub atest_lvds_reserved5_4, set_atest_lvds_reserved5_4: 5, 4;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub atest_lvds_reserved3_0, set_atest_lvds_reserved3_0: 3, 0;
     }
-    
+
     impl const Register for AtestLvds {
         const ADDRESS: u16 = 0x2F9D;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AtestLvds {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AtestLvds {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Analog Test Mode
         ///
         #[derive(Clone, Copy)]
         pub struct AtestMode(u8);
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub atest_mode_reserved7_4, set_atest_mode_reserved7_4: 7, 4;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub atest_mode_reserved3_0, set_atest_mode_reserved3_0: 3, 0;
     }
-    
+
     impl const Register for AtestMode {
         const ADDRESS: u16 = 0x2F9E;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AtestMode {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AtestMode {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Crystal Oscillator Test Reg. 1
         ///
         #[derive(Clone, Copy)]
         pub struct XoscTest1(u8);
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub xosc_test1_reserved7, set_xosc_test1_reserved7: 7;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub xosc_test1_reserved6, set_xosc_test1_reserved6: 6;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub xosc_test1_reserved5_2, _: 5, 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub xosc_test1_reserved1_0, set_xosc_test1_reserved1_0: 1, 0;
     }
-    
+
     impl const Register for XoscTest1 {
         const ADDRESS: u16 = 0x2F9F;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for XoscTest1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for XoscTest1 {
         fn default() -> Self {
             Self(0x3c)
         }
     }
-    
+
     bitfield! {
         /// Crystal Oscillator Test Reg. 0
         ///
         #[derive(Clone, Copy)]
         pub struct XoscTest0(u8);
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub xosc_test0_reserved7_0, set_xosc_test0_reserved7_0: 7, 0;
     }
-    
+
     impl const Register for XoscTest0 {
         const ADDRESS: u16 = 0x2FA0;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for XoscTest0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for XoscTest0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// AES
         ///
         #[derive(Clone, Copy)]
         pub struct Aes(u8);
-    
+
         pub aes_not_used, _: 7, 2;
-    
+
         /// Setting this bit to 1 will abort the AES encryption cycle. The bit will be cleared by HW when the abortion sequence is completed
         pub aes_abort, set_aes_abort: 1;
-    
+
         /// AES enable. The bit will be cleared by HW when an encryption cycle has finished
         ///
         /// # Values
@@ -7405,1291 +7405,1291 @@ pub mod ext {
         /// The default value is 0x00
         pub aes_run, set_aes_run: 0;
     }
-    
+
     impl const Register for Aes {
         const ADDRESS: u16 = 0x2FA1;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Aes {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Aes {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// MODEM Test
         ///
         #[derive(Clone, Copy)]
         pub struct MdmTest(u8);
-    
+
         pub mdm_test_not_used, _: 7, 4;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub mdm_test_reserved3_0, set_mdm_test_reserved3_0: 3, 0;
     }
-    
+
     impl const Register for MdmTest {
         const ADDRESS: u16 = 0x2FA2;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for MdmTest {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for MdmTest {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// RX FIFO Pointer First Entry
         ///
         #[derive(Clone, Copy)]
         pub struct Rxfirst(u8);
-    
+
         /// Pointer to the first entry in the RX FIFO
         pub rx_first, set_rx_first: 7, 0;
     }
-    
+
     impl const Register for Rxfirst {
         const ADDRESS: u16 = 0x2FD2;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Rxfirst {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Rxfirst {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// TX FIFO Pointer First Entry
         ///
         #[derive(Clone, Copy)]
         pub struct Txfirst(u8);
-    
+
         /// Pointer to the first entry in the TX FIFO
         pub tx_first, set_tx_first: 7, 0;
     }
-    
+
     impl const Register for Txfirst {
         const ADDRESS: u16 = 0x2FD3;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Txfirst {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Txfirst {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// RX FIFO Pointer Last Entry
         ///
         #[derive(Clone, Copy)]
         pub struct Rxlast(u8);
-    
+
         /// Pointer to the last entry in the RX FIFO
         pub rx_last, set_rx_last: 7, 0;
     }
-    
+
     impl const Register for Rxlast {
         const ADDRESS: u16 = 0x2FD4;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Rxlast {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Rxlast {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// TX FIFO Pointer Last Entry
         ///
         #[derive(Clone, Copy)]
         pub struct Txlast(u8);
-    
+
         /// Pointer to the last entry in the TX FIFO
         pub tx_last, set_tx_last: 7, 0;
     }
-    
+
     impl const Register for Txlast {
         const ADDRESS: u16 = 0x2FD5;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Txlast {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Txlast {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// TX FIFO Status
         ///
         #[derive(Clone, Copy)]
         pub struct NumTxbytes(u8);
-    
+
         /// Number of bytes in the TX FIFO
         pub txbytes, _: 7, 0;
     }
-    
+
     impl const Register for NumTxbytes {
         const ADDRESS: u16 = 0x2FD6;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for NumTxbytes {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for NumTxbytes {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// RX FIFO Status
         ///
         #[derive(Clone, Copy)]
         pub struct NumRxbytes(u8);
-    
+
         /// Number of bytes in the RX FIFO
         pub rxbytes, _: 7, 0;
     }
-    
+
     impl const Register for NumRxbytes {
         const ADDRESS: u16 = 0x2FD7;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for NumRxbytes {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for NumRxbytes {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// TX FIFO Status
         ///
         #[derive(Clone, Copy)]
         pub struct FifoNumTxbytes(u8);
-    
+
         pub fifo_num_txbytes_not_used, _: 7, 4;
-    
+
         /// Number of free entries in the TX FIFO. 1111b means that there are 15 or more free entries
         pub fifo_txbytes, _: 3, 0;
     }
-    
+
     impl const Register for FifoNumTxbytes {
         const ADDRESS: u16 = 0x2FD8;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FifoNumTxbytes {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FifoNumTxbytes {
         fn default() -> Self {
             Self(0x0f)
         }
     }
-    
+
     bitfield! {
         /// RX FIFO Status
         ///
         #[derive(Clone, Copy)]
         pub struct FifoNumRxbytes(u8);
-    
+
         pub fifo_num_rxbytes_not_used, _: 7, 4;
-    
+
         /// Number of available bytes in the RX FIFO. 1111b means that there are 15 or more bytes available to read
         pub fifo_rxbytes, _: 3, 0;
     }
-    
+
     impl const Register for FifoNumRxbytes {
         const ADDRESS: u16 = 0x2FD9;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FifoNumRxbytes {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FifoNumRxbytes {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// RX FIFO Status
         ///
         #[derive(Clone, Copy)]
         pub struct RxfifoPreBuf(u8);
-    
+
         /// Contains the first byte received in the RX FIFO when the RX FIFO is empty (i.e. RXFIRST = RXLAST)
         pub pre_buf, _: 7, 0;
     }
-    
+
     impl const Register for RxfifoPreBuf {
         const ADDRESS: u16 = 0x2FDA;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for RxfifoPreBuf {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for RxfifoPreBuf {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Key [127:120]
         ///
         #[derive(Clone, Copy)]
         pub struct AesKey15(u8);
-    
+
         /// 16 bytes AES key, [127:120]
         pub aes_key_127_120, set_aes_key_127_120: 7, 0;
     }
-    
+
     impl const Register for AesKey15 {
         const ADDRESS: u16 = 0x2FE0;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesKey15 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesKey15 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Key [119:112]
         ///
         #[derive(Clone, Copy)]
         pub struct AesKey14(u8);
-    
+
         /// 16 bytes AES key, [119:112]
         pub aes_key_119_112, set_aes_key_119_112: 7, 0;
     }
-    
+
     impl const Register for AesKey14 {
         const ADDRESS: u16 = 0x2FE1;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesKey14 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesKey14 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Key [111:104]
         ///
         #[derive(Clone, Copy)]
         pub struct AesKey13(u8);
-    
+
         /// 16 bytes AES key, [111:104]
         pub aes_key_111_104, set_aes_key_111_104: 7, 0;
     }
-    
+
     impl const Register for AesKey13 {
         const ADDRESS: u16 = 0x2FE2;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesKey13 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesKey13 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Key [103:96]
         ///
         #[derive(Clone, Copy)]
         pub struct AesKey12(u8);
-    
+
         /// 16 bytes AES key, [103:96]
         pub aes_key_103_96, set_aes_key_103_96: 7, 0;
     }
-    
+
     impl const Register for AesKey12 {
         const ADDRESS: u16 = 0x2FE3;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesKey12 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesKey12 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Key [95:88]
         ///
         #[derive(Clone, Copy)]
         pub struct AesKey11(u8);
-    
+
         /// 16 bytes AES key, [95:88]
         pub aes_key_95_88, set_aes_key_95_88: 7, 0;
     }
-    
+
     impl const Register for AesKey11 {
         const ADDRESS: u16 = 0x2FE4;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesKey11 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesKey11 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Key [87:80]
         ///
         #[derive(Clone, Copy)]
         pub struct AesKey10(u8);
-    
+
         /// 16 bytes AES key, [87:80]
         pub aes_key_87_80, set_aes_key_87_80: 7, 0;
     }
-    
+
     impl const Register for AesKey10 {
         const ADDRESS: u16 = 0x2FE5;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesKey10 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesKey10 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Key [79:72]
         ///
         #[derive(Clone, Copy)]
         pub struct AesKey9(u8);
-    
+
         /// 16 bytes AES key, [79:72]
         pub aes_key_79_72, set_aes_key_79_72: 7, 0;
     }
-    
+
     impl const Register for AesKey9 {
         const ADDRESS: u16 = 0x2FE6;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesKey9 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesKey9 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Key [71:64]
         ///
         #[derive(Clone, Copy)]
         pub struct AesKey8(u8);
-    
+
         /// 16 bytes AES key, [71:64]
         pub aes_key_71_64, set_aes_key_71_64: 7, 0;
     }
-    
+
     impl const Register for AesKey8 {
         const ADDRESS: u16 = 0x2FE7;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesKey8 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesKey8 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Key [63:56]
         ///
         #[derive(Clone, Copy)]
         pub struct AesKey7(u8);
-    
+
         /// 16 bytes AES key, [63:56]
         pub aes_key_63_56, set_aes_key_63_56: 7, 0;
     }
-    
+
     impl const Register for AesKey7 {
         const ADDRESS: u16 = 0x2FE8;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesKey7 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesKey7 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Key [55:48]
         ///
         #[derive(Clone, Copy)]
         pub struct AesKey6(u8);
-    
+
         /// 16 bytes AES key, [55:48]
         pub aes_key_55_48, set_aes_key_55_48: 7, 0;
     }
-    
+
     impl const Register for AesKey6 {
         const ADDRESS: u16 = 0x2FE9;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesKey6 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesKey6 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Key [47:40]
         ///
         #[derive(Clone, Copy)]
         pub struct AesKey5(u8);
-    
+
         /// 16 bytes AES key, [47:40]
         pub aes_key_47_40, set_aes_key_47_40: 7, 0;
     }
-    
+
     impl const Register for AesKey5 {
         const ADDRESS: u16 = 0x2FEA;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesKey5 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesKey5 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Key [39:32]
         ///
         #[derive(Clone, Copy)]
         pub struct AesKey4(u8);
-    
+
         /// 16 bytes AES key, [39:32]
         pub aes_key_39_32, set_aes_key_39_32: 7, 0;
     }
-    
+
     impl const Register for AesKey4 {
         const ADDRESS: u16 = 0x2FEB;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesKey4 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesKey4 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Key [31:24]
         ///
         #[derive(Clone, Copy)]
         pub struct AesKey3(u8);
-    
+
         /// 16 bytes AES key, [31:24]
         pub aes_key_31_24, set_aes_key_31_24: 7, 0;
     }
-    
+
     impl const Register for AesKey3 {
         const ADDRESS: u16 = 0x2FEC;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesKey3 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesKey3 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Key [23:16]
         ///
         #[derive(Clone, Copy)]
         pub struct AesKey2(u8);
-    
+
         /// 16 bytes AES key, [23:16]
         pub aes_key_23_16, set_aes_key_23_16: 7, 0;
     }
-    
+
     impl const Register for AesKey2 {
         const ADDRESS: u16 = 0x2FED;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesKey2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesKey2 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Key [15:8]
         ///
         #[derive(Clone, Copy)]
         pub struct AesKey1(u8);
-    
+
         /// 16 bytes AES key, [15:8]
         pub aes_key_15_8, set_aes_key_15_8: 7, 0;
     }
-    
+
     impl const Register for AesKey1 {
         const ADDRESS: u16 = 0x2FEE;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesKey1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesKey1 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Key [7:0]
         ///
         #[derive(Clone, Copy)]
         pub struct AesKey0(u8);
-    
+
         /// 16 bytes AES key, [7:0]
         pub aes_key_7_0, set_aes_key_7_0: 7, 0;
     }
-    
+
     impl const Register for AesKey0 {
         const ADDRESS: u16 = 0x2FEF;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesKey0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesKey0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [127:120]
         ///
         #[derive(Clone, Copy)]
         pub struct AesBuffer15(u8);
-    
+
         /// AES data buffer [127:120]. The content serves as input to the AES encryption module, and the content will be overwritten with the encrypted data when the AES encryption is completed
         pub aes_buffer_127_120, set_aes_buffer_127_120: 7, 0;
     }
-    
+
     impl const Register for AesBuffer15 {
         const ADDRESS: u16 = 0x2FF0;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesBuffer15 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesBuffer15 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [119:112]
         ///
         #[derive(Clone, Copy)]
         pub struct AesBuffer14(u8);
-    
+
         /// AES data buffer [119:112]. See AES_BUFFER15 for details
         pub aes_buffer_119_112, set_aes_buffer_119_112: 7, 0;
     }
-    
+
     impl const Register for AesBuffer14 {
         const ADDRESS: u16 = 0x2FF1;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesBuffer14 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesBuffer14 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [111:104]
         ///
         #[derive(Clone, Copy)]
         pub struct AesBuffer13(u8);
-    
+
         /// AES data buffer [111:104]. See AES_BUFFER15 for details
         pub aes_buffer_111_104, set_aes_buffer_111_104: 7, 0;
     }
-    
+
     impl const Register for AesBuffer13 {
         const ADDRESS: u16 = 0x2FF2;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesBuffer13 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesBuffer13 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [103:93]
         ///
         #[derive(Clone, Copy)]
         pub struct AesBuffer12(u8);
-    
+
         /// AES data buffer [103:93]. See AES_BUFFER15 for details
         pub aes_buffer_103_93, set_aes_buffer_103_93: 7, 0;
     }
-    
+
     impl const Register for AesBuffer12 {
         const ADDRESS: u16 = 0x2FF3;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesBuffer12 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesBuffer12 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [95:88]
         ///
         #[derive(Clone, Copy)]
         pub struct AesBuffer11(u8);
-    
+
         /// AES data buffer [95:88]. See AES_BUFFER15 for details
         pub aes_buffer_95_88, set_aes_buffer_95_88: 7, 0;
     }
-    
+
     impl const Register for AesBuffer11 {
         const ADDRESS: u16 = 0x2FF4;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesBuffer11 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesBuffer11 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [87:80]
         ///
         #[derive(Clone, Copy)]
         pub struct AesBuffer10(u8);
-    
+
         /// AES data buffer [87:80]. See AES_BUFFER15 for details
         pub aes_buffer_87_80, set_aes_buffer_87_80: 7, 0;
     }
-    
+
     impl const Register for AesBuffer10 {
         const ADDRESS: u16 = 0x2FF5;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesBuffer10 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesBuffer10 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [79:72]
         ///
         #[derive(Clone, Copy)]
         pub struct AesBuffer9(u8);
-    
+
         /// AES data buffer [79:72]. See AES_BUFFER15 for details
         pub aes_buffer_79_72, set_aes_buffer_79_72: 7, 0;
     }
-    
+
     impl const Register for AesBuffer9 {
         const ADDRESS: u16 = 0x2FF6;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesBuffer9 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesBuffer9 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [71:64]
         ///
         #[derive(Clone, Copy)]
         pub struct AesBuffer8(u8);
-    
+
         /// AES data buffer [71:64]. See AES_BUFFER15 for details
         pub aes_buffer_71_64, set_aes_buffer_71_64: 7, 0;
     }
-    
+
     impl const Register for AesBuffer8 {
         const ADDRESS: u16 = 0x2FF7;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesBuffer8 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesBuffer8 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [63:56]
         ///
         #[derive(Clone, Copy)]
         pub struct AesBuffer7(u8);
-    
+
         /// AES data buffer [63:56]. See AES_BUFFER15 for details
         pub aes_buffer_63_56, set_aes_buffer_63_56: 7, 0;
     }
-    
+
     impl const Register for AesBuffer7 {
         const ADDRESS: u16 = 0x2FF8;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesBuffer7 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesBuffer7 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [55:48]
         ///
         #[derive(Clone, Copy)]
         pub struct AesBuffer6(u8);
-    
+
         /// AES data buffer [55:48]. See AES_BUFFER15 for details
         pub aes_buffer_55_48, set_aes_buffer_55_48: 7, 0;
     }
-    
+
     impl const Register for AesBuffer6 {
         const ADDRESS: u16 = 0x2FF9;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesBuffer6 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesBuffer6 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [47:40]
         ///
         #[derive(Clone, Copy)]
         pub struct AesBuffer5(u8);
-    
+
         /// AES data buffer [47:40]. See AES_BUFFER15 for details
         pub aes_buffer_47_40, set_aes_buffer_47_40: 7, 0;
     }
-    
+
     impl const Register for AesBuffer5 {
         const ADDRESS: u16 = 0x2FFA;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesBuffer5 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesBuffer5 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [39:32]
         ///
         #[derive(Clone, Copy)]
         pub struct AesBuffer4(u8);
-    
+
         /// AES data buffer [39:32]. See AES_BUFFER15 for details
         pub aes_buffer_39_32, set_aes_buffer_39_32: 7, 0;
     }
-    
+
     impl const Register for AesBuffer4 {
         const ADDRESS: u16 = 0x2FFB;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesBuffer4 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesBuffer4 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [31:24]
         ///
         #[derive(Clone, Copy)]
         pub struct AesBuffer3(u8);
-    
+
         /// AES data buffer [131:24]. See AES_BUFFER15 for details
         pub aes_buffer_31_24, set_aes_buffer_31_24: 7, 0;
     }
-    
+
     impl const Register for AesBuffer3 {
         const ADDRESS: u16 = 0x2FFC;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesBuffer3 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesBuffer3 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [23:16]
         ///
         #[derive(Clone, Copy)]
         pub struct AesBuffer2(u8);
-    
+
         /// AES data buffer [23:16]. See AES_BUFFER15 for details
         pub aes_buffer_23_16, set_aes_buffer_23_16: 7, 0;
     }
-    
+
     impl const Register for AesBuffer2 {
         const ADDRESS: u16 = 0x2FFD;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesBuffer2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesBuffer2 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [15:8]
         ///
         #[derive(Clone, Copy)]
         pub struct AesBuffer1(u8);
-    
+
         /// AES data buffer [15:8]. See AES_BUFFER15 for details
         pub aes_buffer_15_8, set_aes_buffer_15_8: 7, 0;
     }
-    
+
     impl const Register for AesBuffer1 {
         const ADDRESS: u16 = 0x2FFE;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesBuffer1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesBuffer1 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [7:0]
         ///
         #[derive(Clone, Copy)]
         pub struct AesBuffer0(u8);
-    
+
         /// AES data buffer [7:0]. See AES_BUFFER15 for details
         pub aes_buffer_7_0, set_aes_buffer_7_0: 7, 0;
     }
-    
+
     impl const Register for AesBuffer0 {
         const ADDRESS: u16 = 0x2FFF;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AesBuffer0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AesBuffer0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
 }

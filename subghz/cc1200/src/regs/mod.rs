@@ -5,7 +5,7 @@ use crate::gpio::{Gpio0Output, Gpio1Output, Gpio2Output, Gpio3Output, GpioOutput
 mod generated;
 pub use generated::*;
 
-use self::pri::{Iocfg3, Iocfg2, Iocfg1, Iocfg0, FifoCfg};
+use self::pri::{FifoCfg, Iocfg0, Iocfg1, Iocfg2, Iocfg3};
 
 pub trait Iocfg {
     /// Analog transfer enable
@@ -186,7 +186,7 @@ mod tests {
     #[test]
     fn fifo_thr_rx() {
         let mut fifocfg = FifoCfg(0);
-        
+
         fifocfg.set_bytes_in_rxfifo(1);
         assert_eq!(1, fifocfg.bytes_in_rxfifo());
         assert_eq!(0, fifocfg.fifo_thr());
@@ -207,7 +207,7 @@ mod tests {
     #[test]
     fn fifo_thr_tx() {
         let mut fifocfg = FifoCfg(0);
-        
+
         fifocfg.set_bytes_in_txfifo(127);
         assert_eq!(127, fifocfg.bytes_in_txfifo());
         assert_eq!(0, fifocfg.fifo_thr());
