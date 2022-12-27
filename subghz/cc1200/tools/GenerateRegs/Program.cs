@@ -102,7 +102,13 @@ foreach (var register in definition.Register.Where(x => Convert.ToInt32(x.Addres
 
     foreach (var line in writer.ToString().Split(Environment.NewLine))
     {
-        Console.WriteLine("".PadLeft(4) + line);
+        if (line != "")
+        {
+            // Add indentation
+            Console.Write("".PadLeft(4));
+        }
+
+        Console.WriteLine(line);
     }
 }
 Console.WriteLine("}");
@@ -118,6 +124,7 @@ foreach (var register in definition.Register.Where(x => Convert.ToInt32(x.Addres
     {
         if (line != "")
         {
+            // Add indentation
             Console.Write("".PadLeft(4));
         }
 

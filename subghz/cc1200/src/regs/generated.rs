@@ -24,7 +24,7 @@ pub mod pri {
         ///
         #[derive(Clone, Copy)]
         pub struct Iocfg3(u8);
-    
+
         /// Analog transfer enable
         ///
         /// # Values
@@ -34,7 +34,7 @@ pub mod pri {
         ///
         /// The default value is 0x00
         pub gpio3_atran, set_gpio3_atran: 7;
-    
+
         /// Invert output enable
         ///
         /// # Values
@@ -44,282 +44,282 @@ pub mod pri {
         ///
         /// The default value is 0x00
         pub gpio3_inv, set_gpio3_inv: 6;
-    
+
         /// Output selection. Default: PKT_SYNC_RXTX
         pub gpio3_cfg, set_gpio3_cfg: 5, 0;
     }
-    
+
     impl const Register for Iocfg3 {
         const ADDRESS: u16 = 0x00;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Iocfg3 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Iocfg3 {
         fn default() -> Self {
             Self(0x06)
         }
     }
-    
+
     bitfield! {
         /// GPIO2 IO Pin Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct Iocfg2(u8);
-    
+
         /// Analog transfer enable. Refer to IOCFG3
         pub gpio2_atran, set_gpio2_atran: 7;
-    
+
         /// Invert output enable. Refer to IOCFG3
         pub gpio2_inv, set_gpio2_inv: 6;
-    
+
         /// Output selection. Default: PKT_CRC_OK
         pub gpio2_cfg, set_gpio2_cfg: 5, 0;
     }
-    
+
     impl const Register for Iocfg2 {
         const ADDRESS: u16 = 0x01;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Iocfg2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Iocfg2 {
         fn default() -> Self {
             Self(0x07)
         }
     }
-    
+
     bitfield! {
         /// GPIO1 IO Pin Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct Iocfg1(u8);
-    
+
         /// Analog transfer enable. Refer to IOCFG3
         pub gpio1_atran, set_gpio1_atran: 7;
-    
+
         /// Invert output enable. Refer to IOCFG3
         pub gpio1_inv, set_gpio1_inv: 6;
-    
+
         /// Output selection. Default: HIGHZ. Note that GPIO1 is shared with the SPI and act as SO when CSn is asserted (active low). The system must ensure pull up/down on this pin
         pub gpio1_cfg, set_gpio1_cfg: 5, 0;
     }
-    
+
     impl const Register for Iocfg1 {
         const ADDRESS: u16 = 0x02;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Iocfg1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Iocfg1 {
         fn default() -> Self {
             Self(0x30)
         }
     }
-    
+
     bitfield! {
         /// GPIO0 IO Pin Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct Iocfg0(u8);
-    
+
         /// Analog transfer enable. Refer to IOCFG3
         pub gpio0_atran, set_gpio0_atran: 7;
-    
+
         /// Invert output enable. Refer to IOCFG3
         pub gpio0_inv, set_gpio0_inv: 6;
-    
+
         /// Output selection. Default: EXT_OSC_EN
         pub gpio0_cfg, set_gpio0_cfg: 5, 0;
     }
-    
+
     impl const Register for Iocfg0 {
         const ADDRESS: u16 = 0x03;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Iocfg0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Iocfg0 {
         fn default() -> Self {
             Self(0x3c)
         }
     }
-    
+
     bitfield! {
         /// Sync Word Configuration [31:24]
         ///
         #[derive(Clone, Copy)]
         pub struct Sync3(u8);
-    
+
         /// Sync word [31:24]
         pub sync31_24, set_sync31_24: 7, 0;
     }
-    
+
     impl const Register for Sync3 {
         const ADDRESS: u16 = 0x04;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Sync3 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Sync3 {
         fn default() -> Self {
             Self(0x93)
         }
     }
-    
+
     bitfield! {
         /// Sync Word Configuration [23:16]
         ///
         #[derive(Clone, Copy)]
         pub struct Sync2(u8);
-    
+
         /// Sync word [23:16]
         pub sync23_16, set_sync23_16: 7, 0;
     }
-    
+
     impl const Register for Sync2 {
         const ADDRESS: u16 = 0x05;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Sync2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Sync2 {
         fn default() -> Self {
             Self(0x0b)
         }
     }
-    
+
     bitfield! {
         /// Sync Word Configuration [15:8]
         ///
         #[derive(Clone, Copy)]
         pub struct Sync1(u8);
-    
+
         /// Sync word [15:8]
         pub sync15_8, set_sync15_8: 7, 0;
     }
-    
+
     impl const Register for Sync1 {
         const ADDRESS: u16 = 0x06;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Sync1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Sync1 {
         fn default() -> Self {
             Self(0x51)
         }
     }
-    
+
     bitfield! {
         /// Sync Word Configuration [7:0]
         ///
         #[derive(Clone, Copy)]
         pub struct Sync0(u8);
-    
+
         /// Sync Word [7:0]
         pub sync7_0, set_sync7_0: 7, 0;
     }
-    
+
     impl const Register for Sync0 {
         const ADDRESS: u16 = 0x07;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Sync0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Sync0 {
         fn default() -> Self {
             Self(0xde)
         }
     }
-    
+
     bitfield! {
         /// Sync Word Detection Configuration Reg. 1
         ///
         #[derive(Clone, Copy)]
         pub struct SyncCfg1(u8);
-    
+
         /// Sync word configuration. When SYNC_MODE = 000b, all samples (noise or data) received after RX mode is entered will either be put in the RX FIFO or output on a GPIO configured as SERIAL_RX. Note that when 4'ary modulation is used the sync word uses 2'ary modulation (the symbol rate is kept the same)
         sync_mode_bits, set_sync_mode_bits: 7, 5;
-    
+
         /// Soft decision sync word threshold. A sync word is accepted when the calculated sync word qualifier value (PQT_SYNC_ERR.SYNC_ERROR) is less than SYNC_THR/2). A low threshold value means a strict sync word qualifier (sync word must be of high quality to be accepted) while a high threshold value will accept sync word of a poorer quality (increased probability of detecting false sync words)
         pub sync_thr, set_sync_thr: 4, 0;
     }
-    
+
     impl SyncCfg1 {
         pub fn sync_mode(&self) -> SyncModeValue {
             unsafe { transmute(self.sync_mode_bits()) }
         }
-    
+
         pub fn set_sync_mode(&mut self, value: SyncModeValue) {
             self.set_sync_mode_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum SyncModeValue {
         /// No sync word
@@ -339,35 +339,35 @@ pub mod pri {
         /// 16D bits (DualSync search). When this setting is used in TX mode [SYNC15_8:SYNC7_0] is transmitted
         Bits16d = 0b111,
     }
-    
+
     impl const Register for SyncCfg1 {
         const ADDRESS: u16 = 0x08;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for SyncCfg1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for SyncCfg1 {
         fn default() -> Self {
             Self(0xaa)
         }
     }
-    
+
     bitfield! {
         /// Sync Word Detection Configuration Reg. 0
         ///
         #[derive(Clone, Copy)]
         pub struct SyncCfg0(u8);
-    
+
         pub sync_cfg0_not_used, _: 7, 6;
-    
+
         /// Auto clear enable. Auto clear of symbol rate offset estimate when TOC_CFG.TOC_LIMIT != 0 and MDMCFG1.CARRIER_SENSE_GATE = 1. The  symbol rate offset estimate will be cleared when CARRIER_SENSE is de-asserted. Auto clear of IQIC coefficient when IQIC.IQIC_EN = 1. The receiver image compensation coefficient is cleared when the image signal dissappears
         ///
         /// # Values
@@ -377,7 +377,7 @@ pub mod pri {
         ///
         /// The default value is 0x00
         pub auto_clear, set_auto_clear: 5;
-    
+
         /// Receiver configuration limitation. The decimation factor is given by CHAN_BW.ADC_CIC_DECFACT. When this bit is set, RX filter BW must be less than 1500 kHz.
         /// When RX_CONFIG_LIMITATION = 1 the AGC_CFG1.AGC_WIN_SIZE should be incremented by 1 and the wait time between AGC gain adjustment programmed through AGC_CFG1.AGC_SETTLE_WAIT should be doubled.
         ///
@@ -388,7 +388,7 @@ pub mod pri {
         ///
         /// The default value is 0x00
         pub rx_config_limitation, set_rx_config_limitation: 4;
-    
+
         /// PQT gating enable
         ///
         /// # Values
@@ -398,24 +398,24 @@ pub mod pri {
         ///
         /// The default value is 0x00
         pub pqt_gating_en, set_pqt_gating_en: 3;
-    
+
         /// External sync detect can be used in blind mode to make the receiver change modem parameters after a sync word has been detected by the MCU. GPIO2 needs to be configured as SYNC_DETECT (IOCFG2.GPIO2_CFG = HIGHZ (48)) and the MCU should set this input when a sync word is detected. This will make the receiver switch modem parameters from sync search settings to packet receive settings similar to what is done in FIFO mode/normal mode
         pub ext_sync_detect, set_ext_sync_detect: 2;
-    
+
         /// Strict sync word bit check. This feature is useful in cases where the sync word has weak correlation properties (level 3 is the strictest sync check)
         strict_sync_check_bits, set_strict_sync_check_bits: 1, 0;
     }
-    
+
     impl SyncCfg0 {
         pub fn strict_sync_check(&self) -> StrictSyncCheckValue {
             unsafe { transmute(self.strict_sync_check_bits()) }
         }
-    
+
         pub fn set_strict_sync_check(&mut self, value: StrictSyncCheckValue) {
             self.set_strict_sync_check_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum StrictSyncCheckValue {
         /// Strict sync word check level 1
@@ -427,85 +427,85 @@ pub mod pri {
         /// Strict sync word check disabled
         StrictSyncWordCheckDisabled = 0b11,
     }
-    
+
     impl const Register for SyncCfg0 {
         const ADDRESS: u16 = 0x09;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for SyncCfg0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for SyncCfg0 {
         fn default() -> Self {
             Self(0x03)
         }
     }
-    
+
     bitfield! {
         /// Frequency Deviation Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct DeviationM(u8);
-    
+
         /// Frequency deviation (mantissa part)<BR/>
         /// DEV_E > 0 => f_dev = f_xosc*(256+DEV_M)*2^DEV_E/2^22 [Hz]<BR/>
         /// DEV_E = 0 => f_dev = f_xosc*DEV_M/2^21 [Hz]
         pub dev_m, set_dev_m: 7, 0;
     }
-    
+
     impl const Register for DeviationM {
         const ADDRESS: u16 = 0x0A;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for DeviationM {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for DeviationM {
         fn default() -> Self {
             Self(0x06)
         }
     }
-    
+
     bitfield! {
         /// Modulation Format and Frequency Deviation Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct ModcfgDevE(u8);
-    
+
         /// Modem mode configuration
         pub modem_mode, set_modem_mode: 7, 6;
-    
+
         /// Modulation format
         mod_format_bits, set_mod_format_bits: 5, 3;
-    
+
         /// Frequency deviation (exponent part). See DEVIATION_M
         pub dev_e, set_dev_e: 2, 0;
     }
-    
+
     impl ModcfgDevE {
         pub fn mod_format(&self) -> ModFormatValue {
             unsafe { transmute(self.mod_format_bits()) }
         }
-    
+
         pub fn set_mod_format(&mut self, value: ModFormatValue) {
             self.set_mod_format_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum ModFormatValue {
         /// 2-FSK
@@ -525,35 +525,35 @@ pub mod pri {
         /// Reserved
         Reserved_111 = 0b111,
     }
-    
+
     impl const Register for ModcfgDevE {
         const ADDRESS: u16 = 0x0B;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for ModcfgDevE {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for ModcfgDevE {
         fn default() -> Self {
             Self(0x03)
         }
     }
-    
+
     bitfield! {
         /// Digital DC Removal Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct DcfiltCfg(u8);
-    
+
         pub dcfilt_cfg_not_used, _: 7;
-    
+
         /// DC filter override
         ///
         /// # Values
@@ -563,12 +563,12 @@ pub mod pri {
         ///
         /// The default value is 0x01
         pub dcfilt_freeze_coeff, set_dcfilt_freeze_coeff: 6;
-    
+
         /// Settling period of high pass DC filter after AGC adjustment<BR/>
         /// Sample Rate = f_xosc/Decimation Factor [Hz]<BR/>
         /// The decimation factor is 12, 24, or 48, depending on the CHAN_BW.ADC_CIC_DECFACT setting
         dcfilt_bw_settle_bits, set_dcfilt_bw_settle_bits: 5, 3;
-    
+
         /// Cut-off frequency (f_Cut_Off ) of high pass DC filter<BR/>
         /// DCFILT_BW = 0 - 011b:<BR/>
         /// f_Cut_Off_DC_filter ~= f_xosc/(Decimation Factor*2^(DCFILT_BW+3)) [Hz]<BR/>
@@ -577,17 +577,17 @@ pub mod pri {
         /// The decimation factor is 12, 24, or48, depending on the CHAN_BW.ADC_CIC_DECFACT setting
         pub dcfilt_bw, set_dcfilt_bw: 2, 0;
     }
-    
+
     impl DcfiltCfg {
         pub fn dcfilt_bw_settle(&self) -> DcfiltBwSettleValue {
             unsafe { transmute(self.dcfilt_bw_settle_bits()) }
         }
-    
+
         pub fn set_dcfilt_bw_settle(&mut self, value: DcfiltBwSettleValue) {
             self.set_dcfilt_bw_settle_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum DcfiltBwSettleValue {
         /// 8 samples
@@ -607,59 +607,59 @@ pub mod pri {
         /// 128 samples
         Samples128_111 = 0b111,
     }
-    
+
     impl const Register for DcfiltCfg {
         const ADDRESS: u16 = 0x0C;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for DcfiltCfg {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for DcfiltCfg {
         fn default() -> Self {
             Self(0x4c)
         }
     }
-    
+
     bitfield! {
         /// Preamble Length Configuration Reg. 1
         ///
         #[derive(Clone, Copy)]
         pub struct PreambleCfg1(u8);
-    
+
         pub preamble_cfg1_not_used, _: 7, 6;
-    
+
         /// Sets the minimum number of preamble bits to be transmitted
         num_preamble_bits, set_num_preamble_bits: 5, 2;
-    
+
         /// Preamble byte configuration. PREAMBLE_WORD determines how a preamble byte looks like. Note that when 4'ary modulation is used the preamble uses 2'are modulation (the baud rate is kept the same)
         preamble_word_bits, set_preamble_word_bits: 1, 0;
     }
-    
+
     impl PreambleCfg1 {
         pub fn num_preamble(&self) -> NumPreambleValue {
             unsafe { transmute(self.num_preamble_bits()) }
         }
-    
+
         pub fn set_num_preamble(&mut self, value: NumPreambleValue) {
             self.set_num_preamble_bits(value as u8);
         }
         pub fn preamble_word(&self) -> PreambleWordValue {
             unsafe { transmute(self.preamble_word_bits()) }
         }
-    
+
         pub fn set_preamble_word(&mut self, value: PreambleWordValue) {
             self.set_preamble_word_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum NumPreambleValue {
         /// No preamble
@@ -695,7 +695,7 @@ pub mod pri {
         /// Reserved
         Reserved_1111 = 0b1111,
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum PreambleWordValue {
         /// 10101010 (0xAA)
@@ -707,33 +707,33 @@ pub mod pri {
         /// 11001100 (0xCC)
         Pattern11001100 = 0b11,
     }
-    
+
     impl const Register for PreambleCfg1 {
         const ADDRESS: u16 = 0x0D;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for PreambleCfg1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for PreambleCfg1 {
         fn default() -> Self {
             Self(0x14)
         }
     }
-    
+
     bitfield! {
         /// Preamble Detection Configuration Reg. 0
         ///
         #[derive(Clone, Copy)]
         pub struct PreambleCfg0(u8);
-    
+
         /// Preamble detection enable
         ///
         /// # Values
@@ -743,24 +743,24 @@ pub mod pri {
         ///
         /// The default value is 0x01
         pub pqt_en, set_pqt_en: 7;
-    
+
         /// PQT start-up timer. PQT_VALID_TIMEOUT sets the number of symbols that must be received before PQT_VALID is asserted
         pqt_valid_timeout_bits, set_pqt_valid_timeout_bits: 6, 4;
-    
+
         /// Soft Decision PQT. A preamble is detected when the calculated preamble qualifier value (PQT_SYNC_ERR.PQT_ERROR) is less than PQT. A low threshold value means a strict preamble qualifier (preamble must be of high quality to be accepted) while a high threshold value will accept preamble of a poorer quality (increased probability of detecting false preamble)
         pub pqt, set_pqt: 3, 0;
     }
-    
+
     impl PreambleCfg0 {
         pub fn pqt_valid_timeout(&self) -> PqtValidTimeoutValue {
             unsafe { transmute(self.pqt_valid_timeout_bits()) }
         }
-    
+
         pub fn set_pqt_valid_timeout(&mut self, value: PqtValidTimeoutValue) {
             self.set_pqt_valid_timeout_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum PqtValidTimeoutValue {
         /// 11 symbols
@@ -780,33 +780,33 @@ pub mod pri {
         /// 32 symbols
         Symbols32 = 0b111,
     }
-    
+
     impl const Register for PreambleCfg0 {
         const ADDRESS: u16 = 0x0E;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for PreambleCfg0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for PreambleCfg0 {
         fn default() -> Self {
             Self(0xda)
         }
     }
-    
+
     bitfield! {
         /// Digital Image Channel Compensation Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct Iqic(u8);
-    
+
         /// IQ image compensation enable. When this bit is set the following must be true:<BR/>
         /// f_IF > RX Filter BW<BR/>
         /// (see IF_MIX_CFGCMIX_CFG for how to program f_IF)
@@ -818,7 +818,7 @@ pub mod pri {
         ///
         /// The default value is 0x01
         pub iqic_en, set_iqic_en: 7;
-    
+
         /// IQIC update coefficients enable
         ///
         /// # Values
@@ -828,41 +828,41 @@ pub mod pri {
         ///
         /// The default value is 0x01
         pub iqic_update_coeff_en, set_iqic_update_coeff_en: 6;
-    
+
         /// IQIC block length when settling. The IQIC module will do a coarse estimation of IQ imbalance coefficients during settling mode. Long block length increases settling time and improves image rejection
         iqic_blen_settle_bits, set_iqic_blen_settle_bits: 5, 4;
-    
+
         /// IQIC block length. Long block length increases settling time and improves image rejection
         iqic_blen_bits, set_iqic_blen_bits: 3, 2;
-    
+
         /// IQIC image channel level threshold. Image rejection will be activated when image carrier is present. The IQIC image channel level threshold is an image carrier detector. High threshold imply that image carrier must be high to enable IQIC compensation module
         iqic_imgch_level_thr_bits, set_iqic_imgch_level_thr_bits: 1, 0;
     }
-    
+
     impl Iqic {
         pub fn iqic_blen_settle(&self) -> IqicBlenSettleValue {
             unsafe { transmute(self.iqic_blen_settle_bits()) }
         }
-    
+
         pub fn set_iqic_blen_settle(&mut self, value: IqicBlenSettleValue) {
             self.set_iqic_blen_settle_bits(value as u8);
         }
         pub fn iqic_blen(&self) -> IqicBlenValue {
             unsafe { transmute(self.iqic_blen_bits()) }
         }
-    
+
         pub fn set_iqic_blen(&mut self, value: IqicBlenValue) {
             self.set_iqic_blen_bits(value as u8);
         }
         pub fn iqic_imgch_level_thr(&self) -> IqicImgchLevelThrValue {
             unsafe { transmute(self.iqic_imgch_level_thr_bits()) }
         }
-    
+
         pub fn set_iqic_imgch_level_thr(&mut self, value: IqicImgchLevelThrValue) {
             self.set_iqic_imgch_level_thr_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum IqicBlenSettleValue {
         /// 8 samples
@@ -874,7 +874,7 @@ pub mod pri {
         /// 256 samples
         Samples256 = 0b11,
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum IqicBlenValue {
         /// 8 samples
@@ -886,7 +886,7 @@ pub mod pri {
         /// 256 samples
         Samples256 = 0b11,
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum IqicImgchLevelThrValue {
         /// > 256
@@ -898,50 +898,50 @@ pub mod pri {
         /// > 2048
         Above2048 = 0b11,
     }
-    
+
     impl const Register for Iqic {
         const ADDRESS: u16 = 0x0F;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Iqic {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Iqic {
         fn default() -> Self {
             Self(0xc4)
         }
     }
-    
+
     bitfield! {
         /// Channel Filter Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct ChanBw(u8);
-    
+
         /// ADC_CIC_DECFACT is a table index which programs the first decimation filter and program the RX filter bandwidth. ADC_CIC_DECFACT table index:
         adc_cic_decfact_bits, set_adc_cic_decfact_bits: 7, 6;
-    
+
         /// BB_CIC_DECFACT configures the RX filter BW by changing decimation factor in the second decimation filter
         pub bb_cic_decfact, set_bb_cic_decfact: 5, 0;
     }
-    
+
     impl ChanBw {
         pub fn adc_cic_decfact(&self) -> AdcCicDecfactValue {
             unsafe { transmute(self.adc_cic_decfact_bits()) }
         }
-    
+
         pub fn set_adc_cic_decfact(&mut self, value: AdcCicDecfactValue) {
             self.set_adc_cic_decfact_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum AdcCicDecfactValue {
         /// Decimation factor 12
@@ -953,33 +953,33 @@ pub mod pri {
         /// Reserved
         Reserved_11 = 0b11,
     }
-    
+
     impl const Register for ChanBw {
         const ADDRESS: u16 = 0x10;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for ChanBw {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for ChanBw {
         fn default() -> Self {
             Self(0x94)
         }
     }
-    
+
     bitfield! {
         /// General Modem Parameter Configuration Reg. 1
         ///
         #[derive(Clone, Copy)]
         pub struct Mdmcfg1(u8);
-    
+
         /// When CARRIER_SENSE_GATE is 1, the demodulator will not start to look for a sync word before CARRIER_SENSE is asserted
         ///
         /// # Values
@@ -989,7 +989,7 @@ pub mod pri {
         ///
         /// The default value is 0x00
         pub carrier_sense_gate, set_carrier_sense_gate: 7;
-    
+
         /// FIFO enable. Specifies if data to/from modem will be passed through the FIFOs or directly to the serial pin
         ///
         /// # Values
@@ -999,7 +999,7 @@ pub mod pri {
         ///
         /// The default value is 0x01
         pub fifo_en, set_fifo_en: 6;
-    
+
         /// Manchester mode enable. Manchester encoding/decoding is only applicable to payload data including optional CRC. Manchester encoding/decoding is not supported for 4-(G)FSK
         ///
         /// # Values
@@ -1009,7 +1009,7 @@ pub mod pri {
         ///
         /// The default value is 0x00
         pub manchester_en, set_manchester_en: 5;
-    
+
         /// Invert data enable. Invert payload data stream in RX and TX (only applicable to payload data including optional CRC)
         ///
         /// # Values
@@ -1019,7 +1019,7 @@ pub mod pri {
         ///
         /// The default value is 0x00
         pub invert_data_en, set_invert_data_en: 4;
-    
+
         /// Collision detect enable. After a sync word is detected (SYNC_EVENT asserted), the receiver will always receive a packet. If collision detection is enabled, the receiver will continue to search for preamble. If a new preamble is found (PQT_REACHED asserted) and the RSSI has increased  10 or 16 dB during packet reception (depending on AGC_CFG1.RSSI_STEP_THR) a collision is detected and the COLLISION_FOUND flag will be asserted
         ///
         /// # Values
@@ -1029,10 +1029,10 @@ pub mod pri {
         ///
         /// The default value is 0x00
         pub collision_detect_en, set_collision_detect_en: 3;
-    
+
         /// Fixed DVGA gain configuration. The DVGA configuration has impact on the RSSI  offset
         dvga_gain_bits, set_dvga_gain_bits: 2, 1;
-    
+
         /// Configure the number of active receive channels. If this bit is set the power consumption will be reduced but the sensitivity level will be reduced by ~3 dB. Image rejection will not work
         ///
         /// # Values
@@ -1043,17 +1043,17 @@ pub mod pri {
         /// The default value is 0x00
         pub single_adc_en, set_single_adc_en: 0;
     }
-    
+
     impl Mdmcfg1 {
         pub fn dvga_gain(&self) -> DvgaGainValue {
             unsafe { transmute(self.dvga_gain_bits()) }
         }
-    
+
         pub fn set_dvga_gain(&mut self, value: DvgaGainValue) {
             self.set_dvga_gain_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum DvgaGainValue {
         /// 0 dB DVGA (preferred setting for RX filter bandwidth < 100 kHz)
@@ -1065,36 +1065,36 @@ pub mod pri {
         /// 9 dB DVGA
         Db9 = 0b11,
     }
-    
+
     impl const Register for Mdmcfg1 {
         const ADDRESS: u16 = 0x11;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Mdmcfg1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Mdmcfg1 {
         fn default() -> Self {
             Self(0x46)
         }
     }
-    
+
     bitfield! {
         /// General Modem Parameter Configuration Reg. 0
         ///
         #[derive(Clone, Copy)]
         pub struct Mdmcfg0(u8);
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub mdmcfg0_reserved7, set_mdmcfg0_reserved7: 7;
-    
+
         /// Transparent mode enable
         ///
         /// # Values
@@ -1104,12 +1104,12 @@ pub mod pri {
         ///
         /// The default value is 0x00
         pub transparent_mode_en, set_transparent_mode_en: 6;
-    
+
         /// Transparent signal interpolation factor. The sample rate gives the jitter of the samples and the sample rate is given by:<BR/>
         /// Sample Rate = f_xosc*Interpolation Facor/(Decimation Factor*CHAN_BW.BB_CIC_DECFACT) [Hz]<BR/>
         /// The decimation factor is given by CHAN_BW.ADC_CIC_DECFACT while the interpolation factor is given below
         transparent_intfact_bits, set_transparent_intfact_bits: 5, 4;
-    
+
         /// Transparent data filter and extended data filter enable. Enabling transparent data filter and/or extended data filter might Improve sensitivity. When TRANSPARENT_MODE_EN = 0 this bit should only be set when RX filter bandwidth/symbol rate > 10 and TOC_CFG.TOC_LIMIT = 0. The table below shows the status of the transparent data filter and the extended data filter for all combinations of TRANSPARENT_MODE_EN (MSB) and DATA_FILTER_EN (LSB)
         ///
         /// # Values
@@ -1121,7 +1121,7 @@ pub mod pri {
         ///
         /// The default value is 0x01
         pub data_filter_en, set_data_filter_en: 3;
-    
+
         /// Viterbi detection enable. Enabling Viterbi detection improves the sensitivity. The latency from the antenna to the signal is available in the RXFIFO or on the GPIO is increased by 5 bits for 2-ary modulation formats and 10 bits for 4-ary modulation formats. Minimum packet length = 2 bytes when Viterbi Detection and 4-(G)FSK is enabled
         ///
         /// # Values
@@ -1131,24 +1131,24 @@ pub mod pri {
         ///
         /// The default value is 0x01
         pub viterbi_en, set_viterbi_en: 2;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub mdmcfg0_reserved1, set_mdmcfg0_reserved1: 1;
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub mdmcfg0_reserved0, set_mdmcfg0_reserved0: 0;
     }
-    
+
     impl Mdmcfg0 {
         pub fn transparent_intfact(&self) -> TransparentIntfactValue {
             unsafe { transmute(self.transparent_intfact_bits()) }
         }
-    
+
         pub fn set_transparent_intfact(&mut self, value: TransparentIntfactValue) {
             self.set_transparent_intfact_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum TransparentIntfactValue {
         /// 1x transparent signal interpolated one time before output (reset)
@@ -1160,241 +1160,241 @@ pub mod pri {
         /// Reserved
         Reserved_11 = 0b11,
     }
-    
+
     impl const Register for Mdmcfg0 {
         const ADDRESS: u16 = 0x12;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for Mdmcfg0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for Mdmcfg0 {
         fn default() -> Self {
             Self(0x0d)
         }
     }
-    
+
     bitfield! {
         /// Symbol Rate Configuration Exponent and Mantissa [19:16]
         ///
         #[derive(Clone, Copy)]
         pub struct SymbolRate2(u8);
-    
+
         /// Symbol rate (exponent part)<BR/>
         /// SRATE_E > 0 => Symbol Rate = f_xosc*(2^20+SRATE_M)*2^SRATE_E/2^39 [ksps]<BR/>
         /// SRATE_E = 0 => Symbol Rate = f_xosc*SRATE_M/2^38 [ksps]
         pub srate_e, set_srate_e: 7, 4;
-    
+
         /// Symbol rate (mantissa part [19:16]). See SRATE_E
         pub srate_m_19_16, set_srate_m_19_16: 3, 0;
     }
-    
+
     impl const Register for SymbolRate2 {
         const ADDRESS: u16 = 0x13;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for SymbolRate2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for SymbolRate2 {
         fn default() -> Self {
             Self(0x43)
         }
     }
-    
+
     bitfield! {
         /// Symbol Rate Configuration Mantissa [15:8]
         ///
         #[derive(Clone, Copy)]
         pub struct SymbolRate1(u8);
-    
+
         /// Symbol rate (mantissa part [15:8]). See SYMBOL_RATE2
         pub srate_m_15_8, set_srate_m_15_8: 7, 0;
     }
-    
+
     impl const Register for SymbolRate1 {
         const ADDRESS: u16 = 0x14;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for SymbolRate1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for SymbolRate1 {
         fn default() -> Self {
             Self(0xa9)
         }
     }
-    
+
     bitfield! {
         /// Symbol Rate Configuration Mantissa [7:0]
         ///
         #[derive(Clone, Copy)]
         pub struct SymbolRate0(u8);
-    
+
         /// Symbol rate (mantissa part [7:0]). See SYMBOL_RATE2
         pub srate_m_7_0, set_srate_m_7_0: 7, 0;
     }
-    
+
     impl const Register for SymbolRate0 {
         const ADDRESS: u16 = 0x15;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for SymbolRate0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for SymbolRate0 {
         fn default() -> Self {
             Self(0x2a)
         }
     }
-    
+
     bitfield! {
         /// AGC Reference Level Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct AgcRef(u8);
-    
+
         /// AGC reference level. The AGC reference level must be higher than the minimum SNR to the demodulator. The AGC reduces the analog front end gain when the magnitude output from channel filter > AGC reference level. An optimum AGC reference level is given by several conditions, but a rule of thumb is to use the formula:<BR/>
         /// AGC_REFERENCE = 10*log10(RX Filter BW) - 92 - RSSI Offset<BR/>
         /// For Zero-IF configuration, AGC hysteresis > 3 dB, or modem format which needs SNR>15 dB a higher AGC reference value is needed
         /// </br>
         pub agc_reference, set_agc_reference: 7, 0;
     }
-    
+
     impl const Register for AgcRef {
         const ADDRESS: u16 = 0x16;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AgcRef {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AgcRef {
         fn default() -> Self {
             Self(0x36)
         }
     }
-    
+
     bitfield! {
         /// Carrier Sense Threshold Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct AgcCsThr(u8);
-    
+
         /// AGC carrier sense threshold. Two's complement number with 1 dB resolution
         pub agc_cs_threshold, set_agc_cs_threshold: 7, 0;
     }
-    
+
     impl const Register for AgcCsThr {
         const ADDRESS: u16 = 0x17;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AgcCsThr {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AgcCsThr {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// RSSI Offset Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct AgcGainAdjust(u8);
-    
+
         /// AGC gain adjustment. This register is used to adjust RSSI[11:0] to the actual carrier input signal level to compensate for interpolation gains (two's complement with 1 dB resolution)
         pub gain_adjustment, set_gain_adjustment: 7, 0;
     }
-    
+
     impl const Register for AgcGainAdjust {
         const ADDRESS: u16 = 0x18;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AgcGainAdjust {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AgcGainAdjust {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Automatic Gain Control Configuration Reg. 3
         ///
         #[derive(Clone, Copy)]
         pub struct AgcCfg3(u8);
-    
+
         /// AGC behavior after sync word detection
         agc_sync_behaviour_bits, set_agc_sync_behaviour_bits: 7, 5;
-    
+
         /// AGC minimum gain. Limits the AGC minimum gain compared to the preset gain table range. AGC_MIN_GAIN can have a value in the range<BR/>
         /// 0 to 17 when AGC_CFG2.FE_PERFORMANCE_MODE = 0 or 1,<BR/>
         /// 0 to 13 when AGC_CFG2.FE_PERFORMANCE_MODE = 10b and<BR/>
         /// 0 to 7 when AGC_CFG2.FE_PERFORMANCE_MODE = 11b
         pub agc_min_gain, set_agc_min_gain: 4, 0;
     }
-    
+
     impl AgcCfg3 {
         pub fn agc_sync_behaviour(&self) -> AgcSyncBehaviourValue {
             unsafe { transmute(self.agc_sync_behaviour_bits()) }
         }
-    
+
         pub fn set_agc_sync_behaviour(&mut self, value: AgcSyncBehaviourValue) {
             self.set_agc_sync_behaviour_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum AgcSyncBehaviourValue {
         /// No AGC gain freeze. Keep computing/updating RSSI
@@ -1414,33 +1414,33 @@ pub mod pri {
         /// Freeze both AGC gain and RSSI
         FreezeBothAgcGainAndRssi_111 = 0b111,
     }
-    
+
     impl const Register for AgcCfg3 {
         const ADDRESS: u16 = 0x19;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AgcCfg3 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AgcCfg3 {
         fn default() -> Self {
             Self(0xb1)
         }
     }
-    
+
     bitfield! {
         /// Automatic Gain Control Configuration Reg. 2
         ///
         #[derive(Clone, Copy)]
         pub struct AgcCfg2(u8);
-    
+
         ///
         /// # Values
         ///
@@ -1449,27 +1449,27 @@ pub mod pri {
         ///
         /// The default value is 0x00
         pub start_previous_gain_en, set_start_previous_gain_en: 7;
-    
+
         /// Controls which gain tables to be applied
         fe_performance_mode_bits, set_fe_performance_mode_bits: 6, 5;
-    
+
         /// AGC maximum gain. Limits the AGC maximum gain compared to the preset gain table range. AGC_MAX_GAIN can have a value in the range<BR/>
         /// 0 to 17 when AGC_CFG2.FE_PERFORMANCE_MODE = 0 or 1,<BR/>
         /// 0 to 13 when AGC_CFG2.FE_PERFORMANCE_MODE = 10b and<BR/>
         /// 0 to 7 when AGC_CFG2.FE_PERFORMANCE_MODE = 11b
         pub agc_max_gain, set_agc_max_gain: 4, 0;
     }
-    
+
     impl AgcCfg2 {
         pub fn fe_performance_mode(&self) -> FePerformanceModeValue {
             unsafe { transmute(self.fe_performance_mode_bits()) }
         }
-    
+
         pub fn set_fe_performance_mode(&mut self, value: FePerformanceModeValue) {
             self.set_fe_performance_mode_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum FePerformanceModeValue {
         /// Optimized linearity mode
@@ -1481,35 +1481,35 @@ pub mod pri {
         /// Zero-IF mode
         ZeroIfMode = 0b11,
     }
-    
+
     impl const Register for AgcCfg2 {
         const ADDRESS: u16 = 0x1A;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AgcCfg2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AgcCfg2 {
         fn default() -> Self {
             Self(0x20)
         }
     }
-    
+
     bitfield! {
         /// Automatic Gain Control Configuration Reg. 1
         ///
         #[derive(Clone, Copy)]
         pub struct AgcCfg1(u8);
-    
+
         pub agc_cfg1_not_used, _: 7;
-    
+
         /// AGC has a built in function to signal if there has been a step in the RSSI value. During sync search the difference between the current and the previous RSSI value is compared against the RSSI step (3 or 6 dB), while during packet reception, the difference between the current value and the value at sync found is compared against 10 or 16 dB
         ///
         /// # Values
@@ -1519,31 +1519,31 @@ pub mod pri {
         ///
         /// The default value is 0x01
         pub rssi_step_thr, set_rssi_step_thr: 6;
-    
+
         /// AGC integration window size for each value. Samples refer to the RX filter sampling frequency, which is programmed to be 4 times the desired RX filter BW
         agc_win_size_bits, set_agc_win_size_bits: 5, 3;
-    
+
         /// Sets the wait time between AGC gain adjustments
         agc_settle_wait_bits, set_agc_settle_wait_bits: 2, 0;
     }
-    
+
     impl AgcCfg1 {
         pub fn agc_win_size(&self) -> AgcWinSizeValue {
             unsafe { transmute(self.agc_win_size_bits()) }
         }
-    
+
         pub fn set_agc_win_size(&mut self, value: AgcWinSizeValue) {
             self.set_agc_win_size_bits(value as u8);
         }
         pub fn agc_settle_wait(&self) -> AgcSettleWaitValue {
             unsafe { transmute(self.agc_settle_wait_bits()) }
         }
-    
+
         pub fn set_agc_settle_wait(&mut self, value: AgcSettleWaitValue) {
             self.set_agc_settle_wait_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum AgcWinSizeValue {
         /// 8 samples
@@ -1563,7 +1563,7 @@ pub mod pri {
         /// Reserved
         Reserved_111 = 0b111,
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum AgcSettleWaitValue {
         /// 24 samples
@@ -1583,42 +1583,42 @@ pub mod pri {
         /// 127 samples
         Samples127 = 0b111,
     }
-    
+
     impl const Register for AgcCfg1 {
         const ADDRESS: u16 = 0x1B;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AgcCfg1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AgcCfg1 {
         fn default() -> Self {
             Self(0x52)
         }
     }
-    
+
     bitfield! {
         /// Automatic Gain Control Configuration Reg. 0
         ///
         #[derive(Clone, Copy)]
         pub struct AgcCfg0(u8);
-    
+
         /// AGC hysteresis level. The difference between the desired signal level and the actual signal level must be larger than AGC hysteresis level before the AGC changes the front end gain
         agc_hyst_level_bits, set_agc_hyst_level_bits: 7, 6;
-    
+
         /// AGC slew rate limit. Limits the maximum front end gain adjustment
         agc_slewrate_limit_bits, set_agc_slewrate_limit_bits: 5, 4;
-    
+
         /// Gives the number of new input samples to the moving average filter (internal RSSI estimates) that are required before the next update of the RSSI value. The RSSI_VALID signal will be asserted from the first RSSI update. RSSI_VALID is available on a GPIO or can be read from the RSSI0 register
         rssi_valid_cnt_bits, set_rssi_valid_cnt_bits: 3, 2;
-    
+
         /// The OOK/ASK receiver uses a max peak magnitude (logic 1) tracker and low peak magnitude (logic 0) tracker to estimate ASK_THRESHOLD (decision level) as the average of the max and min value. The max peak magnitude value is also used by the AGC to set the gain. AGC_ASK_DECAY controls the max peak magnitude decay steps in OOK/ASK mode and defines the number of samples required for the max peak level to be reduced to 10% when receiving logic 0 after receiving a logic 1.
         /// <BR/> <BR/>
         /// Sample Rate = (f_xosc*Interpolation Factor)/(Decimation Factor*CHAN_BW.BB_CIC_DECFACT)[Hz]
@@ -1626,38 +1626,38 @@ pub mod pri {
         /// The decimation factor is given by CHAN_BW.ADC_CIC_DECFACT and the interpolation factor is given by SYNC_CFG0.RX_CONFIG_LIMITATION as follows:</br>
         agc_ask_decay_bits, set_agc_ask_decay_bits: 1, 0;
     }
-    
+
     impl AgcCfg0 {
         pub fn agc_hyst_level(&self) -> AgcHystLevelValue {
             unsafe { transmute(self.agc_hyst_level_bits()) }
         }
-    
+
         pub fn set_agc_hyst_level(&mut self, value: AgcHystLevelValue) {
             self.set_agc_hyst_level_bits(value as u8);
         }
         pub fn agc_slewrate_limit(&self) -> AgcSlewrateLimitValue {
             unsafe { transmute(self.agc_slewrate_limit_bits()) }
         }
-    
+
         pub fn set_agc_slewrate_limit(&mut self, value: AgcSlewrateLimitValue) {
             self.set_agc_slewrate_limit_bits(value as u8);
         }
         pub fn rssi_valid_cnt(&self) -> RssiValidCntValue {
             unsafe { transmute(self.rssi_valid_cnt_bits()) }
         }
-    
+
         pub fn set_rssi_valid_cnt(&mut self, value: RssiValidCntValue) {
             self.set_rssi_valid_cnt_bits(value as u8);
         }
         pub fn agc_ask_decay(&self) -> AgcAskDecayValue {
             unsafe { transmute(self.agc_ask_decay_bits()) }
         }
-    
+
         pub fn set_agc_ask_decay(&mut self, value: AgcAskDecayValue) {
             self.set_agc_ask_decay_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum AgcHystLevelValue {
         /// 2 dB
@@ -1669,7 +1669,7 @@ pub mod pri {
         /// 10 dB
         Db10 = 0b11,
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum AgcSlewrateLimitValue {
         /// 60 dB
@@ -1681,7 +1681,7 @@ pub mod pri {
         /// 9 dB
         Db9 = 0b11,
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum RssiValidCntValue {
         /// 1
@@ -1693,7 +1693,7 @@ pub mod pri {
         /// 9
         Count9 = 0b11,
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum AgcAskDecayValue {
         /// 1200 samples
@@ -1705,101 +1705,101 @@ pub mod pri {
         /// 9500 samples
         Samples9500 = 0b11,
     }
-    
+
     impl const Register for AgcCfg0 {
         const ADDRESS: u16 = 0x1C;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AgcCfg0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AgcCfg0 {
         fn default() -> Self {
             Self(0xc3)
         }
     }
-    
+
     bitfield! {
         /// FIFO Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct FifoCfg(u8);
-    
+
         /// Automatically flushes the last packet received in the RX FIFO if a CRC error occurred. If this bit has been turned off and should be turned on again, an SFRX strobe must first be issued
         pub crc_autoflush, set_crc_autoflush: 7;
-    
+
         /// Threshold value for the RX and TX FIFO. The threshold value is coded in opposite directions for the two FIFOs to give equal margin to the overflow and underflow conditions when the threshold is reached. I.e.; FIFO_THR = 0 means that there are 127 bytes in the TX FIFO and 1 byte in the RX FIFO, while FIFO_THR = 127 means that there are 0 bytes in the TX FIFO and 128 bytes in the RX FIFO when the thresholds are reached
         pub fifo_thr, set_fifo_thr: 6, 0;
     }
-    
+
     impl const Register for FifoCfg {
         const ADDRESS: u16 = 0x1D;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FifoCfg {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FifoCfg {
         fn default() -> Self {
             Self(0x80)
         }
     }
-    
+
     bitfield! {
         /// Device Address Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct DevAddr(u8);
-    
+
         /// Address used for packet filtering in RX
         pub device_addr, set_device_addr: 7, 0;
     }
-    
+
     impl const Register for DevAddr {
         const ADDRESS: u16 = 0x1E;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for DevAddr {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for DevAddr {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Frequency Synthesizer Calibration and Settling Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct SettlingCfg(u8);
-    
+
         pub settling_cfg_not_used, _: 7, 5;
-    
+
         /// Auto calibration is performed:
         fs_autocal_bits, set_fs_autocal_bits: 4, 3;
-    
+
         /// Sets the time for the frequency synthesizer to settle to lock state. The table shows settling after calibration and settling when switching between TX and RX. Use values from SmartRF Studio
         ///
         /// # Values
@@ -1811,7 +1811,7 @@ pub mod pri {
         ///
         /// The default value is 0x01
         pub lock_time, set_lock_time: 2, 1;
-    
+
         /// Frequency synthesizer regulator settling time. Use values from SmartRF Studio
         ///
         /// # Values
@@ -1822,17 +1822,17 @@ pub mod pri {
         /// The default value is 0x01
         pub fsreg_time, set_fsreg_time: 0;
     }
-    
+
     impl SettlingCfg {
         pub fn fs_autocal(&self) -> FsAutocalValue {
             unsafe { transmute(self.fs_autocal_bits()) }
         }
-    
+
         pub fn set_fs_autocal(&mut self, value: FsAutocalValue) {
             self.set_fs_autocal_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum FsAutocalValue {
         /// Never (manually calibrate using SCAL strobe)
@@ -1844,35 +1844,35 @@ pub mod pri {
         /// Every 4th time when going from RX or TX to IDLE automatically
         Every4thTimeWhenGoingFromRxOrTxToIdleAutomatically = 0b11,
     }
-    
+
     impl const Register for SettlingCfg {
         const ADDRESS: u16 = 0x1F;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for SettlingCfg {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for SettlingCfg {
         fn default() -> Self {
             Self(0x0b)
         }
     }
-    
+
     bitfield! {
         /// Frequency Synthesizer Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct FsCfg(u8);
-    
+
         pub fs_cfg_not_used, _: 7, 5;
-    
+
         /// Out of lock detector enable
         ///
         /// # Values
@@ -1882,21 +1882,21 @@ pub mod pri {
         ///
         /// The default value is 0x00
         pub fs_lock_en, set_fs_lock_en: 4;
-    
+
         /// Band select setting for LO divider
         fsd_bandselect_bits, set_fsd_bandselect_bits: 3, 0;
     }
-    
+
     impl FsCfg {
         pub fn fsd_bandselect(&self) -> FsdBandselectValue {
             unsafe { transmute(self.fsd_bandselect_bits()) }
         }
-    
+
         pub fn set_fsd_bandselect(&mut self, value: FsdBandselectValue) {
             self.set_fsd_bandselect_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum FsdBandselectValue {
         /// Not in use
@@ -1932,38 +1932,38 @@ pub mod pri {
         /// Not in use
         NotInUse_1111 = 0b1111,
     }
-    
+
     impl const Register for FsCfg {
         const ADDRESS: u16 = 0x20;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for FsCfg {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for FsCfg {
         fn default() -> Self {
             Self(0x02)
         }
     }
-    
+
     bitfield! {
         /// eWOR Configuration Reg. 1
         ///
         #[derive(Clone, Copy)]
         pub struct WorCfg1(u8);
-    
+
         /// eWOR timer resolution. Controls the t_Event0 and RX timeout resolution<BR/>
         /// t_EVENT0 =  2^(5*WOR_RES)*EVENT0/f_rcosc [s] and<BR/>
         /// RX Timeout = MAX[1,FLOOR[EVENT0/2^(RFEND_CFG1.RX_TIME+3)]]*2^(4*WOR_RES)*1250/f_xosc [s]
         wor_res_bits, set_wor_res_bits: 7, 6;
-    
+
         /// eWOR mode
         ///
         /// # Values
@@ -1977,23 +1977,23 @@ pub mod pri {
         ///
         /// The default value is 0x01
         pub wor_mode, set_wor_mode: 5, 3;
-    
+
         /// Event 1 timeout<BR/>
         /// t_EVENT1 = WOR_EVENT1/f_rcosc [s]
         /// </br>
         pub event1, set_event1: 2, 0;
     }
-    
+
     impl WorCfg1 {
         pub fn wor_res(&self) -> WorResValue {
             unsafe { transmute(self.wor_res_bits()) }
         }
-    
+
         pub fn set_wor_res(&mut self, value: WorResValue) {
             self.set_wor_res_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum WorResValue {
         /// High resolution
@@ -2005,36 +2005,36 @@ pub mod pri {
         /// Low resolution
         LowResolution = 0b11,
     }
-    
+
     impl const Register for WorCfg1 {
         const ADDRESS: u16 = 0x21;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for WorCfg1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for WorCfg1 {
         fn default() -> Self {
             Self(0x08)
         }
     }
-    
+
     bitfield! {
         /// eWOR Configuration Reg. 0
         ///
         #[derive(Clone, Copy)]
         pub struct WorCfg0(u8);
-    
+
         /// RX duty cycle mode configuration. eWOR mode and RXDCM cannot be enabled at the same time. Both modes can be used in RX Sniff Mode implementation
         rx_duty_cycle_mode_bits, _: 7, 6;
-    
+
         /// Clock division enable. Enables clock division in SLEEP mode
         /// Setting DIV_256HZ_EN = 1 will lower the current consumption in SLEEP mode. Note that when this bit is set the radio should not be woken from SLEEP by pulling CSn low
         ///
@@ -2045,14 +2045,14 @@ pub mod pri {
         ///
         /// The default value is 0x01
         pub div_256hz_en, set_div_256hz_en: 5;
-    
+
         /// Event 2 timeout<BR/>
         /// t_EVENT2 = 2^WOR_EVENT2/f_rcosc [s]
         pub event2_cfg, set_event2_cfg: 4, 3;
-    
+
         /// RCOSC calibration mode. Configures when the RCOSC calibration sequence is performed. If calibration is enabled, WOR_CFG0.RC_PD must be 0
         rc_mode_bits, set_rc_mode_bits: 2, 1;
-    
+
         /// RCOSC power down signal
         ///
         /// # Values
@@ -2063,7 +2063,7 @@ pub mod pri {
         /// The default value is 0x01
         pub rc_pd, set_rc_pd: 0;
     }
-    
+
     impl WorCfg0 {
         pub fn rx_duty_cycle_mode(&self) -> RxDutyCycleModeValue {
             unsafe { transmute(self.rx_duty_cycle_mode_bits()) }
@@ -2071,12 +2071,12 @@ pub mod pri {
         pub fn rc_mode(&self) -> RcModeValue {
             unsafe { transmute(self.rc_mode_bits()) }
         }
-    
+
         pub fn set_rc_mode(&mut self, value: RcModeValue) {
             self.set_rc_mode_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum RxDutyCycleModeValue {
         /// RXDCM disabled
@@ -2088,7 +2088,7 @@ pub mod pri {
         /// RXDCM 2
         Rxdcm2 = 0b11,
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum RcModeValue {
         /// RCOSC calibration disabled
@@ -2100,94 +2100,94 @@ pub mod pri {
         /// RCOSC calibration is enabled on every 4th time the device is powered up and goes from IDLE to RX. This setting should only be used together with eWOR
         RcoscCalibrationIsEnabledOnEvery4thTimeTheDeviceIsPoweredUpAndGoesFromIdleToRx = 0b11,
     }
-    
+
     impl const Register for WorCfg0 {
         const ADDRESS: u16 = 0x22;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for WorCfg0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for WorCfg0 {
         fn default() -> Self {
             Self(0x21)
         }
     }
-    
+
     bitfield! {
         /// Event 0 Configuration MSB
         ///
         #[derive(Clone, Copy)]
         pub struct WorEvent0Msb(u8);
-    
+
         /// Event 0 timeout (MSB)<BR/>
         /// t_EVENT0 = 2^(5*WOR_CFG1.WOR_RES)*EVENT0/f_rcosc [s]
         pub event0_15_8, set_event0_15_8: 7, 0;
     }
-    
+
     impl const Register for WorEvent0Msb {
         const ADDRESS: u16 = 0x23;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for WorEvent0Msb {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for WorEvent0Msb {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Event 0 Configuration LSB
         ///
         #[derive(Clone, Copy)]
         pub struct WorEvent0Lsb(u8);
-    
+
         /// Event 0 timeout (LSB). See WOR_EVENT0_MSB
         pub event0_7_0, set_event0_7_0: 7, 0;
     }
-    
+
     impl const Register for WorEvent0Lsb {
         const ADDRESS: u16 = 0x24;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for WorEvent0Lsb {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for WorEvent0Lsb {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// RX Duty Cycle Mode Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct RxdcmTime(u8);
-    
+
         /// Configures the time spent in RXDCM state</br>
         /// RX_DUTY_CYCLE_TIME = 0:</br>
         /// t_RXDCM = 2^WOR_CFG1.WOR_RES[us]</br>
@@ -2195,35 +2195,35 @@ pub mod pri {
         /// t_RXDCM = RX_DUTY_CYCLE_TIME*2^WOR_CFG1.WOR_RES[us]
         pub rx_duty_cycle_time, set_rx_duty_cycle_time: 7, 0;
     }
-    
+
     impl const Register for RxdcmTime {
         const ADDRESS: u16 = 0x25;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for RxdcmTime {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for RxdcmTime {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Packet Configuration Reg. 2
         ///
         #[derive(Clone, Copy)]
         pub struct PktCfg2(u8);
-    
+
         pub pkt_cfg2_not_used, _: 7;
-    
+
         /// TX/RX data byte swap enable. In RX, all bits in the received data byte are swapped before written to the RX FIFO. In TX, all bits in the TX FIFO data byte are swapped before being transmitted
         ///
         /// # Values
@@ -2233,7 +2233,7 @@ pub mod pri {
         ///
         /// The default value is 0x00
         pub byte_swap_en, set_byte_swap_en: 6;
-    
+
         /// Select between standard packet mode or 802.15.4g packet mode
         ///
         /// # Values
@@ -2243,31 +2243,31 @@ pub mod pri {
         ///
         /// The default value is 0x00
         pub fg_mode_en, set_fg_mode_en: 5;
-    
+
         /// CCA mode. Selects the definition of a clear channel (when to assert the CCA signal)
         cca_mode_bits, set_cca_mode_bits: 4, 2;
-    
+
         /// Packet format configuration
         pkt_format_bits, set_pkt_format_bits: 1, 0;
     }
-    
+
     impl PktCfg2 {
         pub fn cca_mode(&self) -> CcaModeValue {
             unsafe { transmute(self.cca_mode_bits()) }
         }
-    
+
         pub fn set_cca_mode(&mut self, value: CcaModeValue) {
             self.set_cca_mode_bits(value as u8);
         }
         pub fn pkt_format(&self) -> PktFormatValue {
             unsafe { transmute(self.pkt_format_bits()) }
         }
-    
+
         pub fn set_pkt_format(&mut self, value: PktFormatValue) {
             self.set_pkt_format_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum CcaModeValue {
         /// Always give a clear channel indication
@@ -2287,7 +2287,7 @@ pub mod pri {
         /// Reserved
         Reserved_111 = 0b111,
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum PktFormatValue {
         /// Normal mode / FIFO mode (MDMCFG1.FIFO_EN must be set to 1 and MDMCFG0.TRANSPARENT_MODE_EN must be set to 0)
@@ -2299,33 +2299,33 @@ pub mod pri {
         /// Transparent serial mode (MDMCFG1.FIFO_EN must be set to 0 and MDMCFG0.TRANSPARENT_MODE_EN must be set to 1). This mode is only supported for 2ary modulations formats
         TransparentSerialMode = 0b11,
     }
-    
+
     impl const Register for PktCfg2 {
         const ADDRESS: u16 = 0x26;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for PktCfg2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for PktCfg2 {
         fn default() -> Self {
             Self(0x04)
         }
     }
-    
+
     bitfield! {
         /// Packet Configuration Reg. 1
         ///
         #[derive(Clone, Copy)]
         pub struct PktCfg1(u8);
-    
+
         /// Forward error correction enable
         ///
         /// # Values
@@ -2335,7 +2335,7 @@ pub mod pri {
         ///
         /// The default value is 0x00
         pub fec_en, set_fec_en: 7;
-    
+
         /// Whitening enable
         ///
         /// # Values
@@ -2345,7 +2345,7 @@ pub mod pri {
         ///
         /// The default value is 0x00
         pub white_data, set_white_data: 6;
-    
+
         /// PN9 sequence swap enable Determines if the PN9 sequence is swapped prior to whitening/de-whitening. This settings is only used when WHITE_DATA = 1 and PKT_CFG2.FG_MODE_EN = 0
         ///
         /// # Values
@@ -2355,13 +2355,13 @@ pub mod pri {
         ///
         /// The default value is 0x00
         pub pn9_swap_en, set_pn9_swap_en: 5;
-    
+
         /// Address check configuration. Controls how address check is performed in RX mode
         addr_check_cfg_bits, set_addr_check_cfg_bits: 4, 3;
-    
+
         /// CRC configuration
         crc_cfg_bits, set_crc_cfg_bits: 2, 1;
-    
+
         /// Append status bytes to RX FIFO. The status bytes contain info about CRC, RSSI, and LQI. When PKT_CFG1.CRC_CFG = 0, the CRC_OK field in the status byte will be 0
         ///
         /// # Values
@@ -2372,24 +2372,24 @@ pub mod pri {
         /// The default value is 0x01
         pub append_status, set_append_status: 0;
     }
-    
+
     impl PktCfg1 {
         pub fn addr_check_cfg(&self) -> AddrCheckCfgValue {
             unsafe { transmute(self.addr_check_cfg_bits()) }
         }
-    
+
         pub fn set_addr_check_cfg(&mut self, value: AddrCheckCfgValue) {
             self.set_addr_check_cfg_bits(value as u8);
         }
         pub fn crc_cfg(&self) -> CrcCfgValue {
             unsafe { transmute(self.crc_cfg_bits()) }
         }
-    
+
         pub fn set_crc_cfg(&mut self, value: CrcCfgValue) {
             self.set_crc_cfg_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum AddrCheckCfgValue {
         /// No address check
@@ -2401,7 +2401,7 @@ pub mod pri {
         /// Address check, 0x00 and 0xFF broadcast
         AddressCheck0x00And0xffBroadcast = 0b11,
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum CrcCfgValue {
         /// CRC disabled for TX and RX
@@ -2413,42 +2413,42 @@ pub mod pri {
         /// CRC calculation in TX mode and CRC check in RX mode enabled. 1's complement of CRC16(X16+X12+X5+1). Initialized to 0x1D0F
         CrcEnabledPoly1021InvInit1D0F = 0b11,
     }
-    
+
     impl const Register for PktCfg1 {
         const ADDRESS: u16 = 0x27;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for PktCfg1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for PktCfg1 {
         fn default() -> Self {
             Self(0x03)
         }
     }
-    
+
     bitfield! {
         /// Packet Configuration Reg. 0
         ///
         #[derive(Clone, Copy)]
         pub struct PktCfg0(u8);
-    
+
         /// For test purposes only, use values from SmartRF Studio.
         pub pkt_cfg0_reserved7, set_pkt_cfg0_reserved7: 7;
-    
+
         /// Packet length configuration
         length_config_bits, set_length_config_bits: 6, 5;
-    
+
         /// In fixed packet length mode this field (when not zero) indicates the number of bits to send/receive after PKT_LEN number of bytes are sent/received. CRC is not supported when PKT_LEN_BIT != 0
         pub pkt_bit_len, set_pkt_bit_len: 4, 2;
-    
+
         /// UART mode enable. When enabled, the packet engine will insert/remove a start and stop bit to/from the transmitted/received bytes
         ///
         /// # Values
@@ -2458,7 +2458,7 @@ pub mod pri {
         ///
         /// The default value is 0x00
         pub uart_mode_en, set_uart_mode_en: 1;
-    
+
         /// Swap start and stop bits values
         ///
         /// # Values
@@ -2469,17 +2469,17 @@ pub mod pri {
         /// The default value is 0x00
         pub uart_swap_en, set_uart_swap_en: 0;
     }
-    
+
     impl PktCfg0 {
         pub fn length_config(&self) -> LengthConfigValue {
             unsafe { transmute(self.length_config_bits()) }
         }
-    
+
         pub fn set_length_config(&mut self, value: LengthConfigValue) {
             self.set_length_config_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum LengthConfigValue {
         /// Fixed packet length mode. Packet Length configured through the PKT_LEN register
@@ -2491,43 +2491,43 @@ pub mod pri {
         /// Variable packet length mode. Length configured by the 5 LSB of the first byte received after sync word
         VariablePacketLengthMode5Bits = 0b11,
     }
-    
+
     impl const Register for PktCfg0 {
         const ADDRESS: u16 = 0x28;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for PktCfg0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for PktCfg0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// RFEND Configuration Reg. 1
         ///
         #[derive(Clone, Copy)]
         pub struct RfendCfg1(u8);
-    
+
         pub rfend_cfg1_not_used, _: 7, 6;
-    
+
         /// RXOFF mode. Determines the state the radio will enter after receiving a good packet
         rxoff_mode_bits, set_rxoff_mode_bits: 5, 4;
-    
+
         /// RX timeout for sync word search in RX<BR/>
         /// RX Timeout = MAX[1,FLOOR[EVENT0/2^(RX_TIME+3)]]*2^(4*WOR_CFG1.WOR_RES)*1250/f_xosc [s]<BR/>
         /// The RX timeout is disabled when RX_TIME = 111b. EVENT0 is found in the WOR_EVENT0_MSB and WOR_EVENT0_LSB registers
         pub rx_time, set_rx_time: 3, 1;
-    
+
         /// RX timeout qualifier
         ///
         /// # Values
@@ -2538,17 +2538,17 @@ pub mod pri {
         /// The default value is 0x01
         pub rx_time_qual, set_rx_time_qual: 0;
     }
-    
+
     impl RfendCfg1 {
         pub fn rxoff_mode(&self) -> RxoffModeValue {
             unsafe { transmute(self.rxoff_mode_bits()) }
         }
-    
+
         pub fn set_rxoff_mode(&mut self, value: RxoffModeValue) {
             self.set_rxoff_mode_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum RxoffModeValue {
         /// IDLE
@@ -2560,35 +2560,35 @@ pub mod pri {
         /// RX
         Rx = 0b11,
     }
-    
+
     impl const Register for RfendCfg1 {
         const ADDRESS: u16 = 0x29;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for RfendCfg1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for RfendCfg1 {
         fn default() -> Self {
             Self(0x0f)
         }
     }
-    
+
     bitfield! {
         /// RFEND Configuration Reg. 0
         ///
         #[derive(Clone, Copy)]
         pub struct RfendCfg0(u8);
-    
+
         pub rfend_cfg0_not_used, _: 7;
-    
+
         /// Enable additional wake-up pulses on the end of calibration. To be used together with the MCU_WAKEUP signal (MARC_STATUS_OUT will be 0)
         ///
         /// # Values
@@ -2598,10 +2598,10 @@ pub mod pri {
         ///
         /// The default value is 0x00
         pub cal_end_wake_up_en, set_cal_end_wake_up_en: 6;
-    
+
         /// TXOFF mode. Determines the state the radio will enter after transmitting a packet
         txoff_mode_bits, set_txoff_mode_bits: 5, 4;
-    
+
         /// Terminate on bad packet enable
         ///
         /// # Values
@@ -2611,28 +2611,28 @@ pub mod pri {
         ///
         /// The default value is 0x00
         pub term_on_bad_packet_en, set_term_on_bad_packet_en: 3;
-    
+
         /// Direct RX termination and antenna diversity configuration
         ant_div_rx_term_cfg_bits, set_ant_div_rx_term_cfg_bits: 2, 0;
     }
-    
+
     impl RfendCfg0 {
         pub fn txoff_mode(&self) -> TxoffModeValue {
             unsafe { transmute(self.txoff_mode_bits()) }
         }
-    
+
         pub fn set_txoff_mode(&mut self, value: TxoffModeValue) {
             self.set_txoff_mode_bits(value as u8);
         }
         pub fn ant_div_rx_term_cfg(&self) -> AntDivRxTermCfgValue {
             unsafe { transmute(self.ant_div_rx_term_cfg_bits()) }
         }
-    
+
         pub fn set_ant_div_rx_term_cfg(&mut self, value: AntDivRxTermCfgValue) {
             self.set_ant_div_rx_term_cfg_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum TxoffModeValue {
         /// IDLE
@@ -2644,7 +2644,7 @@ pub mod pri {
         /// RX
         Rx = 0b11,
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum AntDivRxTermCfgValue {
         /// Antenna diversity and termination based on CS/PQT are disabled
@@ -2664,35 +2664,35 @@ pub mod pri {
         /// Reserved
         Reserved_111 = 0b111,
     }
-    
+
     impl const Register for RfendCfg0 {
         const ADDRESS: u16 = 0x2A;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for RfendCfg0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for RfendCfg0 {
         fn default() -> Self {
             Self(0x00)
         }
     }
-    
+
     bitfield! {
         /// Power Amplifier Configuration Reg. 1
         ///
         #[derive(Clone, Copy)]
         pub struct PaCfg1(u8);
-    
+
         pub pa_cfg2_not_used, _: 7;
-    
+
         /// PA ramping and ASK/OOK shaping enable
         ///
         /// # Values
@@ -2702,45 +2702,45 @@ pub mod pri {
         ///
         /// The default value is 0x01
         pub pa_ramp_shape_en, set_pa_ramp_shape_en: 6;
-    
+
         /// PA power ramp target level<BR/>
         /// Output Power = (PA_POWER_RAMP+1)/2-18 [dBm]<BR/>
         /// PA_POWER_RAMP >= 0x03 for the equation to be valid. {0x00, 0x01, 0x02} are special power levels
         pub pa_power_ramp, set_pa_power_ramp: 5, 0;
     }
-    
+
     impl const Register for PaCfg1 {
         const ADDRESS: u16 = 0x2B;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for PaCfg1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for PaCfg1 {
         fn default() -> Self {
             Self(0x7f)
         }
     }
-    
+
     bitfield! {
         /// Power Amplifier Configuration Reg. 0
         ///
         #[derive(Clone, Copy)]
         pub struct PaCfg0(u8);
-    
+
         /// First intermediate power level. The first intermediate power level can be programmed within the power level range 0 - 7/16 in steps of 1/16
         pub first_ipl, set_first_ipl: 7, 5;
-    
+
         /// Second intermediate power level. The second intermediate power level can be programmed within the power level range 8/16 - 15/16 in steps of 1/16
         pub second_ipl, set_second_ipl: 4, 2;
-    
+
         /// PA ramp time and ASK/OOK shape length. Note that only certain values of PA_CFG0.UPSAMPLER_P complies with the different ASK/OOK shape lengths
         ///
         /// # Values
@@ -2753,33 +2753,33 @@ pub mod pri {
         /// The default value is 0x02
         pub ramp_shape, set_ramp_shape: 1, 0;
     }
-    
+
     impl const Register for PaCfg0 {
         const ADDRESS: u16 = 0x2C;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for PaCfg0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for PaCfg0 {
         fn default() -> Self {
             Self(0x56)
         }
     }
-    
+
     bitfield! {
         /// ASK Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct AskCfg(u8);
-    
+
         /// Controls the bandwidth of the data filter in ASK/OOK mode. The -3 dB cut-off frequency (fCut-Off) is given below:</br>
         /// RX_CONFIG_LIMITATION = 0:<BR/>
         /// f-Cut-Off = 4*ASK BW Scale Factor*Rx Filter BW [Hz]<BR/>
@@ -2787,24 +2787,24 @@ pub mod pri {
         /// f-Cut-Off = 8*ASK BW Scale Factor*Rx Filter BW [Hz]<BR/>
         /// RX_CONFIG_LIMITATION is found in SYNC_CFG0. A rule of thumb is to set f_Cut-Off >= 5*symbol rate
         agc_ask_bw_bits, set_agc_ask_bw_bits: 7, 6;
-    
+
         /// ASK/OOK depth<BR/>
         /// A_Max = (PA_CFG1.PA_POWER_RAMP+1)/2-18 [dBm]<BR/>
         /// A_Min = (PA_CFG1.PA_POWER_RAMP+1-ASK_DEPTH)/2-18 [dBm]<BR/>
         /// Minimum PA power level is -16 dBm. PA_POWER_RAMP - ASK_DEPTH = 0x00 is OOK off state (< -50 dBm)
         pub ask_depth, set_ask_depth: 5, 0;
     }
-    
+
     impl AskCfg {
         pub fn agc_ask_bw(&self) -> AgcAskBwValue {
             unsafe { transmute(self.agc_ask_bw_bits()) }
         }
-    
+
         pub fn set_agc_ask_bw(&mut self, value: AgcAskBwValue) {
             self.set_agc_ask_bw_bits(value as u8);
         }
     }
-    
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum AgcAskBwValue {
         /// ASK BW scale factor = 0.28
@@ -2816,57 +2816,57 @@ pub mod pri {
         /// ASK BW scale factor = 0.14
         AskBwScaleFactorEqualPoint14 = 0b11,
     }
-    
+
     impl const Register for AskCfg {
         const ADDRESS: u16 = 0x2D;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for AskCfg {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for AskCfg {
         fn default() -> Self {
             Self(0x0f)
         }
     }
-    
+
     bitfield! {
         /// Packet Length Configuration
         ///
         #[derive(Clone, Copy)]
         pub struct PktLen(u8);
-    
+
         /// In fixed length mode this field indicates the packet length, and a value of 0 indicates the length to be 256 bytes. In variable length packet mode, this value indicates the maximum allowed length packets
         pub packet_length, set_packet_length: 7, 0;
     }
-    
+
     impl const Register for PktLen {
         const ADDRESS: u16 = 0x2E;
-    
+
         fn value(&self) -> u8 {
             self.0
         }
     }
-    
+
     impl const From<u8> for PktLen {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
-    
+
     impl const Default for PktLen {
         fn default() -> Self {
             Self(0x03)
         }
     }
-    
+
 }
 
 pub mod ext {
