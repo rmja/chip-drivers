@@ -203,9 +203,32 @@ where
         self.map_rssi(rx[2])
     }
 
-    /// Read from the RX fifo.
+    /// Read from the RX fifo by first reading the length and then read what is available.
     /// This action _does_ update `last_status`.
-    pub async fn read_fifo(&mut self, buffer: &mut [u8]) -> Result<(), Self::Error> {
+    pub async fn read_fifo(&mut self, buffer: &mut [u8]) -> Result<usize, Self::Error> {
+        let mut opcode_tx: [u8; 4] = [0; 4];
+        assert_eq!(2, Opcode::ReadSingle(ext::NumRxbytes::ADDRESS).assign(&mut opcode_tx));
+        opcode_tx[3] = Opcode::ReadFifoBurst.as_u8();
+        let mut opcode_rx = [0; 4];
+
+        let (status, length) = spi_transaction!(&mut self.spi, |bus| async {
+            bus.transfer(&mut opcode_rx, &opcode_tx).await?;
+            let status = StatusByte(opcode_rx[0]);
+            let available = opcode_rx[2] as usize;
+            let length = usize::min(available, buffer.len());
+            bus.read(&mut buffer[..length]).await?;
+            Ok((status, length))
+        })
+        .await
+        .map_err(DriverError::Spi)?;
+        self.last_status = Some(status);
+
+        Ok(length)
+    }
+
+    /// Read from the RX fifo by explicitly reading a pre-known amount corresponding to the size of the buffer.
+    /// This action _does_ update `last_status`.
+    pub async fn read_fifo_raw(&mut self, buffer: &mut [u8]) -> Result<(), Self::Error> {
         assert!(buffer.len() <= RX_FIFO_SIZE);
 
         const OPCODE_TX: [u8; 1] = [Opcode::ReadFifoBurst.as_u8()];
@@ -223,35 +246,7 @@ where
 
         Ok(())
     }
-
-    /// Read from the RX fifo until condition is satisfied or until the buffer is full.
-    /// This action _does_ update `last_status`.
-    pub async fn read_fifo_until(&mut self, buffer: &mut [u8], get_available: impl Fn() -> usize) -> Result<usize, Self::Error> {
-        const OPCODE_TX: [u8; 1] = [Opcode::ReadFifoBurst.as_u8()];
-        let mut opcode_rx = [0];
-
-        let mut offset = 0;
-        let status = spi_transaction!(&mut self.spi, |bus| async {
-            bus.transfer(&mut opcode_rx, &OPCODE_TX).await?;
-            let status = StatusByte(opcode_rx[0]);
-            loop {
-                let length = usize::min(get_available(), buffer.len() - offset);
-                if length == 0 {
-                    // No more bytes are available or the buffer cannot hold any more bytes.
-                    break;
-                }
-                bus.read(&mut buffer[offset..offset+length]).await?;
-                offset += length;
-            }
-            Ok(status)
-        })
-        .await
-        .map_err(DriverError::Spi)?;
-        self.last_status = Some(status);
-
-        Ok(offset)
-    }
-
+    
     /// Skip bytes in the RX fifo.
     /// This action _does_ update `last_status`.
     pub async fn skip_fifo(&mut self, length: usize) -> Result<(), Self::Error> {
