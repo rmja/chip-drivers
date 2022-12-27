@@ -2,13 +2,13 @@ use num_traits::FromPrimitive;
 
 use crate::regs::{
     pri::{Iocfg0, Iocfg1, Iocfg2, Iocfg3},
-    Register,
+    Register, Iocfg,
 };
 
 /// CC1200 GPIO marker trait
 #[const_trait]
 pub trait Gpio {
-    type Iocfg: Register;
+    type Iocfg: Register + Iocfg;
 }
 
 pub struct Gpio0;

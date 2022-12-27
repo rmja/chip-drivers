@@ -7,8 +7,12 @@ use bitfield::bitfield;
 use core::mem::transmute;
 
 #[const_trait]
-pub trait Register: ~const From<u8> + ~const Default {
+pub trait Register: ~const From<u8> + ~const Default + Clone + Copy {
     const ADDRESS: u16;
+
+    fn is_extended() -> bool {
+        Self::ADDRESS > 0x7F
+    }
 
     fn value(&self) -> u8;
 }
