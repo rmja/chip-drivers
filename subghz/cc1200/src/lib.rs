@@ -21,6 +21,9 @@ mod opcode;
 pub mod regs;
 mod statusbyte;
 
+#[cfg(feature = "ctrl")]
+pub mod controllers;
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum PartNumber {
     Cc1200,
