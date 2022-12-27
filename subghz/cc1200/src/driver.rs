@@ -1,80 +1,104 @@
 use crate::{
     opcode::{Opcode, Strobe, OPCODE_MAX},
+    regs::{self, ext, Register},
     statusbyte::{State, StatusByte},
-    regs::{self, Register, ext},
-    traits, ConfigPatch, DriverError, PartNumber, Rssi, RX_FIFO_SIZE, TX_FIFO_SIZE,
+    ConfigPatch, DriverError, PartNumber, Rssi, RX_FIFO_SIZE, TX_FIFO_SIZE,
 };
+use embedded_hal::digital::OutputPin;
 use embedded_hal_async::{delay, spi, spi_transaction};
 use futures::{
     future::{self, Either},
     pin_mut,
 };
 
-pub struct Driver<Spi, SpiBus, Delay, Pins>
+pub struct Driver<Spi, SpiBus, Delay, ResetPin>
 where
     Spi: spi::SpiDevice<Bus = SpiBus>,
     SpiBus: spi::SpiBus,
     Delay: delay::DelayUs,
-    Pins: traits::Pins,
+    ResetPin: OutputPin,
 {
     spi: Spi,
     delay: Delay,
-    pins: Pins,
+    reset_pin: Option<ResetPin>,
     last_status: Option<StatusByte>,
     pub rssi_offset: Rssi,
 }
 
-impl<Spi, SpiBus, Delay, Pins> Driver<Spi, SpiBus, Delay, Pins>
+impl<Spi, SpiBus, Delay, ResetPin> Driver<Spi, SpiBus, Delay, ResetPin>
 where
     Spi: spi::SpiDevice<Bus = SpiBus>,
     SpiBus: spi::SpiBus,
     Delay: delay::DelayUs,
-    Pins: traits::Pins,
+    ResetPin: OutputPin,
 {
     type Error = DriverError<Spi::Error, Delay>;
 
-    pub fn new(spi: Spi, delay: Delay, pins: Pins) -> Self {
+    pub fn new(spi: Spi, delay: Delay, reset_pin: Option<ResetPin>) -> Self {
         Self {
             spi,
-            pins,
             delay,
+            reset_pin,
             last_status: None,
-            rssi_offset: -99, // Default offset defined in users guide
+            rssi_offset: -99, // The default offset defined in the users guide
         }
     }
 
     /// Initialize chip by releasing reset pin.
     pub async fn init(&mut self) -> Result<(), Self::Error> {
-        self.pins.set_reset(); // Release chip reset pin.
+        if let Some(reset_pin) = self.reset_pin.as_mut() {
+            reset_pin.set_high().unwrap(); // Release chip reset pin.
+        }
         future::ready(()).await;
         Ok(())
     }
 
-    /// Send a hardware reset to chip and wait for it to become available.
+    /// Send a reset to chip and wait for it to become available.
     /// This action _does_ update `last_status`.
-    pub async fn hw_reset(&mut self) -> Result<(), Self::Error> {
-        // Send reset chip sequence
-        self.pins.clear_reset(); // Trigger chip reset pin.
-        self.delay.delay_ms(2).await.map_err(DriverError::Delay)?;
-        self.pins.set_reset(); // Release chip reset pin.
+    pub async fn reset(&mut self) -> Result<(), Self::Error> {
+        if let Some(reset_pin) = self.reset_pin.as_mut() {
+            // Send reset chip sequence
+            reset_pin.set_low().unwrap(); // Trigger chip reset pin.
+            self.delay.delay_ms(2).await.map_err(DriverError::Delay)?;
+            reset_pin.set_high().unwrap(); // Release chip reset pin.
 
-        // The chip reset sequence was sent - wait for chip to become available.
+            // The chip reset sequence was sent - wait for chip to become available.
 
-        let delay = &mut self.delay;
-        let status = spi_transaction!(&mut self.spi, move |bus| async move {
-            // Wait 1ms until the chip has had a chance to set the SO pin high.
-            // We must unwrap as the transaction can only return `SpiBus::Error`.
-            delay.delay_ms(1).await.unwrap();
-            Self::wait_for_xtal(bus, delay).await
-        })
-        .await
-        .map_err(DriverError::Spi)?;
-        self.last_status = status;
+            let delay = &mut self.delay;
+            let status = spi_transaction!(&mut self.spi, move |bus| async move {
+                // Wait 1ms until the chip has had a chance to set the SO pin high.
+                // We must unwrap as the transaction can only return `SpiBus::Error`.
+                delay.delay_ms(1).await.unwrap();
+                Self::wait_for_xtal(bus, delay).await
+            })
+            .await
+            .map_err(DriverError::Spi)?;
+            self.last_status = status;
 
-        if let Some(status) = status && status.chip_rdy() {
-            Ok(())
+            if let Some(status) = status && status.chip_rdy() {
+                Ok(())
+            } else {
+                Err(DriverError::Timeout)
+            }
         } else {
-            Err(DriverError::Timeout)
+            let delay = &mut self.delay;
+            let status = spi_transaction!(&mut self.spi, move |bus| async move {
+                bus.write(&[Opcode::Strobe(Strobe::SRES).as_u8()]).await?;
+
+                // The chip reset sequence was sent - wait for chip to become available.
+                // This must happen in the same spi transaction
+
+                Self::wait_for_xtal(bus, delay).await
+            })
+            .await
+            .map_err(DriverError::Spi)?;
+            self.last_status = status;
+
+            if let Some(status) = status && status.chip_rdy() {
+                Ok(())
+            } else {
+                Err(DriverError::Timeout)
+            }
         }
     }
 
@@ -119,8 +143,8 @@ where
         buffer: &mut [u8],
     ) -> Result<(), Self::Error> {
         let mut opcode_tx_buffer = [0; OPCODE_MAX];
-        let opcode_len = Opcode::read(first_address, buffer.len() > 1)
-            .assign(&mut opcode_tx_buffer);
+        let opcode_len =
+            Opcode::read(first_address, buffer.len() > 1).assign(&mut opcode_tx_buffer);
         let opcode_tx = &opcode_tx_buffer[..opcode_len];
 
         let mut opcode_rx_buffer = [0; OPCODE_MAX];
@@ -156,10 +180,14 @@ where
 
     /// Write a sequence of register values to chip.
     /// This action _does not_ update `last_status`.
-    pub async fn write_regs(&mut self, first_address: u16, values: &[u8]) -> Result<(), Self::Error> {
+    pub async fn write_regs(
+        &mut self,
+        first_address: u16,
+        values: &[u8],
+    ) -> Result<(), Self::Error> {
         let mut opcode_tx_buffer = [0; OPCODE_MAX];
-        let opcode_len = Opcode::write(first_address, values.len() > 1)
-            .assign(&mut opcode_tx_buffer);
+        let opcode_len =
+            Opcode::write(first_address, values.len() > 1).assign(&mut opcode_tx_buffer);
         let opcode_tx = &opcode_tx_buffer[..opcode_len];
 
         spi_transaction!(&mut self.spi, |bus| async {
@@ -176,13 +204,10 @@ where
 
     /// Write a configuration patch to chip.
     /// This action _does not_ update `last_status`.
-    pub async fn write_patch<'a, 'patch>(
-        &'a mut self,
+    pub async fn write_patch<'patch>(
+        &mut self,
         patch: ConfigPatch<'patch>,
-    ) -> Result<(), Self::Error>
-    where
-        'a: 'patch,
-    {
+    ) -> Result<(), Self::Error> {
         self.write_regs(patch.first_address, patch.values).await
     }
 
@@ -207,7 +232,10 @@ where
     /// This action _does_ update `last_status`.
     pub async fn read_fifo(&mut self, buffer: &mut [u8]) -> Result<usize, Self::Error> {
         let mut opcode_tx: [u8; 4] = [0; 4];
-        assert_eq!(2, Opcode::ReadSingle(ext::NumRxbytes::ADDRESS).assign(&mut opcode_tx));
+        assert_eq!(
+            2,
+            Opcode::ReadSingle(ext::NumRxbytes::ADDRESS).assign(&mut opcode_tx)
+        );
         opcode_tx[3] = Opcode::ReadFifoBurst.as_u8();
         let mut opcode_rx = [0; 4];
 
@@ -246,7 +274,39 @@ where
 
         Ok(())
     }
-    
+
+    /// Empty the RX fifo.
+    /// This action _does_ update `last_status`.
+    pub async fn empty_fifo(&mut self) -> Result<(), Self::Error> {
+        let mut opcode_tx: [u8; 4] = [0; 4];
+        assert_eq!(
+            2,
+            Opcode::ReadSingle(ext::NumRxbytes::ADDRESS).assign(&mut opcode_tx)
+        );
+        opcode_tx[3] = Opcode::ReadFifoBurst.as_u8();
+        let mut opcode_rx = [0; 4];
+
+        let status = spi_transaction!(&mut self.spi, |bus| async {
+            bus.transfer(&mut opcode_rx, &opcode_tx).await?;
+            let status = StatusByte(opcode_rx[0]);
+            let mut available = opcode_rx[2] as usize;
+            let zeros = &[0; 16];
+            while available > zeros.len() {
+                bus.write(zeros).await?;
+                available -= zeros.len();
+            }
+
+            bus.write(&zeros[..available]).await?;
+
+            Ok(status)
+        })
+        .await
+        .map_err(DriverError::Spi)?;
+        self.last_status = Some(status);
+
+        Ok(())
+    }
+
     /// Skip bytes in the RX fifo.
     /// This action _does_ update `last_status`.
     pub async fn skip_fifo(&mut self, length: usize) -> Result<(), Self::Error> {
@@ -337,17 +397,13 @@ where
     /// Strobe a command to the chip.
     /// This action _does_ update `last_status`.
     pub async fn strobe(&mut self, strobe: Strobe) -> Result<(), Self::Error> {
+        assert_ne!(Strobe::SRES, strobe);
+
         let opcode_tx = [Opcode::Strobe(strobe).as_u8()];
         let mut opcode_rx = [0];
 
         let status = spi_transaction!(&mut self.spi, |bus| async {
             bus.transfer(&mut opcode_rx, &opcode_tx).await?;
-
-            if strobe == Strobe::SRES {
-                // When SRES strobe is issued the CSn pin must be kept low until the SO pin goes low again.
-                Self::miso_wait_low(bus).await?;
-            }
-
             Ok(StatusByte(opcode_rx[0]))
         })
         .await

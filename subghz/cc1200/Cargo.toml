@@ -4,8 +4,13 @@ version = "0.1.0"
 edition = "2021"
 description = "CC1200 low power and high performance wireless transceiver driver"
 
+[features]
+packet-ctrl = ["ctrl"]
+ctrl = []
+
 [dependencies]
 bitfield = "0.14"
+embedded-hal = "1.0.0-alpha.9"
 embedded-hal-async = "0.2.0-alpha.0"
 futures = { version = "0.3", default-features = false }
 num-derive = "0.3"

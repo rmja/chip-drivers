@@ -2866,7 +2866,6 @@ pub mod pri {
             Self(0x03)
         }
     }
-
 }
 
 pub mod ext {
@@ -8691,5 +8690,4 @@ pub mod ext {
             Self(0x00)
         }
     }
-
 }

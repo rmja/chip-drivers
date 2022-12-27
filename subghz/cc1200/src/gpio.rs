@@ -2,7 +2,7 @@ use num_traits::FromPrimitive;
 
 use crate::regs::{
     pri::{Iocfg0, Iocfg1, Iocfg2, Iocfg3},
-    Register, Iocfg,
+    Iocfg, Register,
 };
 
 /// CC1200 GPIO marker trait

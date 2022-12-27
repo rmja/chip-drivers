@@ -5,6 +5,7 @@
 #![feature(const_trait_impl)]
 #![feature(inherent_associated_types)]
 #![feature(let_chains)]
+#![feature(async_fn_in_trait)]
 
 extern crate alloc;
 extern crate bitfield;
@@ -19,7 +20,6 @@ pub mod gpio;
 mod opcode;
 pub mod regs;
 mod statusbyte;
-pub mod traits;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum PartNumber {
