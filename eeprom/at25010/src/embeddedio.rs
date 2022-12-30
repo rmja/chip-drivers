@@ -1,17 +1,7 @@
 use embedded_hal_async::{delay, spi};
 use embedded_io::{self, asynch, Error, ErrorKind, Io, SeekFrom};
 
-use crate::{Driver, DriverError};
-
-pub struct StatefulDriver<Spi, SpiBus, Delay>
-where
-    Spi: spi::SpiDevice<Bus = SpiBus>,
-    SpiBus: spi::SpiBus,
-    Delay: delay::DelayUs,
-{
-    pub driver: Driver<Spi, SpiBus, Delay>,
-    position: u16,
-}
+use crate::{DriverError, driver::StatefulDriver};
 
 impl<Spi, T> Error for DriverError<Spi, T>
 where

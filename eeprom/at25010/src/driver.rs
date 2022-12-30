@@ -31,6 +31,16 @@ where
     part_number: PartNumber,
 }
 
+pub struct StatefulDriver<Spi, SpiBus, Delay>
+where
+    Spi: spi::SpiDevice<Bus = SpiBus>,
+    SpiBus: spi::SpiBus,
+    Delay: delay::DelayUs,
+{
+    pub driver: Driver<Spi, SpiBus, Delay>,
+    pub(crate) position: u16,
+}
+
 impl<Spi, SpiBus, Delay> Driver<Spi, SpiBus, Delay>
 where
     Spi: spi::SpiDevice<Bus = SpiBus>,
@@ -39,11 +49,18 @@ where
 {
     type Error = DriverError<Spi::Error, Delay>;
 
-    pub fn new(spi: Spi, delay: Delay, part_number: PartNumber) -> Self {
+    pub const fn new(spi: Spi, delay: Delay, part_number: PartNumber) -> Self {
         Self {
             part_number,
             spi,
             delay,
+        }
+    }
+
+    pub const fn to_stateful(self) -> StatefulDriver<Spi, SpiBus, Delay> {
+        StatefulDriver {
+            driver: self,
+            position: 0,
         }
     }
 
