@@ -6,6 +6,7 @@
 #![feature(inherent_associated_types)]
 #![feature(let_chains)]
 #![feature(async_fn_in_trait)]
+#![feature(const_slice_split_at_not_mut)]
 
 extern crate alloc;
 extern crate bitfield;
@@ -23,6 +24,7 @@ mod statusbyte;
 
 #[cfg(feature = "ctrl")]
 pub mod controllers;
+pub mod configs;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum PartNumber {
