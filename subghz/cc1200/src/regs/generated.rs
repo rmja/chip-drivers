@@ -8,14 +8,17 @@ use core::mem::transmute;
 
 #[const_trait]
 pub trait Register: ~const From<u8> + ~const Default + Clone + Copy {
-    const ADDRESS: u16;
+    const ADDRESS: RegisterAddress;
 
     fn is_extended() -> bool {
-        Self::ADDRESS > 0x7F
+        Self::ADDRESS.0 > 0x7F
     }
 
     fn value(&self) -> u8;
 }
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct RegisterAddress(pub(crate) u16);
 
 pub mod pri {
     use super::*;
@@ -50,7 +53,7 @@ pub mod pri {
     }
 
     impl const Register for Iocfg3 {
-        const ADDRESS: u16 = 0x00;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x00);
 
         fn value(&self) -> u8 {
             self.0
@@ -86,7 +89,7 @@ pub mod pri {
     }
 
     impl const Register for Iocfg2 {
-        const ADDRESS: u16 = 0x01;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x01);
 
         fn value(&self) -> u8 {
             self.0
@@ -122,7 +125,7 @@ pub mod pri {
     }
 
     impl const Register for Iocfg1 {
-        const ADDRESS: u16 = 0x02;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x02);
 
         fn value(&self) -> u8 {
             self.0
@@ -158,7 +161,7 @@ pub mod pri {
     }
 
     impl const Register for Iocfg0 {
-        const ADDRESS: u16 = 0x03;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x03);
 
         fn value(&self) -> u8 {
             self.0
@@ -188,7 +191,7 @@ pub mod pri {
     }
 
     impl const Register for Sync3 {
-        const ADDRESS: u16 = 0x04;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x04);
 
         fn value(&self) -> u8 {
             self.0
@@ -218,7 +221,7 @@ pub mod pri {
     }
 
     impl const Register for Sync2 {
-        const ADDRESS: u16 = 0x05;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x05);
 
         fn value(&self) -> u8 {
             self.0
@@ -248,7 +251,7 @@ pub mod pri {
     }
 
     impl const Register for Sync1 {
-        const ADDRESS: u16 = 0x06;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x06);
 
         fn value(&self) -> u8 {
             self.0
@@ -278,7 +281,7 @@ pub mod pri {
     }
 
     impl const Register for Sync0 {
-        const ADDRESS: u16 = 0x07;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x07);
 
         fn value(&self) -> u8 {
             self.0
@@ -341,7 +344,7 @@ pub mod pri {
     }
 
     impl const Register for SyncCfg1 {
-        const ADDRESS: u16 = 0x08;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x08);
 
         fn value(&self) -> u8 {
             self.0
@@ -429,7 +432,7 @@ pub mod pri {
     }
 
     impl const Register for SyncCfg0 {
-        const ADDRESS: u16 = 0x09;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x09);
 
         fn value(&self) -> u8 {
             self.0
@@ -461,7 +464,7 @@ pub mod pri {
     }
 
     impl const Register for DeviationM {
-        const ADDRESS: u16 = 0x0A;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x0A);
 
         fn value(&self) -> u8 {
             self.0
@@ -527,7 +530,7 @@ pub mod pri {
     }
 
     impl const Register for ModcfgDevE {
-        const ADDRESS: u16 = 0x0B;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x0B);
 
         fn value(&self) -> u8 {
             self.0
@@ -609,7 +612,7 @@ pub mod pri {
     }
 
     impl const Register for DcfiltCfg {
-        const ADDRESS: u16 = 0x0C;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x0C);
 
         fn value(&self) -> u8 {
             self.0
@@ -709,7 +712,7 @@ pub mod pri {
     }
 
     impl const Register for PreambleCfg1 {
-        const ADDRESS: u16 = 0x0D;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x0D);
 
         fn value(&self) -> u8 {
             self.0
@@ -782,7 +785,7 @@ pub mod pri {
     }
 
     impl const Register for PreambleCfg0 {
-        const ADDRESS: u16 = 0x0E;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x0E);
 
         fn value(&self) -> u8 {
             self.0
@@ -900,7 +903,7 @@ pub mod pri {
     }
 
     impl const Register for Iqic {
-        const ADDRESS: u16 = 0x0F;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x0F);
 
         fn value(&self) -> u8 {
             self.0
@@ -955,7 +958,7 @@ pub mod pri {
     }
 
     impl const Register for ChanBw {
-        const ADDRESS: u16 = 0x10;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x10);
 
         fn value(&self) -> u8 {
             self.0
@@ -1067,7 +1070,7 @@ pub mod pri {
     }
 
     impl const Register for Mdmcfg1 {
-        const ADDRESS: u16 = 0x11;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x11);
 
         fn value(&self) -> u8 {
             self.0
@@ -1162,7 +1165,7 @@ pub mod pri {
     }
 
     impl const Register for Mdmcfg0 {
-        const ADDRESS: u16 = 0x12;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x12);
 
         fn value(&self) -> u8 {
             self.0
@@ -1197,7 +1200,7 @@ pub mod pri {
     }
 
     impl const Register for SymbolRate2 {
-        const ADDRESS: u16 = 0x13;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x13);
 
         fn value(&self) -> u8 {
             self.0
@@ -1227,7 +1230,7 @@ pub mod pri {
     }
 
     impl const Register for SymbolRate1 {
-        const ADDRESS: u16 = 0x14;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x14);
 
         fn value(&self) -> u8 {
             self.0
@@ -1257,7 +1260,7 @@ pub mod pri {
     }
 
     impl const Register for SymbolRate0 {
-        const ADDRESS: u16 = 0x15;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x15);
 
         fn value(&self) -> u8 {
             self.0
@@ -1290,7 +1293,7 @@ pub mod pri {
     }
 
     impl const Register for AgcRef {
-        const ADDRESS: u16 = 0x16;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x16);
 
         fn value(&self) -> u8 {
             self.0
@@ -1320,7 +1323,7 @@ pub mod pri {
     }
 
     impl const Register for AgcCsThr {
-        const ADDRESS: u16 = 0x17;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x17);
 
         fn value(&self) -> u8 {
             self.0
@@ -1350,7 +1353,7 @@ pub mod pri {
     }
 
     impl const Register for AgcGainAdjust {
-        const ADDRESS: u16 = 0x18;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x18);
 
         fn value(&self) -> u8 {
             self.0
@@ -1416,7 +1419,7 @@ pub mod pri {
     }
 
     impl const Register for AgcCfg3 {
-        const ADDRESS: u16 = 0x19;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x19);
 
         fn value(&self) -> u8 {
             self.0
@@ -1483,7 +1486,7 @@ pub mod pri {
     }
 
     impl const Register for AgcCfg2 {
-        const ADDRESS: u16 = 0x1A;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x1A);
 
         fn value(&self) -> u8 {
             self.0
@@ -1585,7 +1588,7 @@ pub mod pri {
     }
 
     impl const Register for AgcCfg1 {
-        const ADDRESS: u16 = 0x1B;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x1B);
 
         fn value(&self) -> u8 {
             self.0
@@ -1707,7 +1710,7 @@ pub mod pri {
     }
 
     impl const Register for AgcCfg0 {
-        const ADDRESS: u16 = 0x1C;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x1C);
 
         fn value(&self) -> u8 {
             self.0
@@ -1740,7 +1743,7 @@ pub mod pri {
     }
 
     impl const Register for FifoCfg {
-        const ADDRESS: u16 = 0x1D;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x1D);
 
         fn value(&self) -> u8 {
             self.0
@@ -1770,7 +1773,7 @@ pub mod pri {
     }
 
     impl const Register for DevAddr {
-        const ADDRESS: u16 = 0x1E;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x1E);
 
         fn value(&self) -> u8 {
             self.0
@@ -1846,7 +1849,7 @@ pub mod pri {
     }
 
     impl const Register for SettlingCfg {
-        const ADDRESS: u16 = 0x1F;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x1F);
 
         fn value(&self) -> u8 {
             self.0
@@ -1934,7 +1937,7 @@ pub mod pri {
     }
 
     impl const Register for FsCfg {
-        const ADDRESS: u16 = 0x20;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x20);
 
         fn value(&self) -> u8 {
             self.0
@@ -2007,7 +2010,7 @@ pub mod pri {
     }
 
     impl const Register for WorCfg1 {
-        const ADDRESS: u16 = 0x21;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x21);
 
         fn value(&self) -> u8 {
             self.0
@@ -2102,7 +2105,7 @@ pub mod pri {
     }
 
     impl const Register for WorCfg0 {
-        const ADDRESS: u16 = 0x22;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x22);
 
         fn value(&self) -> u8 {
             self.0
@@ -2133,7 +2136,7 @@ pub mod pri {
     }
 
     impl const Register for WorEvent0Msb {
-        const ADDRESS: u16 = 0x23;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x23);
 
         fn value(&self) -> u8 {
             self.0
@@ -2163,7 +2166,7 @@ pub mod pri {
     }
 
     impl const Register for WorEvent0Lsb {
-        const ADDRESS: u16 = 0x24;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x24);
 
         fn value(&self) -> u8 {
             self.0
@@ -2197,7 +2200,7 @@ pub mod pri {
     }
 
     impl const Register for RxdcmTime {
-        const ADDRESS: u16 = 0x25;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x25);
 
         fn value(&self) -> u8 {
             self.0
@@ -2301,7 +2304,7 @@ pub mod pri {
     }
 
     impl const Register for PktCfg2 {
-        const ADDRESS: u16 = 0x26;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x26);
 
         fn value(&self) -> u8 {
             self.0
@@ -2415,7 +2418,7 @@ pub mod pri {
     }
 
     impl const Register for PktCfg1 {
-        const ADDRESS: u16 = 0x27;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x27);
 
         fn value(&self) -> u8 {
             self.0
@@ -2493,7 +2496,7 @@ pub mod pri {
     }
 
     impl const Register for PktCfg0 {
-        const ADDRESS: u16 = 0x28;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x28);
 
         fn value(&self) -> u8 {
             self.0
@@ -2562,7 +2565,7 @@ pub mod pri {
     }
 
     impl const Register for RfendCfg1 {
-        const ADDRESS: u16 = 0x29;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x29);
 
         fn value(&self) -> u8 {
             self.0
@@ -2666,7 +2669,7 @@ pub mod pri {
     }
 
     impl const Register for RfendCfg0 {
-        const ADDRESS: u16 = 0x2A;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2A);
 
         fn value(&self) -> u8 {
             self.0
@@ -2710,7 +2713,7 @@ pub mod pri {
     }
 
     impl const Register for PaCfg1 {
-        const ADDRESS: u16 = 0x2B;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2B);
 
         fn value(&self) -> u8 {
             self.0
@@ -2755,7 +2758,7 @@ pub mod pri {
     }
 
     impl const Register for PaCfg0 {
-        const ADDRESS: u16 = 0x2C;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2C);
 
         fn value(&self) -> u8 {
             self.0
@@ -2818,7 +2821,7 @@ pub mod pri {
     }
 
     impl const Register for AskCfg {
-        const ADDRESS: u16 = 0x2D;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2D);
 
         fn value(&self) -> u8 {
             self.0
@@ -2848,7 +2851,7 @@ pub mod pri {
     }
 
     impl const Register for PktLen {
-        const ADDRESS: u16 = 0x2E;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2E);
 
         fn value(&self) -> u8 {
             self.0
@@ -2902,7 +2905,7 @@ pub mod ext {
     }
 
     impl const Register for IfMixCfg {
-        const ADDRESS: u16 = 0x2F00;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F00);
 
         fn value(&self) -> u8 {
             self.0
@@ -2993,7 +2996,7 @@ pub mod ext {
     }
 
     impl const Register for FreqoffCfg {
-        const ADDRESS: u16 = 0x2F01;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F01);
 
         fn value(&self) -> u8 {
             self.0
@@ -3063,7 +3066,7 @@ pub mod ext {
     }
 
     impl const Register for TocCfg {
-        const ADDRESS: u16 = 0x2F02;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F02);
 
         fn value(&self) -> u8 {
             self.0
@@ -3104,7 +3107,7 @@ pub mod ext {
     }
 
     impl const Register for MarcSpare {
-        const ADDRESS: u16 = 0x2F03;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F03);
 
         fn value(&self) -> u8 {
             self.0
@@ -3173,7 +3176,7 @@ pub mod ext {
     }
 
     impl const Register for EcgCfg {
-        const ADDRESS: u16 = 0x2F04;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F04);
 
         fn value(&self) -> u8 {
             self.0
@@ -3262,7 +3265,7 @@ pub mod ext {
     }
 
     impl const Register for Mdmcfg2 {
-        const ADDRESS: u16 = 0x2F05;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F05);
 
         fn value(&self) -> u8 {
             self.0
@@ -3321,7 +3324,7 @@ pub mod ext {
     }
 
     impl const Register for ExtCtrl {
-        const ADDRESS: u16 = 0x2F06;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F06);
 
         fn value(&self) -> u8 {
             self.0
@@ -3353,7 +3356,7 @@ pub mod ext {
     }
 
     impl const Register for RccalFine {
-        const ADDRESS: u16 = 0x2F07;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F07);
 
         fn value(&self) -> u8 {
             self.0
@@ -3385,7 +3388,7 @@ pub mod ext {
     }
 
     impl const Register for RccalCoarse {
-        const ADDRESS: u16 = 0x2F08;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F08);
 
         fn value(&self) -> u8 {
             self.0
@@ -3417,7 +3420,7 @@ pub mod ext {
     }
 
     impl const Register for RccalOffset {
-        const ADDRESS: u16 = 0x2F09;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F09);
 
         fn value(&self) -> u8 {
             self.0
@@ -3447,7 +3450,7 @@ pub mod ext {
     }
 
     impl const Register for Freqoff1 {
-        const ADDRESS: u16 = 0x2F0A;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F0A);
 
         fn value(&self) -> u8 {
             self.0
@@ -3477,7 +3480,7 @@ pub mod ext {
     }
 
     impl const Register for Freqoff0 {
-        const ADDRESS: u16 = 0x2F0B;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F0B);
 
         fn value(&self) -> u8 {
             self.0
@@ -3508,7 +3511,7 @@ pub mod ext {
     }
 
     impl const Register for Freq2 {
-        const ADDRESS: u16 = 0x2F0C;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F0C);
 
         fn value(&self) -> u8 {
             self.0
@@ -3538,7 +3541,7 @@ pub mod ext {
     }
 
     impl const Register for Freq1 {
-        const ADDRESS: u16 = 0x2F0D;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F0D);
 
         fn value(&self) -> u8 {
             self.0
@@ -3568,7 +3571,7 @@ pub mod ext {
     }
 
     impl const Register for Freq0 {
-        const ADDRESS: u16 = 0x2F0E;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F0E);
 
         fn value(&self) -> u8 {
             self.0
@@ -3600,7 +3603,7 @@ pub mod ext {
     }
 
     impl const Register for IfAdc2 {
-        const ADDRESS: u16 = 0x2F0F;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F0F);
 
         fn value(&self) -> u8 {
             self.0
@@ -3639,7 +3642,7 @@ pub mod ext {
     }
 
     impl const Register for IfAdc1 {
-        const ADDRESS: u16 = 0x2F10;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F10);
 
         fn value(&self) -> u8 {
             self.0
@@ -3677,7 +3680,7 @@ pub mod ext {
     }
 
     impl const Register for IfAdc0 {
-        const ADDRESS: u16 = 0x2F11;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F11);
 
         fn value(&self) -> u8 {
             self.0
@@ -3721,7 +3724,7 @@ pub mod ext {
     }
 
     impl const Register for FsDig1 {
-        const ADDRESS: u16 = 0x2F12;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F12);
 
         fn value(&self) -> u8 {
             self.0
@@ -3801,7 +3804,7 @@ pub mod ext {
     }
 
     impl const Register for FsDig0 {
-        const ADDRESS: u16 = 0x2F13;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F13);
 
         fn value(&self) -> u8 {
             self.0
@@ -3847,7 +3850,7 @@ pub mod ext {
     }
 
     impl const Register for FsCal3 {
-        const ADDRESS: u16 = 0x2F14;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F14);
 
         fn value(&self) -> u8 {
             self.0
@@ -3879,7 +3882,7 @@ pub mod ext {
     }
 
     impl const Register for FsCal2 {
-        const ADDRESS: u16 = 0x2F15;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F15);
 
         fn value(&self) -> u8 {
             self.0
@@ -3918,7 +3921,7 @@ pub mod ext {
     }
 
     impl const Register for FsCal1 {
-        const ADDRESS: u16 = 0x2F16;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F16);
 
         fn value(&self) -> u8 {
             self.0
@@ -3975,7 +3978,7 @@ pub mod ext {
     }
 
     impl const Register for FsCal0 {
-        const ADDRESS: u16 = 0x2F17;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F17);
 
         fn value(&self) -> u8 {
             self.0
@@ -4007,7 +4010,7 @@ pub mod ext {
     }
 
     impl const Register for FsChp {
-        const ADDRESS: u16 = 0x2F18;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F18);
 
         fn value(&self) -> u8 {
             self.0
@@ -4039,7 +4042,7 @@ pub mod ext {
     }
 
     impl const Register for FsDivtwo {
-        const ADDRESS: u16 = 0x2F19;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F19);
 
         fn value(&self) -> u8 {
             self.0
@@ -4074,7 +4077,7 @@ pub mod ext {
     }
 
     impl const Register for FsDsm1 {
-        const ADDRESS: u16 = 0x2F1A;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F1A);
 
         fn value(&self) -> u8 {
             self.0
@@ -4110,7 +4113,7 @@ pub mod ext {
     }
 
     impl const Register for FsDsm0 {
-        const ADDRESS: u16 = 0x2F1B;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F1B);
 
         fn value(&self) -> u8 {
             self.0
@@ -4149,7 +4152,7 @@ pub mod ext {
     }
 
     impl const Register for FsDvc1 {
-        const ADDRESS: u16 = 0x2F1C;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F1C);
 
         fn value(&self) -> u8 {
             self.0
@@ -4184,7 +4187,7 @@ pub mod ext {
     }
 
     impl const Register for FsDvc0 {
-        const ADDRESS: u16 = 0x2F1D;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F1D);
 
         fn value(&self) -> u8 {
             self.0
@@ -4213,7 +4216,7 @@ pub mod ext {
     }
 
     impl const Register for FsLbi {
-        const ADDRESS: u16 = 0x2F1E;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F1E);
 
         fn value(&self) -> u8 {
             self.0
@@ -4251,7 +4254,7 @@ pub mod ext {
     }
 
     impl const Register for FsPfd {
-        const ADDRESS: u16 = 0x2F1F;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F1F);
 
         fn value(&self) -> u8 {
             self.0
@@ -4289,7 +4292,7 @@ pub mod ext {
     }
 
     impl const Register for FsPre {
-        const ADDRESS: u16 = 0x2F20;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F20);
 
         fn value(&self) -> u8 {
             self.0
@@ -4324,7 +4327,7 @@ pub mod ext {
     }
 
     impl const Register for FsRegDivCml {
-        const ADDRESS: u16 = 0x2F21;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F21);
 
         fn value(&self) -> u8 {
             self.0
@@ -4354,7 +4357,7 @@ pub mod ext {
     }
 
     impl const Register for FsSpare {
-        const ADDRESS: u16 = 0x2F22;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F22);
 
         fn value(&self) -> u8 {
             self.0
@@ -4386,7 +4389,7 @@ pub mod ext {
     }
 
     impl const Register for FsVco4 {
-        const ADDRESS: u16 = 0x2F23;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F23);
 
         fn value(&self) -> u8 {
             self.0
@@ -4418,7 +4421,7 @@ pub mod ext {
     }
 
     impl const Register for FsVco3 {
-        const ADDRESS: u16 = 0x2F24;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F24);
 
         fn value(&self) -> u8 {
             self.0
@@ -4450,7 +4453,7 @@ pub mod ext {
     }
 
     impl const Register for FsVco2 {
-        const ADDRESS: u16 = 0x2F25;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F25);
 
         fn value(&self) -> u8 {
             self.0
@@ -4490,7 +4493,7 @@ pub mod ext {
     }
 
     impl const Register for FsVco1 {
-        const ADDRESS: u16 = 0x2F26;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F26);
 
         fn value(&self) -> u8 {
             self.0
@@ -4526,7 +4529,7 @@ pub mod ext {
     }
 
     impl const Register for FsVco0 {
-        const ADDRESS: u16 = 0x2F27;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F27);
 
         fn value(&self) -> u8 {
             self.0
@@ -4558,7 +4561,7 @@ pub mod ext {
     }
 
     impl const Register for Gbias6 {
-        const ADDRESS: u16 = 0x2F28;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F28);
 
         fn value(&self) -> u8 {
             self.0
@@ -4590,7 +4593,7 @@ pub mod ext {
     }
 
     impl const Register for Gbias5 {
-        const ADDRESS: u16 = 0x2F29;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F29);
 
         fn value(&self) -> u8 {
             self.0
@@ -4622,7 +4625,7 @@ pub mod ext {
     }
 
     impl const Register for Gbias4 {
-        const ADDRESS: u16 = 0x2F2A;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F2A);
 
         fn value(&self) -> u8 {
             self.0
@@ -4654,7 +4657,7 @@ pub mod ext {
     }
 
     impl const Register for Gbias3 {
-        const ADDRESS: u16 = 0x2F2B;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F2B);
 
         fn value(&self) -> u8 {
             self.0
@@ -4689,7 +4692,7 @@ pub mod ext {
     }
 
     impl const Register for Gbias2 {
-        const ADDRESS: u16 = 0x2F2C;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F2C);
 
         fn value(&self) -> u8 {
             self.0
@@ -4721,7 +4724,7 @@ pub mod ext {
     }
 
     impl const Register for Gbias1 {
-        const ADDRESS: u16 = 0x2F2D;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F2D);
 
         fn value(&self) -> u8 {
             self.0
@@ -4756,7 +4759,7 @@ pub mod ext {
     }
 
     impl const Register for Gbias0 {
-        const ADDRESS: u16 = 0x2F2E;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F2E);
 
         fn value(&self) -> u8 {
             self.0
@@ -4813,7 +4816,7 @@ pub mod ext {
     }
 
     impl const Register for Ifamp {
-        const ADDRESS: u16 = 0x2F2F;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F2F);
 
         fn value(&self) -> u8 {
             self.0
@@ -4845,7 +4848,7 @@ pub mod ext {
     }
 
     impl const Register for Lna {
-        const ADDRESS: u16 = 0x2F30;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F30);
 
         fn value(&self) -> u8 {
             self.0
@@ -4877,7 +4880,7 @@ pub mod ext {
     }
 
     impl const Register for Rxmix {
-        const ADDRESS: u16 = 0x2F31;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F31);
 
         fn value(&self) -> u8 {
             self.0
@@ -4909,7 +4912,7 @@ pub mod ext {
     }
 
     impl const Register for Xosc5 {
-        const ADDRESS: u16 = 0x2F32;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F32);
 
         fn value(&self) -> u8 {
             self.0
@@ -4939,7 +4942,7 @@ pub mod ext {
     }
 
     impl const Register for Xosc4 {
-        const ADDRESS: u16 = 0x2F33;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F33);
 
         fn value(&self) -> u8 {
             self.0
@@ -4972,7 +4975,7 @@ pub mod ext {
     }
 
     impl const Register for Xosc3 {
-        const ADDRESS: u16 = 0x2F34;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F34);
 
         fn value(&self) -> u8 {
             self.0
@@ -5016,7 +5019,7 @@ pub mod ext {
     }
 
     impl const Register for Xosc2 {
-        const ADDRESS: u16 = 0x2F35;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F35);
 
         fn value(&self) -> u8 {
             self.0
@@ -5061,7 +5064,7 @@ pub mod ext {
     }
 
     impl const Register for Xosc1 {
-        const ADDRESS: u16 = 0x2F36;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F36);
 
         fn value(&self) -> u8 {
             self.0
@@ -5096,7 +5099,7 @@ pub mod ext {
     }
 
     impl const Register for Xosc0 {
-        const ADDRESS: u16 = 0x2F37;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F37);
 
         fn value(&self) -> u8 {
             self.0
@@ -5126,7 +5129,7 @@ pub mod ext {
     }
 
     impl const Register for AnalogSpare {
-        const ADDRESS: u16 = 0x2F38;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F38);
 
         fn value(&self) -> u8 {
             self.0
@@ -5158,7 +5161,7 @@ pub mod ext {
     }
 
     impl const Register for PaCfg3 {
-        const ADDRESS: u16 = 0x2F39;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F39);
 
         fn value(&self) -> u8 {
             self.0
@@ -5188,7 +5191,7 @@ pub mod ext {
     }
 
     impl const Register for WorTime1 {
-        const ADDRESS: u16 = 0x2F64;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F64);
 
         fn value(&self) -> u8 {
             self.0
@@ -5218,7 +5221,7 @@ pub mod ext {
     }
 
     impl const Register for WorTime0 {
-        const ADDRESS: u16 = 0x2F65;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F65);
 
         fn value(&self) -> u8 {
             self.0
@@ -5248,7 +5251,7 @@ pub mod ext {
     }
 
     impl const Register for WorCapture1 {
-        const ADDRESS: u16 = 0x2F66;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F66);
 
         fn value(&self) -> u8 {
             self.0
@@ -5278,7 +5281,7 @@ pub mod ext {
     }
 
     impl const Register for WorCapture0 {
-        const ADDRESS: u16 = 0x2F67;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F67);
 
         fn value(&self) -> u8 {
             self.0
@@ -5319,7 +5322,7 @@ pub mod ext {
     }
 
     impl const Register for Bist {
-        const ADDRESS: u16 = 0x2F68;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F68);
 
         fn value(&self) -> u8 {
             self.0
@@ -5349,7 +5352,7 @@ pub mod ext {
     }
 
     impl const Register for DcfiltoffsetI1 {
-        const ADDRESS: u16 = 0x2F69;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F69);
 
         fn value(&self) -> u8 {
             self.0
@@ -5379,7 +5382,7 @@ pub mod ext {
     }
 
     impl const Register for DcfiltoffsetI0 {
-        const ADDRESS: u16 = 0x2F6A;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F6A);
 
         fn value(&self) -> u8 {
             self.0
@@ -5409,7 +5412,7 @@ pub mod ext {
     }
 
     impl const Register for DcfiltoffsetQ1 {
-        const ADDRESS: u16 = 0x2F6B;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F6B);
 
         fn value(&self) -> u8 {
             self.0
@@ -5439,7 +5442,7 @@ pub mod ext {
     }
 
     impl const Register for DcfiltoffsetQ0 {
-        const ADDRESS: u16 = 0x2F6C;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F6C);
 
         fn value(&self) -> u8 {
             self.0
@@ -5469,7 +5472,7 @@ pub mod ext {
     }
 
     impl const Register for IqieI1 {
-        const ADDRESS: u16 = 0x2F6D;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F6D);
 
         fn value(&self) -> u8 {
             self.0
@@ -5499,7 +5502,7 @@ pub mod ext {
     }
 
     impl const Register for IqieI0 {
-        const ADDRESS: u16 = 0x2F6E;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F6E);
 
         fn value(&self) -> u8 {
             self.0
@@ -5529,7 +5532,7 @@ pub mod ext {
     }
 
     impl const Register for IqieQ1 {
-        const ADDRESS: u16 = 0x2F6F;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F6F);
 
         fn value(&self) -> u8 {
             self.0
@@ -5559,7 +5562,7 @@ pub mod ext {
     }
 
     impl const Register for IqieQ0 {
-        const ADDRESS: u16 = 0x2F70;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F70);
 
         fn value(&self) -> u8 {
             self.0
@@ -5589,7 +5592,7 @@ pub mod ext {
     }
 
     impl const Register for Rssi1 {
-        const ADDRESS: u16 = 0x2F71;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F71);
 
         fn value(&self) -> u8 {
             self.0
@@ -5651,7 +5654,7 @@ pub mod ext {
     }
 
     impl const Register for Rssi0 {
-        const ADDRESS: u16 = 0x2F72;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F72);
 
         fn value(&self) -> u8 {
             self.0
@@ -5703,7 +5706,7 @@ pub mod ext {
     }
 
     impl const Register for Marcstate {
-        const ADDRESS: u16 = 0x2F73;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F73);
 
         fn value(&self) -> u8 {
             self.0
@@ -5743,7 +5746,7 @@ pub mod ext {
     }
 
     impl const Register for LqiVal {
-        const ADDRESS: u16 = 0x2F74;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F74);
 
         fn value(&self) -> u8 {
             self.0
@@ -5776,7 +5779,7 @@ pub mod ext {
     }
 
     impl const Register for PqtSyncErr {
-        const ADDRESS: u16 = 0x2F75;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F75);
 
         fn value(&self) -> u8 {
             self.0
@@ -5846,7 +5849,7 @@ pub mod ext {
     }
 
     impl const Register for DemStatus {
-        const ADDRESS: u16 = 0x2F76;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F76);
 
         fn value(&self) -> u8 {
             self.0
@@ -5877,7 +5880,7 @@ pub mod ext {
     }
 
     impl const Register for FreqoffEst1 {
-        const ADDRESS: u16 = 0x2F77;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F77);
 
         fn value(&self) -> u8 {
             self.0
@@ -5907,7 +5910,7 @@ pub mod ext {
     }
 
     impl const Register for FreqoffEst0 {
-        const ADDRESS: u16 = 0x2F78;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F78);
 
         fn value(&self) -> u8 {
             self.0
@@ -5939,7 +5942,7 @@ pub mod ext {
     }
 
     impl const Register for AgcGain3 {
-        const ADDRESS: u16 = 0x2F79;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F79);
 
         fn value(&self) -> u8 {
             self.0
@@ -5982,7 +5985,7 @@ pub mod ext {
     }
 
     impl const Register for AgcGain2 {
-        const ADDRESS: u16 = 0x2F7A;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F7A);
 
         fn value(&self) -> u8 {
             self.0
@@ -6017,7 +6020,7 @@ pub mod ext {
     }
 
     impl const Register for AgcGain1 {
-        const ADDRESS: u16 = 0x2F7B;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F7B);
 
         fn value(&self) -> u8 {
             self.0
@@ -6052,7 +6055,7 @@ pub mod ext {
     }
 
     impl const Register for AgcGain0 {
-        const ADDRESS: u16 = 0x2F7C;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F7C);
 
         fn value(&self) -> u8 {
             self.0
@@ -6084,7 +6087,7 @@ pub mod ext {
     }
 
     impl const Register for CfmRxDataOut {
-        const ADDRESS: u16 = 0x2F7D;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F7D);
 
         fn value(&self) -> u8 {
             self.0
@@ -6115,7 +6118,7 @@ pub mod ext {
     }
 
     impl const Register for CfmTxDataIn {
-        const ADDRESS: u16 = 0x2F7E;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F7E);
 
         fn value(&self) -> u8 {
             self.0
@@ -6149,7 +6152,7 @@ pub mod ext {
     }
 
     impl const Register for AskSoftRxData {
-        const ADDRESS: u16 = 0x2F7F;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F7F);
 
         fn value(&self) -> u8 {
             self.0
@@ -6189,7 +6192,7 @@ pub mod ext {
     }
 
     impl const Register for Rndgen {
-        const ADDRESS: u16 = 0x2F80;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F80);
 
         fn value(&self) -> u8 {
             self.0
@@ -6221,7 +6224,7 @@ pub mod ext {
     }
 
     impl const Register for Magn2 {
-        const ADDRESS: u16 = 0x2F81;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F81);
 
         fn value(&self) -> u8 {
             self.0
@@ -6251,7 +6254,7 @@ pub mod ext {
     }
 
     impl const Register for Magn1 {
-        const ADDRESS: u16 = 0x2F82;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F82);
 
         fn value(&self) -> u8 {
             self.0
@@ -6281,7 +6284,7 @@ pub mod ext {
     }
 
     impl const Register for Magn0 {
-        const ADDRESS: u16 = 0x2F83;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F83);
 
         fn value(&self) -> u8 {
             self.0
@@ -6313,7 +6316,7 @@ pub mod ext {
     }
 
     impl const Register for Ang1 {
-        const ADDRESS: u16 = 0x2F84;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F84);
 
         fn value(&self) -> u8 {
             self.0
@@ -6343,7 +6346,7 @@ pub mod ext {
     }
 
     impl const Register for Ang0 {
-        const ADDRESS: u16 = 0x2F85;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F85);
 
         fn value(&self) -> u8 {
             self.0
@@ -6384,7 +6387,7 @@ pub mod ext {
     }
 
     impl const Register for ChfiltI2 {
-        const ADDRESS: u16 = 0x2F86;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F86);
 
         fn value(&self) -> u8 {
             self.0
@@ -6414,7 +6417,7 @@ pub mod ext {
     }
 
     impl const Register for ChfiltI1 {
-        const ADDRESS: u16 = 0x2F87;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F87);
 
         fn value(&self) -> u8 {
             self.0
@@ -6444,7 +6447,7 @@ pub mod ext {
     }
 
     impl const Register for ChfiltI0 {
-        const ADDRESS: u16 = 0x2F88;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F88);
 
         fn value(&self) -> u8 {
             self.0
@@ -6476,7 +6479,7 @@ pub mod ext {
     }
 
     impl const Register for ChfiltQ2 {
-        const ADDRESS: u16 = 0x2F89;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F89);
 
         fn value(&self) -> u8 {
             self.0
@@ -6506,7 +6509,7 @@ pub mod ext {
     }
 
     impl const Register for ChfiltQ1 {
-        const ADDRESS: u16 = 0x2F8A;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F8A);
 
         fn value(&self) -> u8 {
             self.0
@@ -6536,7 +6539,7 @@ pub mod ext {
     }
 
     impl const Register for ChfiltQ0 {
-        const ADDRESS: u16 = 0x2F8B;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F8B);
 
         fn value(&self) -> u8 {
             self.0
@@ -6569,7 +6572,7 @@ pub mod ext {
     }
 
     impl const Register for GpioStatus {
-        const ADDRESS: u16 = 0x2F8C;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F8C);
 
         fn value(&self) -> u8 {
             self.0
@@ -6623,7 +6626,7 @@ pub mod ext {
     }
 
     impl const Register for FscalCtrl {
-        const ADDRESS: u16 = 0x2F8D;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F8D);
 
         fn value(&self) -> u8 {
             self.0
@@ -6653,7 +6656,7 @@ pub mod ext {
     }
 
     impl const Register for PhaseAdjust {
-        const ADDRESS: u16 = 0x2F8E;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F8E);
 
         fn value(&self) -> u8 {
             self.0
@@ -6690,7 +6693,7 @@ pub mod ext {
     }
 
     impl const Register for Partnumber {
-        const ADDRESS: u16 = 0x2F8F;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F8F);
 
         fn value(&self) -> u8 {
             self.0
@@ -6720,7 +6723,7 @@ pub mod ext {
     }
 
     impl const Register for Partversion {
-        const ADDRESS: u16 = 0x2F90;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F90);
 
         fn value(&self) -> u8 {
             self.0
@@ -6774,7 +6777,7 @@ pub mod ext {
     }
 
     impl const Register for SerialStatus {
-        const ADDRESS: u16 = 0x2F91;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F91);
 
         fn value(&self) -> u8 {
             self.0
@@ -6825,7 +6828,7 @@ pub mod ext {
     }
 
     impl const Register for ModemStatus1 {
-        const ADDRESS: u16 = 0x2F92;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F92);
 
         fn value(&self) -> u8 {
             self.0
@@ -6875,7 +6878,7 @@ pub mod ext {
     }
 
     impl const Register for ModemStatus0 {
-        const ADDRESS: u16 = 0x2F93;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F93);
 
         fn value(&self) -> u8 {
             self.0
@@ -6924,7 +6927,7 @@ pub mod ext {
     }
 
     impl const Register for MarcStatus1 {
-        const ADDRESS: u16 = 0x2F94;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F94);
 
         fn value(&self) -> u8 {
             self.0
@@ -6972,7 +6975,7 @@ pub mod ext {
     }
 
     impl const Register for MarcStatus0 {
-        const ADDRESS: u16 = 0x2F95;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F95);
 
         fn value(&self) -> u8 {
             self.0
@@ -7016,7 +7019,7 @@ pub mod ext {
     }
 
     impl const Register for PaIfampTest {
-        const ADDRESS: u16 = 0x2F96;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F96);
 
         fn value(&self) -> u8 {
             self.0
@@ -7057,7 +7060,7 @@ pub mod ext {
     }
 
     impl const Register for FsrfTest {
-        const ADDRESS: u16 = 0x2F97;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F97);
 
         fn value(&self) -> u8 {
             self.0
@@ -7092,7 +7095,7 @@ pub mod ext {
     }
 
     impl const Register for PreTest {
-        const ADDRESS: u16 = 0x2F98;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F98);
 
         fn value(&self) -> u8 {
             self.0
@@ -7125,7 +7128,7 @@ pub mod ext {
     }
 
     impl const Register for PreOvr {
-        const ADDRESS: u16 = 0x2F99;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F99);
 
         fn value(&self) -> u8 {
             self.0
@@ -7160,7 +7163,7 @@ pub mod ext {
     }
 
     impl const Register for AdcTest {
-        const ADDRESS: u16 = 0x2F9A;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F9A);
 
         fn value(&self) -> u8 {
             self.0
@@ -7192,7 +7195,7 @@ pub mod ext {
     }
 
     impl const Register for DvcTest {
-        const ADDRESS: u16 = 0x2F9B;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F9B);
 
         fn value(&self) -> u8 {
             self.0
@@ -7227,7 +7230,7 @@ pub mod ext {
     }
 
     impl const Register for Atest {
-        const ADDRESS: u16 = 0x2F9C;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F9C);
 
         fn value(&self) -> u8 {
             self.0
@@ -7262,7 +7265,7 @@ pub mod ext {
     }
 
     impl const Register for AtestLvds {
-        const ADDRESS: u16 = 0x2F9D;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F9D);
 
         fn value(&self) -> u8 {
             self.0
@@ -7295,7 +7298,7 @@ pub mod ext {
     }
 
     impl const Register for AtestMode {
-        const ADDRESS: u16 = 0x2F9E;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F9E);
 
         fn value(&self) -> u8 {
             self.0
@@ -7334,7 +7337,7 @@ pub mod ext {
     }
 
     impl const Register for XoscTest1 {
-        const ADDRESS: u16 = 0x2F9F;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2F9F);
 
         fn value(&self) -> u8 {
             self.0
@@ -7364,7 +7367,7 @@ pub mod ext {
     }
 
     impl const Register for XoscTest0 {
-        const ADDRESS: u16 = 0x2FA0;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FA0);
 
         fn value(&self) -> u8 {
             self.0
@@ -7406,7 +7409,7 @@ pub mod ext {
     }
 
     impl const Register for Aes {
-        const ADDRESS: u16 = 0x2FA1;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FA1);
 
         fn value(&self) -> u8 {
             self.0
@@ -7438,7 +7441,7 @@ pub mod ext {
     }
 
     impl const Register for MdmTest {
-        const ADDRESS: u16 = 0x2FA2;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FA2);
 
         fn value(&self) -> u8 {
             self.0
@@ -7468,7 +7471,7 @@ pub mod ext {
     }
 
     impl const Register for Rxfirst {
-        const ADDRESS: u16 = 0x2FD2;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FD2);
 
         fn value(&self) -> u8 {
             self.0
@@ -7498,7 +7501,7 @@ pub mod ext {
     }
 
     impl const Register for Txfirst {
-        const ADDRESS: u16 = 0x2FD3;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FD3);
 
         fn value(&self) -> u8 {
             self.0
@@ -7528,7 +7531,7 @@ pub mod ext {
     }
 
     impl const Register for Rxlast {
-        const ADDRESS: u16 = 0x2FD4;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FD4);
 
         fn value(&self) -> u8 {
             self.0
@@ -7558,7 +7561,7 @@ pub mod ext {
     }
 
     impl const Register for Txlast {
-        const ADDRESS: u16 = 0x2FD5;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FD5);
 
         fn value(&self) -> u8 {
             self.0
@@ -7588,7 +7591,7 @@ pub mod ext {
     }
 
     impl const Register for NumTxbytes {
-        const ADDRESS: u16 = 0x2FD6;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FD6);
 
         fn value(&self) -> u8 {
             self.0
@@ -7618,7 +7621,7 @@ pub mod ext {
     }
 
     impl const Register for NumRxbytes {
-        const ADDRESS: u16 = 0x2FD7;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FD7);
 
         fn value(&self) -> u8 {
             self.0
@@ -7650,7 +7653,7 @@ pub mod ext {
     }
 
     impl const Register for FifoNumTxbytes {
-        const ADDRESS: u16 = 0x2FD8;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FD8);
 
         fn value(&self) -> u8 {
             self.0
@@ -7682,7 +7685,7 @@ pub mod ext {
     }
 
     impl const Register for FifoNumRxbytes {
-        const ADDRESS: u16 = 0x2FD9;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FD9);
 
         fn value(&self) -> u8 {
             self.0
@@ -7712,7 +7715,7 @@ pub mod ext {
     }
 
     impl const Register for RxfifoPreBuf {
-        const ADDRESS: u16 = 0x2FDA;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FDA);
 
         fn value(&self) -> u8 {
             self.0
@@ -7742,7 +7745,7 @@ pub mod ext {
     }
 
     impl const Register for AesKey15 {
-        const ADDRESS: u16 = 0x2FE0;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FE0);
 
         fn value(&self) -> u8 {
             self.0
@@ -7772,7 +7775,7 @@ pub mod ext {
     }
 
     impl const Register for AesKey14 {
-        const ADDRESS: u16 = 0x2FE1;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FE1);
 
         fn value(&self) -> u8 {
             self.0
@@ -7802,7 +7805,7 @@ pub mod ext {
     }
 
     impl const Register for AesKey13 {
-        const ADDRESS: u16 = 0x2FE2;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FE2);
 
         fn value(&self) -> u8 {
             self.0
@@ -7832,7 +7835,7 @@ pub mod ext {
     }
 
     impl const Register for AesKey12 {
-        const ADDRESS: u16 = 0x2FE3;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FE3);
 
         fn value(&self) -> u8 {
             self.0
@@ -7862,7 +7865,7 @@ pub mod ext {
     }
 
     impl const Register for AesKey11 {
-        const ADDRESS: u16 = 0x2FE4;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FE4);
 
         fn value(&self) -> u8 {
             self.0
@@ -7892,7 +7895,7 @@ pub mod ext {
     }
 
     impl const Register for AesKey10 {
-        const ADDRESS: u16 = 0x2FE5;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FE5);
 
         fn value(&self) -> u8 {
             self.0
@@ -7922,7 +7925,7 @@ pub mod ext {
     }
 
     impl const Register for AesKey9 {
-        const ADDRESS: u16 = 0x2FE6;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FE6);
 
         fn value(&self) -> u8 {
             self.0
@@ -7952,7 +7955,7 @@ pub mod ext {
     }
 
     impl const Register for AesKey8 {
-        const ADDRESS: u16 = 0x2FE7;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FE7);
 
         fn value(&self) -> u8 {
             self.0
@@ -7982,7 +7985,7 @@ pub mod ext {
     }
 
     impl const Register for AesKey7 {
-        const ADDRESS: u16 = 0x2FE8;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FE8);
 
         fn value(&self) -> u8 {
             self.0
@@ -8012,7 +8015,7 @@ pub mod ext {
     }
 
     impl const Register for AesKey6 {
-        const ADDRESS: u16 = 0x2FE9;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FE9);
 
         fn value(&self) -> u8 {
             self.0
@@ -8042,7 +8045,7 @@ pub mod ext {
     }
 
     impl const Register for AesKey5 {
-        const ADDRESS: u16 = 0x2FEA;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FEA);
 
         fn value(&self) -> u8 {
             self.0
@@ -8072,7 +8075,7 @@ pub mod ext {
     }
 
     impl const Register for AesKey4 {
-        const ADDRESS: u16 = 0x2FEB;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FEB);
 
         fn value(&self) -> u8 {
             self.0
@@ -8102,7 +8105,7 @@ pub mod ext {
     }
 
     impl const Register for AesKey3 {
-        const ADDRESS: u16 = 0x2FEC;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FEC);
 
         fn value(&self) -> u8 {
             self.0
@@ -8132,7 +8135,7 @@ pub mod ext {
     }
 
     impl const Register for AesKey2 {
-        const ADDRESS: u16 = 0x2FED;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FED);
 
         fn value(&self) -> u8 {
             self.0
@@ -8162,7 +8165,7 @@ pub mod ext {
     }
 
     impl const Register for AesKey1 {
-        const ADDRESS: u16 = 0x2FEE;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FEE);
 
         fn value(&self) -> u8 {
             self.0
@@ -8192,7 +8195,7 @@ pub mod ext {
     }
 
     impl const Register for AesKey0 {
-        const ADDRESS: u16 = 0x2FEF;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FEF);
 
         fn value(&self) -> u8 {
             self.0
@@ -8222,7 +8225,7 @@ pub mod ext {
     }
 
     impl const Register for AesBuffer15 {
-        const ADDRESS: u16 = 0x2FF0;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FF0);
 
         fn value(&self) -> u8 {
             self.0
@@ -8252,7 +8255,7 @@ pub mod ext {
     }
 
     impl const Register for AesBuffer14 {
-        const ADDRESS: u16 = 0x2FF1;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FF1);
 
         fn value(&self) -> u8 {
             self.0
@@ -8282,7 +8285,7 @@ pub mod ext {
     }
 
     impl const Register for AesBuffer13 {
-        const ADDRESS: u16 = 0x2FF2;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FF2);
 
         fn value(&self) -> u8 {
             self.0
@@ -8312,7 +8315,7 @@ pub mod ext {
     }
 
     impl const Register for AesBuffer12 {
-        const ADDRESS: u16 = 0x2FF3;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FF3);
 
         fn value(&self) -> u8 {
             self.0
@@ -8342,7 +8345,7 @@ pub mod ext {
     }
 
     impl const Register for AesBuffer11 {
-        const ADDRESS: u16 = 0x2FF4;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FF4);
 
         fn value(&self) -> u8 {
             self.0
@@ -8372,7 +8375,7 @@ pub mod ext {
     }
 
     impl const Register for AesBuffer10 {
-        const ADDRESS: u16 = 0x2FF5;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FF5);
 
         fn value(&self) -> u8 {
             self.0
@@ -8402,7 +8405,7 @@ pub mod ext {
     }
 
     impl const Register for AesBuffer9 {
-        const ADDRESS: u16 = 0x2FF6;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FF6);
 
         fn value(&self) -> u8 {
             self.0
@@ -8432,7 +8435,7 @@ pub mod ext {
     }
 
     impl const Register for AesBuffer8 {
-        const ADDRESS: u16 = 0x2FF7;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FF7);
 
         fn value(&self) -> u8 {
             self.0
@@ -8462,7 +8465,7 @@ pub mod ext {
     }
 
     impl const Register for AesBuffer7 {
-        const ADDRESS: u16 = 0x2FF8;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FF8);
 
         fn value(&self) -> u8 {
             self.0
@@ -8492,7 +8495,7 @@ pub mod ext {
     }
 
     impl const Register for AesBuffer6 {
-        const ADDRESS: u16 = 0x2FF9;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FF9);
 
         fn value(&self) -> u8 {
             self.0
@@ -8522,7 +8525,7 @@ pub mod ext {
     }
 
     impl const Register for AesBuffer5 {
-        const ADDRESS: u16 = 0x2FFA;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FFA);
 
         fn value(&self) -> u8 {
             self.0
@@ -8552,7 +8555,7 @@ pub mod ext {
     }
 
     impl const Register for AesBuffer4 {
-        const ADDRESS: u16 = 0x2FFB;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FFB);
 
         fn value(&self) -> u8 {
             self.0
@@ -8582,7 +8585,7 @@ pub mod ext {
     }
 
     impl const Register for AesBuffer3 {
-        const ADDRESS: u16 = 0x2FFC;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FFC);
 
         fn value(&self) -> u8 {
             self.0
@@ -8612,7 +8615,7 @@ pub mod ext {
     }
 
     impl const Register for AesBuffer2 {
-        const ADDRESS: u16 = 0x2FFD;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FFD);
 
         fn value(&self) -> u8 {
             self.0
@@ -8642,7 +8645,7 @@ pub mod ext {
     }
 
     impl const Register for AesBuffer1 {
-        const ADDRESS: u16 = 0x2FFE;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FFE);
 
         fn value(&self) -> u8 {
             self.0
@@ -8672,7 +8675,7 @@ pub mod ext {
     }
 
     impl const Register for AesBuffer0 {
-        const ADDRESS: u16 = 0x2FFF;
+        const ADDRESS: RegisterAddress = RegisterAddress(0x2FFF);
 
         fn value(&self) -> u8 {
             self.0

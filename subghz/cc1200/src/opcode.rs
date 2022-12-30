@@ -1,15 +1,17 @@
+use crate::regs::RegisterAddress;
+
 pub const OPCODE_MAX: usize = 2;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Opcode {
     /// Write a single register.
-    WriteSingle(u16),
+    WriteSingle(RegisterAddress),
     /// Write multiple registers.
-    WriteBurst(u16),
+    WriteBurst(RegisterAddress),
     /// Read a single register.
-    ReadSingle(u16),
+    ReadSingle(RegisterAddress),
     /// Read multiple registers.
-    ReadBurst(u16),
+    ReadBurst(RegisterAddress),
 
     /// Command strobe.
     Strobe(Strobe),
@@ -20,7 +22,7 @@ pub enum Opcode {
 }
 
 impl Opcode {
-    pub const fn read(address: u16, burst: bool) -> Self {
+    pub const fn read(address: RegisterAddress, burst: bool) -> Self {
         if burst {
             Opcode::ReadBurst(address)
         } else {
@@ -28,7 +30,7 @@ impl Opcode {
         }
     }
 
-    pub const fn write(address: u16, burst: bool) -> Self {
+    pub const fn write(address: RegisterAddress, burst: bool) -> Self {
         if burst {
             Opcode::WriteBurst(address)
         } else {
@@ -40,20 +42,20 @@ impl Opcode {
         buffer[0] = self.as_u8();
 
         match *self {
-            Opcode::WriteSingle(address) if address > 0x2F => {
-                buffer[1] = (address & 0xFF) as u8;
+            Opcode::WriteSingle(address) if address.0 > 0x2F => {
+                buffer[1] = (address.0 & 0xFF) as u8;
                 2
             }
-            Opcode::WriteBurst(address) if address > 0x2F => {
-                buffer[1] = (address & 0xFF) as u8;
+            Opcode::WriteBurst(address) if address.0 > 0x2F => {
+                buffer[1] = (address.0 & 0xFF) as u8;
                 2
             }
-            Opcode::ReadSingle(address) if address > 0x2F => {
-                buffer[1] = (address & 0xFF) as u8;
+            Opcode::ReadSingle(address) if address.0 > 0x2F => {
+                buffer[1] = (address.0 & 0xFF) as u8;
                 2
             }
-            Opcode::ReadBurst(address) if address > 0x2F => {
-                buffer[1] = (address & 0xFF) as u8;
+            Opcode::ReadBurst(address) if address.0 > 0x2F => {
+                buffer[1] = (address.0 & 0xFF) as u8;
                 2
             }
             _ => 1,
@@ -68,10 +70,10 @@ impl Opcode {
         const EXTENDED_ADDRESS: u8 = 0x2F;
 
         match *self {
-            Opcode::WriteSingle(address) if address <= 0x2F => SINGLE_WRITE | address as u8,
-            Opcode::WriteBurst(address) if address <= 0x2F => BURST_WRITE | address as u8,
-            Opcode::ReadSingle(address) if address <= 0x2F => SINGLE_READ | address as u8,
-            Opcode::ReadBurst(address) if address <= 0x2F => BURST_READ | address as u8,
+            Opcode::WriteSingle(address) if address.0 <= 0x2F => SINGLE_WRITE | address.0 as u8,
+            Opcode::WriteBurst(address) if address.0 <= 0x2F => BURST_WRITE | address.0 as u8,
+            Opcode::ReadSingle(address) if address.0 <= 0x2F => SINGLE_READ | address.0 as u8,
+            Opcode::ReadBurst(address) if address.0 <= 0x2F => BURST_READ | address.0 as u8,
             Opcode::WriteSingle(_) => SINGLE_WRITE | EXTENDED_ADDRESS,
             Opcode::WriteBurst(_) => BURST_WRITE | EXTENDED_ADDRESS,
             Opcode::ReadSingle(_) => SINGLE_READ | EXTENDED_ADDRESS,

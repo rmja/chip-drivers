@@ -1,6 +1,10 @@
 use crate::{
     opcode::{Opcode, Strobe, OPCODE_MAX},
-    regs::{self, ext, Register},
+    regs::{
+        self,
+        ext::{self, Freqoff0, Freqoff1},
+        Register, RegisterAddress,
+    },
     statusbyte::{State, StatusByte},
     ConfigPatch, DriverError, PartNumber, Rssi, RX_FIFO_SIZE, TX_FIFO_SIZE,
 };
@@ -139,12 +143,11 @@ where
     /// This action _does_ update `last_status`.
     pub async fn read_regs(
         &mut self,
-        first_address: u16,
+        first: RegisterAddress,
         buffer: &mut [u8],
     ) -> Result<(), Self::Error> {
         let mut opcode_tx_buffer = [0; OPCODE_MAX];
-        let opcode_len =
-            Opcode::read(first_address, buffer.len() > 1).assign(&mut opcode_tx_buffer);
+        let opcode_len = Opcode::read(first, buffer.len() > 1).assign(&mut opcode_tx_buffer);
         let opcode_tx = &opcode_tx_buffer[..opcode_len];
 
         let mut opcode_rx_buffer = [0; OPCODE_MAX];
@@ -182,12 +185,11 @@ where
     /// This action _does not_ update `last_status`.
     pub async fn write_regs(
         &mut self,
-        first_address: u16,
+        first: RegisterAddress,
         values: &[u8],
     ) -> Result<(), Self::Error> {
         let mut opcode_tx_buffer = [0; OPCODE_MAX];
-        let opcode_len =
-            Opcode::write(first_address, values.len() > 1).assign(&mut opcode_tx_buffer);
+        let opcode_len = Opcode::write(first, values.len() > 1).assign(&mut opcode_tx_buffer);
         let opcode_tx = &opcode_tx_buffer[..opcode_len];
 
         spi_transaction!(&mut self.spi, |bus| async {
@@ -208,7 +210,22 @@ where
         &mut self,
         patch: ConfigPatch<'patch>,
     ) -> Result<(), Self::Error> {
-        self.write_regs(patch.first_address, patch.values).await
+        let (pri, ext) = patch.split();
+        if let Some(pri) = pri {
+            self.write_regs(pri.first_address, pri.values).await?;
+        }
+
+        if let Some(ext) = ext {
+            self.write_regs(ext.first_address, ext.values).await?;
+
+            if self.freq_off.is_some() && ext.get::<Freqoff1>().is_some()
+                || ext.get::<Freqoff0>().is_some()
+            {
+                self.write_freq_off().await?;
+            }
+        }
+
+        Ok(())
     }
 
     /// Read the current RSSI level.

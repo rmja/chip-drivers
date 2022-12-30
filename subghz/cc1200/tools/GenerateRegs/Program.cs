@@ -82,14 +82,17 @@ Console.WriteLine($$"""
 
     #[const_trait]
     pub trait Register: ~const From<u8> + ~const Default + Clone + Copy {
-        const ADDRESS: u16;
+        const ADDRESS: RegisterAddress;
 
         fn is_extended() -> bool {
-            Self::ADDRESS > 0x7F
+            Self::ADDRESS.0 > 0x7F
         }
 
         fn value(&self) -> u8;
     }
+
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct RegisterAddress(pub(crate) u16);
 
     """);
 
@@ -265,7 +268,7 @@ void WriteRegister(StringBuilder writer, Register register)
 
     writer.AppendLine($$"""
         impl const Register for {{structName}} {
-            const ADDRESS: u16 = {{register.Address}};
+            const ADDRESS: RegisterAddress = RegisterAddress({{register.Address}});
 
             fn value(&self) -> u8 {
                 self.0
