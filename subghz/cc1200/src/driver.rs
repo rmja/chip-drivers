@@ -15,6 +15,8 @@ use futures::{
     pin_mut,
 };
 
+const DEFAULT_RSSI_OFFSET: i8 = -99; // The default offset defined in the users guide
+
 pub struct Driver<Spi, SpiBus, Delay, ResetPin>
 where
     Spi: spi::SpiDevice<Bus = SpiBus>,
@@ -26,7 +28,13 @@ where
     delay: Delay,
     reset_pin: Option<ResetPin>,
     last_status: Option<StatusByte>,
-    pub rssi_offset: Rssi,
+    rssi_offset: Option<Rssi>,
+    freq_off: Option<i16>,
+}
+
+pub struct CalibrationValue<T> {
+    desired: T,
+    actual: T,
 }
 
 impl<Spi, SpiBus, Delay, ResetPin> Driver<Spi, SpiBus, Delay, ResetPin>
@@ -44,7 +52,8 @@ where
             delay,
             reset_pin,
             last_status: None,
-            rssi_offset: -99, // The default offset defined in the users guide
+            rssi_offset: None,
+            freq_off: None,
         }
     }
 
@@ -407,7 +416,7 @@ where
         let rssi = rssi1_value as i8;
         match rssi {
             -128 => Err(DriverError::InvalidRssi),
-            rssi => Ok(rssi + self.rssi_offset),
+            rssi => Ok(rssi + self.rssi_offset.unwrap_or(DEFAULT_RSSI_OFFSET)),
         }
     }
 
@@ -506,5 +515,58 @@ where
                 return Ok(status);
             }
         }
+    }
+
+    // Set the RSSI calibration
+    pub async fn set_rssi_cal(
+        &mut self,
+        value: Option<CalibrationValue<i8>>,
+    ) -> Result<(), Self::Error> {
+        self.rssi_offset = value.map(|x| x.desired - x.actual);
+        Ok(())
+    }
+
+    /// Set the frequency calibration
+    ///
+    /// # Example
+    ///
+    /// The desired frequency is 868.950MHz but the measured is 868.850MHz.
+    /// Then call with `set_freq_cal(Some(CalibrationValue{ desired: 868950000, actual: 868850000 }))`.
+    ///
+    /// # Details
+    ///
+    /// From equation 28 in CC1200 we have
+    ///
+    /// ![f_VCO](https://latex.codecogs.com/png.latex?\color{White}f_{VCO}=\frac{FREQ}{2^{16}}f_{XOSC}+\frac{FREQOFF}{2^{18}}f_{XOSC})
+    ///
+    /// and from equation 27:
+    ///
+    /// ![f_RF](https://latex.codecogs.com/png.latex?\color{White}f_{RF}=\frac{f_{VCO}}{4})
+    ///
+    /// For the actual value `FREQOFF=0` and so we have:
+    ///
+    /// ![delta](https://latex.codecogs.com/png.latex?\color{White}f_{RFdesired}-f_{RFactual}=\frac{FREQOFF}{2^{20}}f_{XOSC})
+    ///
+    /// Solving for `FREQOFF` we have
+    ///
+    /// ![FREQOFF](https://latex.codecogs.com/png.latex?\color{White}FREQOFF=\frac{f_{RFdesired}-f_{RFactual}}{f_{XOSC}}2^{20}=\frac{f_{RFdesired}-f_{RF_actual}}{10000000}2^{18})
+    pub async fn set_freq_cal(
+        &mut self,
+        value: Option<CalibrationValue<u32>>,
+    ) -> Result<(), Self::Error> {
+        self.freq_off = value.map(|x| {
+            let desired = x.desired as i32;
+            let actual = x.actual as i32;
+            let delta = actual - desired;
+            let freq_off = delta * 2i32.pow(18) / 10_000_000;
+            freq_off as i16
+        });
+
+        self.write_freq_off().await
+    }
+
+    async fn write_freq_off(&mut self) -> Result<(), Self::Error> {
+        let values = self.freq_off.unwrap_or_default().to_be_bytes();
+        self.write_regs(Freqoff1::ADDRESS, &values).await
     }
 }
