@@ -33,8 +33,8 @@ where
 }
 
 pub struct CalibrationValue<T> {
-    desired: T,
-    actual: T,
+    pub desired: T,
+    pub actual: T,
 }
 
 impl<Spi, SpiBus, Delay, ResetPin> Driver<Spi, SpiBus, Delay, ResetPin>

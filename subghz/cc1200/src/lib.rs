@@ -22,9 +22,9 @@ mod opcode;
 pub mod regs;
 mod statusbyte;
 
+pub mod configs;
 #[cfg(feature = "ctrl")]
 pub mod controllers;
-pub mod configs;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum PartNumber {
@@ -39,7 +39,7 @@ pub const TX_FIFO_SIZE: usize = 128;
 
 pub use self::{
     config::ConfigPatch,
-    driver::Driver,
+    driver::{CalibrationValue, Driver},
     error::DriverError,
     opcode::Strobe,
     statusbyte::{State, StatusByte},
