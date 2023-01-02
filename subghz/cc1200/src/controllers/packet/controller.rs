@@ -56,8 +56,7 @@ where
     IrqPin: traits::IrqPin<Timestamp>,
 {
     pub driver: Driver<Spi, SpiBus, Delay, ResetPin>,
-    pri_config: ConfigPatch<'a>,
-    ext_config: ConfigPatch<'a>,
+    config: ConfigPatch<'a>,
     pktcfg0: PktCfg0,
     irq_iocfg: IrqGpio::Iocfg,
     irq_gpio: PhantomData<IrqGpio>,
@@ -91,15 +90,13 @@ where
     pub fn new(
         driver: Driver<Spi, SpiBus, Delay, ResetPin>,
         irq_pin: IrqPin,
-        pri_config: ConfigPatch<'a>,
-        ext_config: ConfigPatch<'a>,
+        config: ConfigPatch<'a>,
     ) -> Self {
         Self {
             driver,
-            pri_config,
-            ext_config,
-            pktcfg0: pri_config.get::<PktCfg0>().unwrap(),
-            irq_iocfg: pri_config.get::<IrqGpio::Iocfg>().unwrap(),
+            config,
+            pktcfg0: config.get::<PktCfg0>().unwrap(),
+            irq_iocfg: config.get::<IrqGpio::Iocfg>().unwrap(),
             irq_gpio: PhantomData,
             irq_pin,
             timestamp: PhantomData,
@@ -111,16 +108,15 @@ where
 
     /// Initialize the chip by sending a configuration and entering idle state
     pub async fn init(&mut self) -> Result<(), Self::Error> {
-        self.driver.write_patch(self.pri_config).await?;
-        self.driver.write_patch(self.ext_config).await?;
+        self.driver.write_patch(self.config).await?;
 
         // FIFO must be enabled
-        let mut mdmcfg1 = self.pri_config.get::<Mdmcfg1>().unwrap_or_default();
+        let mut mdmcfg1 = self.config.get::<Mdmcfg1>().unwrap_or_default();
         mdmcfg1.set_fifo_en(true);
         self.driver.write_reg(mdmcfg1).await?;
 
         // Packet mode must be Normal/FIFO mode
-        let mut pktcfg2 = self.pri_config.get::<PktCfg2>().unwrap_or_default();
+        let mut pktcfg2 = self.config.get::<PktCfg2>().unwrap_or_default();
         pktcfg2.set_pkt_format(PktFormatValue::NormalModeFifoMode);
         self.driver.write_reg(pktcfg2).await?;
 
@@ -181,7 +177,7 @@ where
 
         // Do not wait for calibration and settling.
 
-        let fifocfg = self.pri_config.get::<FifoCfg>().unwrap();
+        let fifocfg = self.config.get::<FifoCfg>().unwrap();
         while !self.pending_write_queue.is_empty() {
             // Wait for fifo buffer to go below threshold.
             self.irq_pin.wait_for_low().await;
@@ -230,7 +226,7 @@ where
 
         self.written_to_txfifo = 0;
 
-        self.is_idle = match self.pri_config.get::<RfendCfg0>().unwrap().txoff_mode() {
+        self.is_idle = match self.config.get::<RfendCfg0>().unwrap_or_default().txoff_mode() {
             TxoffModeValue::Idle => true,
             TxoffModeValue::Rx => false,
             _ => panic!("Unsupported state after tx completes"),
@@ -283,7 +279,7 @@ where
         self.driver.empty_fifo().await?;
 
         // Configure the fifo threshold to be min_frame_length
-        let mut fifo_cfg = self.pri_config.get::<FifoCfg>().unwrap();
+        let mut fifo_cfg = self.config.get::<FifoCfg>().unwrap();
         fifo_cfg.set_bytes_in_rxfifo(min_frame_length as u8);
         self.driver.write_reg(fifo_cfg).await?;
 
@@ -353,7 +349,7 @@ where
             // This is the first portion received
 
             // Configure the fifo threshold to the default
-            let fifo_cfg = self.pri_config.get::<FifoCfg>().unwrap();
+            let fifo_cfg = self.config.get::<FifoCfg>().unwrap();
             self.driver.write_reg(fifo_cfg).await?;
         }
 
@@ -384,7 +380,7 @@ where
             // We have already read more bytes than the length of the frame
             // End the current frame asap and resume after receive.
 
-            self.is_idle = match self.pri_config.get::<RfendCfg1>().unwrap().rxoff_mode() {
+            self.is_idle = match self.config.get::<RfendCfg1>().unwrap_or_default().rxoff_mode() {
                 RxoffModeValue::Idle => true,
                 RxoffModeValue::Rx => false,
                 _ => panic!("Unsupported state after rx completes"),
