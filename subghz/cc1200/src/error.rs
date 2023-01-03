@@ -1,10 +1,10 @@
-pub enum DriverError<SpiError: embedded_hal_async::spi::Error, T: embedded_hal_async::delay::DelayUs> {
+pub enum DriverError<SpiDeviceError: embedded_hal_async::spi::Error, T: embedded_hal_async::delay::DelayUs> {
     Timeout,
     RxFifoOverflow,
     TxFifoUnderflow,
     InvalidPartNumber,
     InvalidRssi,
-    Spi(SpiError),
+    Spi(SpiDeviceError),
     Delay(<T as embedded_hal_async::delay::DelayUs>::Error),
 }
 

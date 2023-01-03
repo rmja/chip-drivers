@@ -43,63 +43,65 @@ use crate::{
 };
 use alloc::vec::Vec;
 use embedded_hal_async::spi;
+use embedded_time::{Clock, Instant};
 
-use super::traits;
-
-pub struct PacketController<'a, Spi, SpiBus, Delay, ResetPin, IrqGpio, IrqPin, Timestamp>
+pub struct PacketController<'a, Spi, SpiBus, Delay, ResetPin, IrqGpio, IrqPin, Clk>
 where
     Spi: spi::SpiDevice<Bus = SpiBus>,
     SpiBus: embedded_hal_async::spi::SpiBus + 'static,
     Delay: embedded_hal_async::delay::DelayUs,
     ResetPin: embedded_hal::digital::OutputPin,
     IrqGpio: Gpio,
-    IrqPin: traits::IrqPin<Timestamp>,
+    IrqPin: embedded_hal_async::digital::Wait,
+    Clk: Clock,
 {
     pub driver: Driver<Spi, SpiBus, Delay, ResetPin>,
+    clock: Clk,
     config: ConfigPatch<'a>,
     pktcfg0: PktCfg0,
     irq_iocfg: IrqGpio::Iocfg,
     irq_gpio: PhantomData<IrqGpio>,
     pub irq_pin: IrqPin,
-    timestamp: PhantomData<Timestamp>,
     pending_write_queue: Vec<u8>,
     written_to_txfifo: usize,
     is_idle: bool,
 }
 
-pub struct RxToken<Timestamp> {
-    pub timestamp: Timestamp,
+pub struct RxToken<Clk: Clock> {
+    pub timestamp: Option<Instant<Clk>>,
     read_from_rxfifo: usize,
     frame_length: Option<usize>,
 }
 
-impl<'a, Spi, SpiBus, Delay, ResetPin, IrqGpio, IrqPin, Timestamp>
-    PacketController<'a, Spi, SpiBus, Delay, ResetPin, IrqGpio, IrqPin, Timestamp>
+impl<'a, Spi, SpiBus, Delay, ResetPin, IrqGpio, IrqPin, Clk>
+    PacketController<'a, Spi, SpiBus, Delay, ResetPin, IrqGpio, IrqPin, Clk>
 where
     Spi: spi::SpiDevice<Bus = SpiBus>,
     SpiBus: embedded_hal_async::spi::SpiBus,
     Delay: embedded_hal_async::delay::DelayUs,
     ResetPin: embedded_hal::digital::OutputPin,
     IrqGpio: Gpio,
-    IrqPin: traits::IrqPin<Timestamp>,
+    IrqPin: embedded_hal_async::digital::Wait,
+    Clk: Clock,
 {
-    type RxToken = RxToken<Timestamp>;
+    type RxToken = RxToken<Clk>;
     type Error = DriverError<Spi::Error, Delay>;
 
     /// Create a new packet controller
     pub fn new(
         driver: Driver<Spi, SpiBus, Delay, ResetPin>,
         irq_pin: IrqPin,
+        clock: Clk,
         config: ConfigPatch<'a>,
     ) -> Self {
         Self {
             driver,
+            clock,
             config,
             pktcfg0: config.get::<PktCfg0>().unwrap(),
             irq_iocfg: config.get::<IrqGpio::Iocfg>().unwrap(),
             irq_gpio: PhantomData,
             irq_pin,
-            timestamp: PhantomData,
             pending_write_queue: Vec::new(),
             written_to_txfifo: 0,
             is_idle: true,
@@ -180,7 +182,7 @@ where
         let fifocfg = self.config.get::<FifoCfg>().unwrap();
         while !self.pending_write_queue.is_empty() {
             // Wait for fifo buffer to go below threshold.
-            self.irq_pin.wait_for_low().await;
+            self.irq_pin.wait_for_low().await.unwrap();
 
             if self.pktcfg0.length_config() != LengthConfigValue::FixedPacketLengthMode
                 && self.pending_write_queue.len() <= TX_FIFO_SIZE
@@ -214,7 +216,7 @@ where
         }
 
         // Wait for fifo buffer to go below threshold.
-        self.irq_pin.wait_for_low().await;
+        self.irq_pin.wait_for_low().await.unwrap();
 
         // Re-define fifo pin to be de-asserted when idle (not rx nor tx).
         self.irq_iocfg = IrqGpio::Iocfg::default();
@@ -222,11 +224,16 @@ where
         self.driver.write_reg(self.irq_iocfg).await?;
 
         // Wait for transmission to complete.
-        self.irq_pin.wait_for_low().await;
+        self.irq_pin.wait_for_low().await.unwrap();
 
         self.written_to_txfifo = 0;
 
-        self.is_idle = match self.config.get::<RfendCfg0>().unwrap_or_default().txoff_mode() {
+        self.is_idle = match self
+            .config
+            .get::<RfendCfg0>()
+            .unwrap_or_default()
+            .txoff_mode()
+        {
             TxoffModeValue::Idle => true,
             TxoffModeValue::Rx => false,
             _ => panic!("Unsupported state after tx completes"),
@@ -290,7 +297,8 @@ where
         self.driver.write_reg(self.irq_iocfg).await?;
 
         // Wait for SOF to be detected
-        let timestamp = self.irq_pin.wait_for_high().await;
+        self.irq_pin.wait_for_high().await.unwrap();
+        let timestamp = self.clock.try_now().ok();
 
         // Setup fifo pin
         // Asserted when fifo is above threshold and deasserted when drained below threshold.
@@ -299,7 +307,7 @@ where
         self.driver.write_reg(self.irq_iocfg).await?;
 
         // Wait for min_frame_length bytes to be received
-        self.irq_pin.wait_for_high().await;
+        self.irq_pin.wait_for_high().await.unwrap();
 
         Ok(RxToken {
             timestamp,
@@ -336,7 +344,7 @@ where
         }
 
         // Wait for the FIFO to reach threshold or for packet to be fully received
-        self.irq_pin.wait_for_high().await;
+        self.irq_pin.wait_for_high().await.unwrap();
 
         // Read bytes available in the fifo
         let received = self.driver.read_fifo(buffer).await?;
@@ -380,7 +388,12 @@ where
             // We have already read more bytes than the length of the frame
             // End the current frame asap and resume after receive.
 
-            self.is_idle = match self.config.get::<RfendCfg1>().unwrap_or_default().rxoff_mode() {
+            self.is_idle = match self
+                .config
+                .get::<RfendCfg1>()
+                .unwrap_or_default()
+                .rxoff_mode()
+            {
                 RxoffModeValue::Idle => true,
                 RxoffModeValue::Rx => false,
                 _ => panic!("Unsupported state after rx completes"),
