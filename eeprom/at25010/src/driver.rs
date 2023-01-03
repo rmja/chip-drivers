@@ -20,36 +20,36 @@ bitfield! {
 const INITIAL_TIMEOUT_MS: u32 = 3; // Wait at least 3 ms
 const RETRY_INTERVAL_US: u32 = 100;
 
-pub struct Driver<Spi, SpiBus, Delay>
+pub struct Driver<SpiDevice, SpiBus, Delay>
 where
-    Spi: spi::SpiDevice<Bus = SpiBus>,
+    SpiDevice: spi::SpiDevice<Bus = SpiBus>,
     SpiBus: spi::SpiBus,
     Delay: delay::DelayUs,
 {
-    spi: Spi,
+    spi: SpiDevice,
     delay: Delay,
     part_number: PartNumber,
 }
 
-pub struct StatefulDriver<Spi, SpiBus, Delay>
+pub struct StatefulDriver<SpiDevice, SpiBus, Delay>
 where
-    Spi: spi::SpiDevice<Bus = SpiBus>,
+    SpiDevice: spi::SpiDevice<Bus = SpiBus>,
     SpiBus: spi::SpiBus,
     Delay: delay::DelayUs,
 {
-    pub driver: Driver<Spi, SpiBus, Delay>,
+    pub driver: Driver<SpiDevice, SpiBus, Delay>,
     pub(crate) position: u16,
 }
 
-impl<Spi, SpiBus, Delay> Driver<Spi, SpiBus, Delay>
+impl<SpiDevice, SpiBus, Delay> Driver<SpiDevice, SpiBus, Delay>
 where
-    Spi: spi::SpiDevice<Bus = SpiBus>,
+    SpiDevice: spi::SpiDevice<Bus = SpiBus>,
     SpiBus: spi::SpiBus,
     Delay: delay::DelayUs,
 {
-    type Error = DriverError<Spi::Error, Delay>;
+    type Error = DriverError<SpiDevice::Error, Delay>;
 
-    pub const fn new(spi: Spi, delay: Delay, part_number: PartNumber) -> Self {
+    pub const fn new(spi: SpiDevice, delay: Delay, part_number: PartNumber) -> Self {
         Self {
             part_number,
             spi,
@@ -57,7 +57,7 @@ where
         }
     }
 
-    pub const fn to_stateful(self) -> StatefulDriver<Spi, SpiBus, Delay> {
+    pub const fn to_stateful(self) -> StatefulDriver<SpiDevice, SpiBus, Delay> {
         StatefulDriver {
             driver: self,
             position: 0,

@@ -60,7 +60,7 @@ where
     pktcfg0: PktCfg0,
     irq_iocfg: IrqGpio::Iocfg,
     irq_gpio: PhantomData<IrqGpio>,
-    irq_pin: IrqPin,
+    pub irq_pin: IrqPin,
     timestamp: PhantomData<Timestamp>,
     pending_write_queue: Vec<u8>,
     written_to_txfifo: usize,

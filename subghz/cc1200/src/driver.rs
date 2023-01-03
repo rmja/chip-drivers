@@ -17,14 +17,14 @@ use futures::{
 
 const DEFAULT_RSSI_OFFSET: i8 = -99; // The default offset defined in the users guide
 
-pub struct Driver<Spi, SpiBus, Delay, ResetPin>
+pub struct Driver<SpiDevice, SpiBus, Delay, ResetPin>
 where
-    Spi: spi::SpiDevice<Bus = SpiBus>,
+    SpiDevice: spi::SpiDevice<Bus = SpiBus>,
     SpiBus: spi::SpiBus,
     Delay: delay::DelayUs,
     ResetPin: OutputPin,
 {
-    spi: Spi,
+    spi: SpiDevice,
     delay: Delay,
     reset_pin: Option<ResetPin>,
     last_status: Option<StatusByte>,
