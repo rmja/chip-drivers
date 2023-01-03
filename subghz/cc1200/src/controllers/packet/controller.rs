@@ -85,7 +85,6 @@ where
     Clk: Clock,
 {
     type RxToken = RxToken<Clk>;
-    type Error = DriverError<Spi::Error, Delay>;
 
     /// Create a new packet controller
     pub fn new(
@@ -109,7 +108,7 @@ where
     }
 
     /// Initialize the chip by sending a configuration and entering idle state
-    pub async fn init(&mut self) -> Result<(), Self::Error> {
+    pub async fn init(&mut self) -> Result<(), DriverError> {
         self.driver.write_patch(self.config).await?;
 
         // FIFO must be enabled
@@ -129,7 +128,7 @@ where
 
     /// Write bytes to the chip tx fifo
     /// Bytes that cannot fit in the tx fifo are buffered and written during transmission
-    pub async fn write(&mut self, buffer: &[u8]) -> Result<(), Self::Error> {
+    pub async fn write(&mut self, buffer: &[u8]) -> Result<(), DriverError> {
         let write_now_length = usize::min(buffer.len(), TX_FIFO_SIZE - self.written_to_txfifo);
         let (write_now, write_later) = buffer.split_at(write_now_length);
 
@@ -146,7 +145,7 @@ where
     }
 
     /// Start transmission of previously written bytes
-    pub async fn transmit(&mut self) -> Result<(), Self::Error> {
+    pub async fn transmit(&mut self) -> Result<(), DriverError> {
         assert_ne!(
             0, self.written_to_txfifo,
             "write() was not called prior to starting transmission"
@@ -243,7 +242,7 @@ where
     }
 
     /// Start the receiver on the chip
-    pub async fn listen(&mut self) -> Result<(), Self::Error> {
+    pub async fn listen(&mut self) -> Result<(), DriverError> {
         assert!(self.is_idle);
 
         // Flush RX buffer before we start the receiver
@@ -260,13 +259,13 @@ where
     }
 
     /// Read the current rssi level
-    pub async fn get_rssi(&mut self) -> Result<Rssi, Self::Error> {
+    pub async fn get_rssi(&mut self) -> Result<Rssi, DriverError> {
         self.driver.read_rssi().await
     }
 
     /// Start waiting for a packet to be detected
     /// This call completes when `min_frame_length` bytes have been received.
-    pub async fn receive(&mut self, min_frame_length: usize) -> Result<Self::RxToken, Self::Error> {
+    pub async fn receive(&mut self, min_frame_length: usize) -> Result<Self::RxToken, DriverError> {
         assert!(min_frame_length > 0);
         assert!(min_frame_length <= RX_FIFO_SIZE);
 
@@ -323,7 +322,7 @@ where
         &mut self,
         token: &mut Self::RxToken,
         buffer: &mut [u8],
-    ) -> Result<usize, Self::Error> {
+    ) -> Result<usize, DriverError> {
         // Determine if it is time to transition to fixed packet length mode
         if self.pktcfg0.length_config() == LengthConfigValue::InfinitePacketLengthMode && let Some(frame_length) = token.frame_length && token.read_from_rxfifo + RX_FIFO_SIZE >= frame_length {
                 // We are now sufficently close to the end of the packet.
@@ -371,7 +370,7 @@ where
         &mut self,
         token: &mut Self::RxToken,
         frame_length: usize,
-    ) -> Result<(), Self::Error> {
+    ) -> Result<(), DriverError> {
         assert_eq!(
             LengthConfigValue::InfinitePacketLengthMode,
             self.pktcfg0.length_config()
@@ -408,7 +407,7 @@ where
     }
 
     /// Stop receiving by setting chip to idle.
-    pub async fn idle(&mut self) -> Result<(), Self::Error> {
+    pub async fn idle(&mut self) -> Result<(), DriverError> {
         self.driver.strobe_until_idle(Strobe::SIDLE).await?;
 
         self.is_idle = true;
