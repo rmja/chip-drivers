@@ -21,5 +21,5 @@ pub enum PartNumber {
     At25040b,
 }
 
-pub use driver::Driver;
+pub use driver::{Driver, StatefulDriver};
 pub use error::DriverError;
