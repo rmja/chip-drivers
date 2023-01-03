@@ -1,12 +1,9 @@
 use embedded_hal_async::{delay, spi};
 use embedded_io::{self, asynch, Error, ErrorKind, Io, SeekFrom};
 
-use crate::{DriverError, driver::StatefulDriver};
+use crate::{driver::StatefulDriver, DriverError};
 
-impl<Spi, T> Error for DriverError<Spi, T>
-where
-    Spi: embedded_hal_async::spi::Error,
-    T: embedded_hal_async::delay::DelayUs,
+impl Error for DriverError
 {
     fn kind(&self) -> ErrorKind {
         ErrorKind::Other
@@ -19,7 +16,7 @@ where
     SpiBus: spi::SpiBus,
     Delay: delay::DelayUs,
 {
-    type Error = DriverError<Spi::Error, Delay>;
+    type Error = DriverError;
 }
 
 impl<Spi, SpiBus, Delay> asynch::Seek for StatefulDriver<Spi, SpiBus, Delay>

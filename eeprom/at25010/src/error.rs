@@ -1,23 +1,16 @@
-// See https://stackoverflow.com/questions/63622942/how-can-i-implement-fromsome-traits-associated-type
-pub enum DriverError<Spi: embedded_hal_async::spi::Error, T: embedded_hal_async::delay::DelayUs> {
+#[derive(Debug)]
+pub enum DriverError {
     WriteProtection,
     Capacity,
-    Spi(Spi),
-    Delay(<T as embedded_hal_async::delay::DelayUs>::Error),
+    Spi,
+    Delay,
 }
 
-// Explicit implementation of Debug because DelayUs may not implement Debug even thoug DelayUs::Error does.
-impl<Spi, T> core::fmt::Debug for crate::DriverError<Spi, T>
+impl<SpiError> From<SpiError> for DriverError
 where
-    Spi: embedded_hal_async::spi::Error,
-    T: embedded_hal_async::delay::DelayUs,
+    SpiError: embedded_hal_async::spi::Error,
 {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            Self::WriteProtection => write!(f, "WriteProtection"),
-            Self::Capacity => write!(f, "Capacity"),
-            Self::Spi(arg0) => f.debug_tuple("Spi").field(arg0).finish(),
-            Self::Delay(arg0) => f.debug_tuple("Delay").field(arg0).finish(),
-        }
+    fn from(_value: SpiError) -> Self {
+        Self::Spi
     }
 }

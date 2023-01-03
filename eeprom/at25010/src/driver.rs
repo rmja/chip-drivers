@@ -47,8 +47,6 @@ where
     SpiBus: spi::SpiBus,
     Delay: delay::DelayUs,
 {
-    type Error = DriverError<SpiDevice::Error, Delay>;
-
     pub const fn new(spi: SpiDevice, delay: Delay, part_number: PartNumber) -> Self {
         Self {
             part_number,
@@ -77,7 +75,7 @@ where
     }
 
     /// Read a sequence of bytes from the EEPROM.
-    pub async fn read(&mut self, origin: u16, buffer: &mut [u8]) -> Result<(), Self::Error> {
+    pub async fn read(&mut self, origin: u16, buffer: &mut [u8]) -> Result<(), DriverError> {
         if origin as usize + buffer.len() > self.capacity() as usize {
             return Err(DriverError::Capacity);
         }
@@ -88,12 +86,13 @@ where
             bus.read(buffer).await?;
             Ok(())
         })
-        .await
-        .map_err(DriverError::Spi)
+        .await?;
+
+        Ok(())
     }
 
     /// Write a sequence of bytes to the EEPROM.
-    pub async fn write(&mut self, origin: u16, buffer: &[u8]) -> Result<(), Self::Error> {
+    pub async fn write(&mut self, origin: u16, buffer: &[u8]) -> Result<(), DriverError> {
         if origin as usize + buffer.len() > self.capacity() as usize {
             return Err(DriverError::Capacity);
         }
@@ -110,7 +109,7 @@ where
         self.delay
             .delay_us(t_cs_us)
             .await
-            .map_err(DriverError::Delay)?;
+            .map_err(|_| DriverError::Delay)?;
 
         // See if write was enabled (it may have been disabled by the WP pin).
         let sr = self.read_status_register().await?;
@@ -130,7 +129,7 @@ where
             self.delay
                 .delay_us(t_cs_us)
                 .await
-                .map_err(DriverError::Delay)?;
+                .map_err(|_| DriverError::Delay)?;
 
             self.write_page(address, incomplete_first_page).await?;
             address += incomplete_first_page.len() as u16;
@@ -149,7 +148,7 @@ where
             self.delay
                 .delay_us(t_cs_us)
                 .await
-                .map_err(DriverError::Delay)?;
+                .map_err(|_| DriverError::Delay)?;
 
             self.write_page(address, page).await?;
             address += page.len() as u16;
@@ -163,7 +162,7 @@ where
         Ok(())
     }
 
-    pub async fn flush(&mut self) -> Result<(), Self::Error> {
+    pub async fn flush(&mut self) -> Result<(), DriverError> {
         let sr = self.read_status_register().await?;
         if !sr.bsy() {
             return Ok(());
@@ -173,14 +172,14 @@ where
         self.delay
             .delay_ms(INITIAL_TIMEOUT_MS)
             .await
-            .map_err(DriverError::Delay)?;
+            .map_err(|_| DriverError::Delay)?;
         let sr = self.read_status_register().await?;
         if sr.bsy() {
             loop {
                 self.delay
                     .delay_us(RETRY_INTERVAL_US)
                     .await
-                    .map_err(DriverError::Delay)?;
+                    .map_err(|_| DriverError::Delay)?;
 
                 let sr = self.read_status_register().await?;
                 if !sr.bsy() {
@@ -192,23 +191,20 @@ where
         Ok(())
     }
 
-    async fn enable_write(&mut self) -> Result<(), Self::Error> {
+    async fn enable_write(&mut self) -> Result<(), DriverError> {
         const TX: [u8; 1] = [Opcode::WREN.as_u8()];
-        self.spi.write(&TX).await.map_err(DriverError::Spi)?;
+        self.spi.write(&TX).await?;
         Ok(())
     }
 
-    async fn read_status_register(&mut self) -> Result<StatusRegister, Self::Error> {
+    async fn read_status_register(&mut self) -> Result<StatusRegister, DriverError> {
         const TX: [u8; 2] = [Opcode::RDSR.as_u8(), 0x00];
         let mut rx: [u8; 2] = [0x00, 0x00];
-        self.spi
-            .transfer(&mut rx, &TX)
-            .await
-            .map_err(DriverError::Spi)?;
+        self.spi.transfer(&mut rx, &TX).await?;
         Ok(StatusRegister(rx[1]))
     }
 
-    async fn write_page(&mut self, address: u16, buffer: &[u8]) -> Result<(), Self::Error> {
+    async fn write_page(&mut self, address: u16, buffer: &[u8]) -> Result<(), DriverError> {
         let len = buffer.len();
         assert!(len > 0);
         assert!(len <= PAGE_SIZE - (address as usize % PAGE_SIZE));
@@ -219,8 +215,9 @@ where
             bus.write(buffer).await?;
             Ok(())
         })
-        .await
-        .map_err(DriverError::Spi)
+        .await?;
+
+        Ok(())
     }
 }
 
