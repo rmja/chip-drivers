@@ -55,13 +55,13 @@ where
     IrqPin: embedded_hal_async::digital::Wait,
     Clk: Clock,
 {
-    pub driver: Driver<Spi, SpiBus, Delay, ResetPin>,
+    driver: &'a mut Driver<Spi, SpiBus, Delay, ResetPin>,
     clock: Clk,
     config: ConfigPatch<'a>,
     pktcfg0: PktCfg0,
     irq_iocfg: IrqGpio::Iocfg,
     irq_gpio: PhantomData<IrqGpio>,
-    pub irq_pin: IrqPin,
+    irq_pin: &'a mut IrqPin,
     pending_write_queue: Vec<u8>,
     written_to_txfifo: usize,
     is_idle: bool,
@@ -88,8 +88,8 @@ where
 
     /// Create a new packet controller
     pub fn new(
-        driver: Driver<Spi, SpiBus, Delay, ResetPin>,
-        irq_pin: IrqPin,
+        driver: &'a mut Driver<Spi, SpiBus, Delay, ResetPin>,
+        irq_pin: &'a mut IrqPin,
         clock: Clk,
         config: ConfigPatch<'a>,
     ) -> Self {
