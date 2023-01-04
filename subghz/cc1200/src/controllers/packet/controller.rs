@@ -31,13 +31,15 @@
 use core::marker::PhantomData;
 
 use crate::{
+    driver::lo_divider,
     gpio::{Gpio, GpioOutput},
     regs::{
+        ext::Freq2,
         pri::{
             FifoCfg, LengthConfigValue, Mdmcfg1, PktCfg0, PktCfg2, PktFormatValue, PktLen,
             RfendCfg0, RfendCfg1, RxoffModeValue, TxoffModeValue,
         },
-        Iocfg,
+        Iocfg, Register,
     },
     ConfigPatch, Driver, DriverError, Rssi, State, Strobe, RX_FIFO_SIZE, TX_FIFO_SIZE,
 };
@@ -124,6 +126,17 @@ where
         self.idle().await?;
 
         Ok(())
+    }
+
+    /// Set the frequency in Hz
+    pub async fn set_frequency(&mut self, frequency: u32) -> Result<(), DriverError> {
+        let lo_div = lo_divider(frequency) as u32;
+        let freq: [u8; 4] = (frequency * lo_div).to_be_bytes();
+        let patch = ConfigPatch {
+            first_address: Freq2::ADDRESS,
+            values: &freq[1..],
+        };
+        self.driver.write_patch(patch).await
     }
 
     /// Write bytes to the chip tx fifo

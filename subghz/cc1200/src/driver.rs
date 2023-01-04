@@ -527,24 +527,25 @@ where
     ///
     /// and from equation 27:
     ///
-    /// ![f_RF](https://latex.codecogs.com/png.latex?\color{White}f_{RF}=\frac{f_{VCO}}{4})
+    /// ![f_RF](https://latex.codecogs.com/png.latex?\color{White}f_{RF}=\frac{f_{VCO}}{LO_{div}})
     ///
     /// For the actual value `FREQOFF=0` and so we have:
     ///
-    /// ![delta](https://latex.codecogs.com/png.latex?\color{White}f_{RFdesired}-f_{RFactual}=\frac{FREQOFF}{2^{20}}f_{XOSC})
+    /// ![delta](https://latex.codecogs.com/png.latex?\color{White}f_{RFdesired}-f_{RFactual}=\frac{FREQOFF}{2^{18}LO_{div}}f_{XOSC})
     ///
     /// Solving for `FREQOFF` we have
     ///
-    /// ![FREQOFF](https://latex.codecogs.com/png.latex?\color{White}FREQOFF=\frac{f_{RFdesired}-f_{RFactual}}{f_{XOSC}}2^{20}=\frac{f_{RFdesired}-f_{RF_actual}}{10000000}2^{18})
-    pub async fn set_freq_cal(
+    /// ![FREQOFF](https://latex.codecogs.com/png.latex?\color{White}FREQOFF=\frac{f_{RFdesired}-f_{RFactual}}{f_{XOSC}}2^{18}LO_{div}=\frac{f_{RFdesired}-f_{RF_actual}}{40000000}2^{18}LO_{div})
+    pub async fn set_frequency_cal(
         &mut self,
         value: Option<CalibrationValue<u32>>,
     ) -> Result<(), DriverError> {
         self.freq_off = value.map(|x| {
+            let lo_div = lo_divider(x.desired) as i32;
             let desired = x.desired as i32;
             let actual = x.actual as i32;
             let delta = actual - desired;
-            let freq_off = delta * 2i32.pow(18) / 10_000_000;
+            let freq_off = (delta * lo_div * 2i32.pow(18)) / 40_000_000;
             freq_off as i16
         });
 
@@ -554,5 +555,17 @@ where
     async fn write_freq_off(&mut self) -> Result<(), DriverError> {
         let values = self.freq_off.unwrap_or_default().to_be_bytes();
         self.write_regs(Freqoff1::ADDRESS, &values).await
+    }
+}
+
+pub(crate) fn lo_divider(frequency: u32) -> u8 {
+    match frequency {
+        820_000_000..=960_000_000 => 4,
+        410_000_000..=480_000_000 => 8,
+        273_300_000..=320_000_000 => 12,
+        205_000_000..=240_000_000 => 16,
+        164_000_000..=192_000_000 => 20,
+        136_700_000..=160_000_000 => 24,
+        _ => panic!("Invalid frequency select"),
     }
 }

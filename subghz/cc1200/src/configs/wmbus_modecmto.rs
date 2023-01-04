@@ -18,7 +18,7 @@ use crate::{
 /// 5. In the Register View, make the following final adjustments:
 ///     IOCFG3         0x33  HW0
 ///     IOCFG2         0x33  HW0
-///     IOCFG1         0x30  HW0
+///     IOCFG1         0x30
 ///     IOCFG0         0x33  HW0
 ///     SYNC3          0xAD
 ///     SYNC2          0x2C
