@@ -38,7 +38,7 @@ where
     Delay: delay::DelayUs,
 {
     pub driver: Driver<SpiDevice, SpiBus, Delay>,
-    pub(crate) position: u16,
+    pub position: u16,
 }
 
 impl<SpiDevice, SpiBus, Delay> Driver<SpiDevice, SpiBus, Delay>

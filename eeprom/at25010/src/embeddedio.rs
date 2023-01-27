@@ -3,8 +3,7 @@ use embedded_io::{self, asynch, Error, ErrorKind, Io, SeekFrom};
 
 use crate::{driver::StatefulDriver, DriverError};
 
-impl Error for DriverError
-{
+impl Error for DriverError {
     fn kind(&self) -> ErrorKind {
         ErrorKind::Other
     }
