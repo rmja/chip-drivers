@@ -1,5 +1,10 @@
 [workspace]
-members = ["eeprom/at25010", "embedded-hal-async-mocks", "subghz/cc1200"]
+members = [
+    "cellular/simcom",
+    "eeprom/at25010",
+    "embedded-hal-async-mocks",
+    "subghz/cc1200",
+]
 
 [workspace.package]
 authors = ["Rasmus Melchior Jacobsen <rmja@laesoe.org>"]
