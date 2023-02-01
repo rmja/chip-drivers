@@ -20,12 +20,3 @@ pub struct ConnectionStatus {
     pub port: String<5>,
     pub state: ClientState,
 }
-
-/// 8.2.26 AT+CIPRXGET Get Data from Network Manually
-#[derive(Debug, Clone, AtatResp)]
-pub struct ReadResult {
-    pub(super) _mode: u8,
-    pub id: u8,
-    pub data_len: usize,
-    pub pending_len: usize,
-}

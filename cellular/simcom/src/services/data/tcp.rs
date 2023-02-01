@@ -24,10 +24,10 @@ use super::{DataService, SocketError, SOCKET_STATE_DROPPED, SOCKET_STATE_USED};
 
 // There is an example implementation of TcpConnect here: https://github.com/drogue-iot/esp8266-at-driver/blob/c49a6b469da6991b680a166e7c5e236d5fb4c560/src/lib.rs
 
-impl<'a, At: AtatClient, Delay: DelayUs + Clone> TcpConnect for DataService<'a, At, Delay> {
+impl<'a, AtCl: AtatClient, Delay: DelayUs + Clone> TcpConnect for DataService<'a, AtCl, Delay> {
     type Error = SocketError;
 
-    type Connection<'m> = TcpSocket<'m, At, Delay> where Self : 'm;
+    type Connection<'m> = TcpSocket<'m, AtCl, Delay> where Self : 'm;
 
     async fn connect<'m>(&'m self, remote: SocketAddr) -> Result<Self::Connection<'m>, Self::Error>
     where
@@ -65,7 +65,7 @@ impl<'a, At: AtatClient, Delay: DelayUs + Clone> TcpConnect for DataService<'a, 
         for _ in 0..TRIALS {
             {
                 let mut client = self.handle.client.lock().await;
-                client.try_read_urc_with::<Urc, _>(|urc| match urc {
+                client.try_read_urc_with::<Urc, _>(|urc, _| match urc {
                     Urc::ConnectOk(x) if x == id => {
                         connected = Some(true);
                         true
@@ -101,7 +101,6 @@ pub struct TcpSocket<'a, AtCl: AtatClient, Delay: DelayUs> {
     id: usize,
     handle: &'a Handle<AtCl>,
     delay: Delay,
-    flushed: bool,
 }
 
 impl<'a, AtCl: AtatClient, Delay: DelayUs> TcpSocket<'a, AtCl, Delay> {
@@ -116,7 +115,6 @@ impl<'a, AtCl: AtatClient, Delay: DelayUs> TcpSocket<'a, AtCl, Delay> {
             // state,
             handle,
             delay,
-            flushed: true,
         }
     }
 
@@ -127,37 +125,66 @@ impl<'a, AtCl: AtatClient, Delay: DelayUs> TcpSocket<'a, AtCl, Delay> {
             Err(SocketError::Closed)
         }
     }
-}
 
-impl<At: AtatClient, Delay: DelayUs> Io for TcpSocket<'_, At, Delay> {
-    type Error = SocketError;
-}
-
-impl<At: AtatClient, Delay: DelayUs> Read for TcpSocket<'_, At, Delay> {
-    async fn read(&mut self, buf: &mut [u8]) -> Result<usize, SocketError> {
-        self.ensure_in_use()?;
-        if buf.is_empty() {
-            return Ok(0);
-        }
-
+    async fn read_inner(&mut self, buf: &mut [u8]) -> Result<(usize, usize), SocketError> {
+        const MAX_READ: usize = 1460;
         const MAX_HEADER_LEN: usize = "\r\n+CIPRXGET: 1,1,4444,4444\r\n".len();
         const TAIL_LEN: usize = "\r\nOK\r\n".len();
-        let len = usize::min(
-            At::max_response_len() - MAX_HEADER_LEN - TAIL_LEN,
-            buf.len(),
+        let max_len = usize::min(
+            usize::min(buf.len(), MAX_READ),
+            AtCl::max_urc_len() - MAX_HEADER_LEN - TAIL_LEN,
         );
 
         let mut client = self.handle.client.lock().await;
 
-        let response = client
-            .send(&ReadData::new(self.id, &mut buf[..len]))
+        client
+            .send(&ReadData {
+                id: self.id,
+                max_len,
+            })
             .await?;
 
-        Ok(response.data_len)
+        let mut result = None;
+
+        loop {
+            client.try_read_urc_with::<Urc, _>(|urc, urc_buf| match urc {
+                Urc::ReadData(r) => {
+                    // The data is in the end of the urc buffer
+                    let offset = urc_buf.len() - r.data_len;
+                    buf[..r.data_len].copy_from_slice(&urc_buf[offset..]);
+                    result = Some(r);
+                    true
+                }
+                urc => self.handle.handle_urc(&urc),
+            });
+
+            // The socket may have closed while handling urc
+            self.ensure_in_use()?;
+
+            if let Some(result) = result {
+                return Ok((result.data_len, result.pending_len));
+            }
+        }
     }
 }
 
-impl<At: AtatClient, Delay: DelayUs> Write for TcpSocket<'_, At, Delay> {
+impl<AtCl: AtatClient, Delay: DelayUs> Io for TcpSocket<'_, AtCl, Delay> {
+    type Error = SocketError;
+}
+
+impl<AtCl: AtatClient, Delay: DelayUs> Read for TcpSocket<'_, AtCl, Delay> {
+    async fn read(&mut self, buf: &mut [u8]) -> Result<usize, SocketError> {
+        self.ensure_in_use()?;
+
+        if buf.is_empty() {
+            return Ok(0);
+        }
+
+        self.read_inner(buf).await.map(|(len, _)| len)
+    }
+}
+
+impl<AtCl: AtatClient, Delay: DelayUs> Write for TcpSocket<'_, AtCl, Delay> {
     async fn write(&mut self, buf: &[u8]) -> Result<usize, SocketError> {
         self.ensure_in_use()?;
         self.flush().await?;
@@ -178,8 +205,8 @@ impl<At: AtatClient, Delay: DelayUs> Write for TcpSocket<'_, At, Delay> {
                     // Determine if there is data available
                     // CME ERROR 3 means invalid operation, and we cannot write when there is data available
 
-                    let info = client.send(&ReadData::new(self.id, &mut [][..])).await?;
-                    if info.pending_len > 0 {
+                    let (_, pending) = self.read_inner(&mut []).await?;
+                    if pending > 0 {
                         debug!("CME ERROR 3 during write because of pending data");
                         SocketError::MustReadBeforeWrite
                     } else {
@@ -190,61 +217,53 @@ impl<At: AtatClient, Delay: DelayUs> Write for TcpSocket<'_, At, Delay> {
             });
         }
 
-        client.send(&WriteData { buf }).await?;
+        // We have received prompt and are ready to write data
+        
+        // Clear the flushed flag
+        self.handle.flushed[self.id].store(false, Ordering::Release);
 
-        self.flushed = false;
+        // Write the data buffer
+        client.send(&WriteData { buf }).await?;
 
         Ok(len)
     }
 
     async fn flush(&mut self) -> Result<(), Self::Error> {
         self.ensure_in_use()?;
-        if self.flushed {
+        if self.handle.flushed[self.id].load(Ordering::Acquire) {
             return Ok(());
         }
 
         const TRIALS: u32 = WriteData::MAX_TIMEOUT_MS / 100;
         for _ in 0..TRIALS {
-            let mut must_read = false;
+            let mut data_available = false;
             let mut client = self.handle.client.lock().await;
-            client.try_read_urc_with::<Urc, _>(|urc| match urc {
-                Urc::SendOk(id) if id == self.id => {
-                    self.flushed = true;
-                    true
-                }
-                Urc::Closed(id) if id == self.id => {
-                    warn!("[{}] Socket closed", id);
-                    true
-                }
+            client.try_read_urc_with::<Urc, _>(|urc, _| match urc {
                 Urc::DataAvailable(id) if id == self.id => {
-                    must_read = true;
+                    data_available = true;
                     true
                 }
                 urc => self.handle.handle_urc(&urc),
             });
 
-            if must_read {
-                return Err(SocketError::MustReadBeforeWrite);
-            }
+            // The socket may have closed while handling urc
+            self.ensure_in_use()?;
 
-            if self.flushed {
-                break;
+            if self.handle.flushed[self.id].load(Ordering::Acquire) {
+                trace!("SEND OK RECEIVED");
+                return Ok(());
+            } else if data_available {
+                return Err(SocketError::MustReadBeforeWrite);
             }
 
             self.delay.delay_ms(100).await.unwrap();
         }
 
-        if self.flushed {
-            trace!("SEND OK RECEIVED");
-            Ok(())
-        } else {
-            self.handle.socket_state[self.id].store(SOCKET_STATE_UNUSED, Ordering::Release);
-            Err(SocketError::Closed)
-        }
+        Err(SocketError::WriteTimeout)
     }
 }
 
-impl<At: AtatClient, Delay: DelayUs> Drop for TcpSocket<'_, At, Delay> {
+impl<AtCl: AtatClient, Delay: DelayUs> Drop for TcpSocket<'_, AtCl, Delay> {
     fn drop(&mut self) {
         // Only set DROPPED state if the connection is not already closed
         if self.handle.socket_state[self.id]

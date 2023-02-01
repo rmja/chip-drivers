@@ -40,6 +40,7 @@ pub enum SocketError {
     ConnectTimeout,
     MustReadBeforeWrite,
     Closed,
+    WriteTimeout,
 }
 
 impl embedded_io::Error for SocketError {

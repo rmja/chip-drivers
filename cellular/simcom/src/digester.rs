@@ -11,30 +11,11 @@ impl SimcomDigester {
     pub fn new() -> Self {
         let inner = AtDigester::new()
             .with_custom_success(|buf| {
-                let (_reminder, (head, data, tail)) = branch::alt((
-                    sequence::tuple((
-                        combinator::success(&b""[..]),
-                        combinator::success(&b""[..]),
-                        bytes::streaming::tag(b"\r\nSHUT OK\r\n"),
-                    )),
-                    sequence::tuple((
-                        bytes::streaming::tag(b"\r\n"),
-                        combinator::recognize(sequence::tuple((
-                            bytes::streaming::tag(b"+CIPRXGET: 2,"),
-                            character::streaming::u8,
-                            bytes::streaming::tag(","),
-                            combinator::flat_map(character::streaming::u16, |data_len| {
-                                combinator::recognize(sequence::tuple((
-                                    bytes::streaming::tag(","),
-                                    character::streaming::u16,
-                                    bytes::streaming::tag("\r\n"),
-                                    bytes::streaming::take(data_len),
-                                )))
-                            }),
-                        ))),
-                        bytes::streaming::tag(b"\r\nOK\r\n"),
-                    )),
-                ))(buf)?;
+                let (_reminder, (head, data, tail)) = branch::alt((sequence::tuple((
+                    combinator::success(&b""[..]),
+                    combinator::success(&b""[..]),
+                    bytes::streaming::tag(b"\r\nSHUT OK\r\n"),
+                )),))(buf)?;
 
                 Ok((data, head.len() + data.len() + tail.len()))
             })

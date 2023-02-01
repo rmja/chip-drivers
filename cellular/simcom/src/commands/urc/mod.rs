@@ -17,23 +17,16 @@ pub enum Urc {
     AlreadyConnect(usize),
     SendOk(usize),
     Closed(usize),
-    Receive(Receive),
     IpLookup(HostIp),
     DataAvailable(usize),
+    ReadData(ReadResult),
+    Receive(Receive),
 }
 
 #[derive(Debug, Clone, AtatUrc)]
 enum UrcInner {
     #[at_urc("+CDNSGIP")]
     IpLookup(HostIp),
-}
-
-/// 19.3 Summary of Unsolicited Result Codes
-#[derive(Debug, Clone, AtatResp, PartialEq)]
-#[cfg_attr(feature = "defmt", derive(defmt::Format))]
-pub struct Receive {
-    pub id: usize,
-    pub len: usize,
 }
 
 /// 8.2.14 AT+CDNSGIP Query the IP Address of Given Domain Name
@@ -44,6 +37,23 @@ pub struct HostIp {
     pub host: String<128>,
     pub ip: String<15>,
     pub alt_ip: Option<String<15>>,
+}
+
+/// 8.2.26 AT+CIPRXGET Get Data from Network Manually
+#[derive(Debug, Clone, AtatResp, PartialEq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub struct ReadResult {
+    pub id: usize,
+    pub data_len: usize,
+    pub pending_len: usize,
+}
+
+/// 19.3 Summary of Unsolicited Result Codes
+#[derive(Debug, Clone, AtatResp, PartialEq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub struct Receive {
+    pub id: usize,
+    pub len: usize,
 }
 
 impl From<UrcInner> for Urc {
@@ -60,9 +70,11 @@ impl AtatUrc for Urc {
     fn parse(resp: &[u8]) -> Option<Self::Response> {
         if let Some(urc) = complete::parse_connection_status(resp) {
             Some(urc)
-        } else if let Some(urc) = complete::parse_receive(resp) {
-            Some(urc)
         } else if let Some(urc) = complete::parse_data_available(resp) {
+            Some(urc)
+        } else if let Some(urc) = complete::parse_read_data(resp) {
+            Some(urc)
+        } else if let Some(urc) = complete::parse_receive(resp) {
             Some(urc)
         } else {
             UrcInner::parse(resp).map(|x| x.into())
@@ -74,8 +86,9 @@ impl atat::Parser for Urc {
     fn parse(buf: &[u8]) -> Result<(&[u8], usize), atat::digest::ParseError> {
         let (_, r) = branch::alt((
             streaming::parse_connection_status,
-            streaming::parse_receive,
             streaming::parse_data_available,
+            streaming::parse_read_data,
+            streaming::parse_receive,
             urc_helper("+CDNSGIP"),
         ))(buf)?;
         Ok(r)
@@ -103,30 +116,6 @@ mod tests {
     }
 
     #[test]
-    fn can_parse_receive() {
-        let mut digester = SimcomDigester::new();
-
-        assert_eq!(
-            (DigestResult::Urc(b"+RECEIVE,2,1234:"), 20),
-            digester.digest(b"\r\n+RECEIVE,2,1234:\r\nHTTP\r\n")
-        );
-        let urc = Urc::parse(b"+RECEIVE,2,1234:").unwrap();
-        assert_eq!(Urc::Receive(Receive { id: 2, len: 1234 }), urc);
-    }
-
-    #[test]
-    fn can_parse_data_available() {
-        let mut digester = SimcomDigester::new();
-
-        assert_eq!(
-            (DigestResult::Urc(b"+CIPRXGET: 1,2"), 18),
-            digester.digest(b"\r\n+CIPRXGET: 1,2\r\n")
-        );
-        let urc = Urc::parse(b"+CIPRXGET: 1,2").unwrap();
-        assert_eq!(Urc::DataAvailable(2), urc);
-    }
-
-    #[test]
     fn can_parse_ip_lookup() {
         let mut digester = SimcomDigester::new();
 
@@ -147,5 +136,48 @@ mod tests {
             }),
             urc
         );
+    }
+
+    #[test]
+    fn can_parse_data_available() {
+        let mut digester = SimcomDigester::new();
+
+        assert_eq!(
+            (DigestResult::Urc(b"+CIPRXGET: 1,2"), 18),
+            digester.digest(b"\r\n+CIPRXGET: 1,2\r\n")
+        );
+        let urc = Urc::parse(b"+CIPRXGET: 1,2").unwrap();
+        assert_eq!(Urc::DataAvailable(2), urc);
+    }
+
+    #[test]
+    fn can_parse_read_data() {
+        let mut digester = SimcomDigester::new();
+
+        assert_eq!(
+            (DigestResult::Urc(b"+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n"), 30),
+            digester.digest(b"\r\n+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n")
+        );
+        let urc = Urc::parse(b"+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n").unwrap();
+        assert_eq!(
+            Urc::ReadData(ReadResult {
+                id: 5,
+                data_len: 8,
+                pending_len: 0
+            }),
+            urc
+        );
+    }
+
+    #[test]
+    fn can_parse_receive() {
+        let mut digester = SimcomDigester::new();
+
+        assert_eq!(
+            (DigestResult::Urc(b"+RECEIVE,2,1234:"), 20),
+            digester.digest(b"\r\n+RECEIVE,2,1234:\r\nHTTP\r\n")
+        );
+        let urc = Urc::parse(b"+RECEIVE,2,1234:").unwrap();
+        assert_eq!(Urc::Receive(Receive { id: 2, len: 1234 }), urc);
     }
 }

@@ -41,19 +41,19 @@ pub trait AtatClient {
 
     fn try_read_urc<Urc: AtatUrc>(&mut self) -> Option<Urc::Response> {
         let mut first = None;
-        self.try_read_urc_with::<Urc, _>(|urc| {
+        self.try_read_urc_with::<Urc, _>(|urc, _| {
             first = Some(urc);
             true
         });
         first
     }
 
-    fn try_read_urc_with<Urc: AtatUrc, F: FnOnce(Urc::Response) -> bool>(
+    fn try_read_urc_with<Urc: AtatUrc, F: for<'b> FnOnce(Urc::Response, &'b [u8]) -> bool>(
         &mut self,
         handle: F,
     ) -> bool;
 
-    fn max_response_len() -> usize;
+    fn max_urc_len() -> usize;
 }
 
 pub struct Client<
@@ -198,14 +198,14 @@ impl<
         response
     }
 
-    fn try_read_urc_with<Urc: AtatUrc, F: FnOnce(Urc::Response) -> bool>(
+    fn try_read_urc_with<Urc: AtatUrc, F: for<'b> FnOnce(Urc::Response, &'b [u8]) -> bool>(
         &mut self,
         handle: F,
     ) -> bool {
         if let Some(urc_grant) = self.urc_reader.read() {
             self.start_cooldown_timer();
             if let Some(urc) = Urc::parse(&urc_grant) {
-                if handle(urc) {
+                if handle(urc, &urc_grant) {
                     urc_grant.release();
                     return true;
                 }
@@ -218,10 +218,9 @@ impl<
         false
     }
 
-    fn max_response_len() -> usize {
+    fn max_urc_len() -> usize {
         // bbqueue can only guarantee grant sizes of half its capacity if the queue is empty.
-        // A frame grant returned by bbqueue has a header. Assume that it is 2 bytes.
-        // We also need 1 byte for the `Frame` bincode discriminator
-        (RES_CAPACITY / 2) - 3
+        // A _frame_ grant returned by bbqueue has a header. Assume that it is 2 bytes.
+        (URC_CAPACITY / 2) - 2
     }
 }

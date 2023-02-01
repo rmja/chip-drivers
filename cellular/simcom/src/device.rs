@@ -1,4 +1,4 @@
-use core::sync::atomic::{AtomicBool, Ordering};
+use core::{sync::atomic::{AtomicBool, Ordering}, char::MAX};
 
 use embedded_hal_async::delay::DelayUs;
 use embedded_io::asynch::Write;
@@ -19,12 +19,18 @@ use crate::{
 pub struct Handle<AtCl: AtatClient> {
     pub(crate) client: LocalMutex<AtCl>,
     pub(crate) socket_state: Vec<SocketState, MAX_SOCKETS>,
+    pub(crate) flushed: [AtomicBool; MAX_SOCKETS],
 }
 
 impl<AtCl: AtatClient> Handle<AtCl> {
     pub(crate) fn handle_urc(&self, urc: &Urc) -> bool {
         match urc {
+            Urc::SendOk(id) => {
+                self.flushed[*id].store(true, Ordering::Release);
+                true
+            }
             Urc::Closed(id) => {
+                warn!("[{}] Socket closed", *id);
                 self.socket_state[*id].store(SOCKET_STATE_UNUSED, Ordering::Release);
                 true
             }
@@ -81,10 +87,12 @@ impl<AtCl: AtatClient, Delay: DelayUs + Clone> Device<AtCl, Delay> {
     /// Create a new device given an AT client
     pub fn with_at_client(at_client: AtCl, delay: Delay) -> Self {
         let network = Network::new(delay.clone());
+        const TRUE: AtomicBool = AtomicBool::new(true);
         Self {
             handle: Handle {
                 client: LocalMutex::new(at_client, true),
                 socket_state: Vec::new(),
+                flushed: [TRUE; MAX_SOCKETS],
             },
             delay,
             part_number: None,

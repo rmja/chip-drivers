@@ -2,8 +2,6 @@ mod impls;
 mod responses;
 mod types;
 
-use core::cell::RefCell;
-
 use super::NoResponse;
 use atat::atat_derive::AtatCmd;
 pub use responses::*;
@@ -99,13 +97,28 @@ pub struct ResolveHostIp<'a> {
 
 /// 8.2.26 AT+CIPRXGET Get Data from Network Manually
 #[derive(Clone, AtatCmd)]
-#[at_cmd("+CIPRXGET=1", NoResponse, value_sep = false, termination = "\r")]
+#[at_cmd("+CIPRXGET=1", NoResponse, termination = "\r")]
 pub struct SetManualRxGetMode;
 
 /// 8.2.26 AT+CIPRXGET Get Data from Network Manually
-pub struct ReadData<'a> {
+///
+/// Note: the response for this command is typically
+/// +CIPRXGET ..data
+/// OK
+///
+/// However, it seems as if the response may be
+/// +CIPRXGET ..data
+/// SOME URC
+/// OK
+///
+/// This is the reason why we consider the response from AT+CIPRXGET as
+/// `NoResponse` and the +CIPRXGET part a Urc
+#[derive(Clone, AtatCmd)]
+#[at_cmd("+CIPRXGET=2,", NoResponse, value_sep = false, termination = "\r")]
+pub struct ReadData {
     pub id: usize,
-    buf: RefCell<&'a mut [u8]>,
+    // The maximum number of bytes to read in the range 0..1460
+    pub max_len: usize,
 }
 
 #[cfg(test)]
@@ -305,72 +318,39 @@ mod tests {
 
     #[tokio::test]
     async fn can_read_data() {
-        let mut buf = [0; 16];
-
-        let response = {
-            let cmd = ReadData::new(5, &mut buf);
-            assert_eq_hex!(b"AT+CIPRXGET=2,5,16\r", cmd.as_bytes());
-
-            let mut written = Vec::new();
-            let mut atat_buffers = atat_async::Buffers::<256, 256, 256>::new();
-            let clock = StandardClock::default();
-            let (mut ingress, device) = crate::device::Device::new(
-                TestWriter::new(&mut written),
-                &mut atat_buffers,
-                &clock,
-                TokioDelay,
-            );
-
-            ingress.write(b"\r\n+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n");
-            ingress.write(b"\r\nOK\r\n");
-
-            let mut at_client = device.handle.client.lock().await;
-            at_client.send(&cmd).await.unwrap()
+        let cmd = ReadData {
+            id: 5,
+            max_len: 16,
         };
+        assert_eq_hex!(b"AT+CIPRXGET=2,5,16\r", cmd.as_bytes());
 
-        assert_eq!(5, response.id);
-        assert_eq!(8, response.data_len);
-        assert_eq!(0, response.pending_len);
-        assert_eq!(b"HTTP\r\n\r\n", &buf[..response.data_len]);
-    }
+        let mut written = Vec::new();
+        let mut atat_buffers = atat_async::Buffers::<256, 256, 256>::new();
+        let clock = StandardClock::default();
+        let (mut ingress, device) = crate::device::Device::new(
+            TestWriter::new(&mut written),
+            &mut atat_buffers,
+            &clock,
+            TokioDelay,
+        );
 
-    #[tokio::test]
-    async fn can_read_data_has_urc_before_ok() {
-        let mut buf = [0; 16];
+        ingress.write(b"\r\n+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n");
+        ingress.write(b"\r\nOK\r\n");
 
-        let response = {
-            let cmd = ReadData::new(5, &mut buf);
-            assert_eq_hex!(b"AT+CIPRXGET=2,5,16\r", cmd.as_bytes());
+        let mut at_client = device.handle.client.lock().await;
+        at_client.send(&cmd).await.unwrap();
+        assert!(at_client.try_read_urc_with::<Urc, _>(|urc, urc_buf| {
+            if let Urc::ReadData(data) = urc {
+                assert_eq!(5, data.id);
+                assert_eq!(8, data.data_len);
+                assert_eq!(0, data.pending_len);
 
-            let mut written = Vec::new();
-            let mut atat_buffers = atat_async::Buffers::<256, 256, 256>::new();
-            let clock = StandardClock::default();
-            let (mut ingress, device) = crate::device::Device::new(
-                TestWriter::new(&mut written),
-                &mut atat_buffers,
-                &clock,
-                TokioDelay,
-            );
-
-            // This has been seen on sim800, wtf?
-            ingress.write(b"\r\n+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n");
-            ingress.write(b"\r\n0, SEND OK\r\n");
-            ingress.write(b"\r\nOK\r\n");
-
-            let mut at_client = device.handle.client.lock().await;
-            at_client.send(&cmd).await.unwrap()
-        };
-
-        assert_eq!(5, response.id);
-        assert_eq!(8, response.data_len);
-        assert_eq!(0, response.pending_len);
-        assert_eq!(b"HTTP\r\n\r\n", &buf[..response.data_len]);
-    }
-
-    #[test]
-    fn can_read_data_large_buffer() {
-        let mut buf = [0; 2000];
-        let cmd = ReadData::new(5, &mut buf);
-        assert_eq_hex!(b"AT+CIPRXGET=2,5,1460\r", cmd.as_bytes());
+                let offset = urc_buf.len() - data.data_len;
+                assert_eq!(b"HTTP\r\n\r\n", &urc_buf[offset..]);
+                true
+            } else {
+                false
+            }
+        }));
     }
 }

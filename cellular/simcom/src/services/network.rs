@@ -49,9 +49,9 @@ impl<'a, Delay: DelayUs> Network<Delay> {
     }
 
     /// Attach the modem to the network
-    pub async fn attach<At: AtatClient>(
+    pub async fn attach<AtCl: AtatClient>(
         &mut self,
-        handle: &Handle<At>,
+        handle: &Handle<AtCl>,
         pin: Option<&str>,
     ) -> Result<(), NetworkError> {
         let mut client = handle.client.lock().await;
@@ -130,9 +130,9 @@ impl<'a, Delay: DelayUs> Network<Delay> {
     }
 
     /// Get the current signal quality from modem
-    pub async fn get_signal_quality<At: AtatClient>(
+    pub async fn get_signal_quality<AtCl: AtatClient>(
         &mut self,
-        handle: &Handle<At>,
+        handle: &Handle<AtCl>,
     ) -> Result<i8, NetworkError> {
         let mut client = handle.client.lock().await;
         client
@@ -158,9 +158,9 @@ impl<'a, Delay: DelayUs> Network<Delay> {
         .contains(&self.gprs_status)
     }
 
-    async fn update_registration<At: AtatClient>(
+    async fn update_registration<AtCl: AtatClient>(
         &mut self,
-        client: &mut At,
+        client: &mut AtCl,
     ) -> Result<(), NetworkError> {
         let response = client.send(&GetNetworkRegistrationStatus).await?;
         self.gsm_status = response.stat;

@@ -9,7 +9,7 @@ use crate::{
 
 use super::{DataService, SocketError};
 
-impl<'a, At: AtatClient, Delay: DelayUs + Clone> Dns for DataService<'a, At, Delay> {
+impl<'a, AtCl: AtatClient, Delay: DelayUs + Clone> Dns for DataService<'a, AtCl, Delay> {
     type Error = SocketError;
 
     async fn get_host_by_name<'m>(
@@ -35,7 +35,7 @@ impl<'a, At: AtatClient, Delay: DelayUs + Clone> Dns for DataService<'a, At, Del
         for _ in 0..50 {
             {
                 let mut client = self.handle.client.lock().await;
-                client.try_read_urc_with::<Urc, _>(|f| match f {
+                client.try_read_urc_with::<Urc, _>(|urc, _| match urc {
                     Urc::IpLookup(urc) if urc.host == host => {
                         ip = Some(urc.ip.parse().unwrap());
                         true
