@@ -6,7 +6,7 @@ use crate::{
         Register, RegisterAddress,
     },
     statusbyte::{State, StatusByte},
-    ConfigPatch, DriverError, PartNumber, Rssi, RX_FIFO_SIZE, TX_FIFO_SIZE,
+    ConfigPatch, DriverError, PartNumber, RX_FIFO_SIZE, TX_FIFO_SIZE, Rssi,
 };
 use embedded_hal::digital::OutputPin;
 use embedded_hal_async::{delay, spi, spi_transaction};
@@ -15,7 +15,7 @@ use futures::{
     pin_mut,
 };
 
-const DEFAULT_RSSI_OFFSET: i8 = -99; // The default offset defined in the users guide
+const DEFAULT_RSSI_OFFSET: i16 = -99; // The default offset defined in the users guide
 
 pub struct Driver<SpiDevice, SpiBus, Delay, ResetPin>
 where
@@ -404,7 +404,7 @@ where
         let rssi = rssi1_value as i8;
         match rssi {
             -128 => Err(DriverError::InvalidRssi),
-            rssi => Ok(rssi + self.rssi_offset.unwrap_or(DEFAULT_RSSI_OFFSET)),
+            rssi => Ok(rssi as i16 + self.rssi_offset.unwrap_or(DEFAULT_RSSI_OFFSET)),
         }
     }
 
@@ -508,7 +508,7 @@ where
         &mut self,
         value: Option<CalibrationValue<i8>>,
     ) -> Result<(), DriverError> {
-        self.rssi_offset = value.map(|x| x.desired - x.actual);
+        self.rssi_offset = value.map(|x| x.desired - x.actual).map(|x| x as i16);
         Ok(())
     }
 

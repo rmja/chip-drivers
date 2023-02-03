@@ -17,7 +17,6 @@ use crate::{
         urc::Urc,
     },
     device::Handle,
-    services::data::SOCKET_STATE_UNUSED,
 };
 
 use super::{DataService, SocketError, SOCKET_STATE_DROPPED, SOCKET_STATE_USED};

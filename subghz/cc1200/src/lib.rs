@@ -32,7 +32,7 @@ pub enum PartNumber {
     Cc1201,
 }
 
-pub type Rssi = i8;
+pub type Rssi = i16;
 
 pub const RX_FIFO_SIZE: usize = 128;
 pub const TX_FIFO_SIZE: usize = 128;

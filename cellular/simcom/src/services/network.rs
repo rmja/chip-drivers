@@ -124,8 +124,6 @@ impl<'a, Delay: DelayUs> Network<Delay> {
             return Err(NetworkError::NotRegistered);
         }
 
-        info!("Attach succeeded");
-
         Ok(())
     }
 

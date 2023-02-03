@@ -1,4 +1,4 @@
-use core::{sync::atomic::{AtomicBool, Ordering}, char::MAX};
+use core::sync::atomic::{AtomicBool, Ordering};
 
 use embedded_hal_async::delay::DelayUs;
 use embedded_io::asynch::Write;
