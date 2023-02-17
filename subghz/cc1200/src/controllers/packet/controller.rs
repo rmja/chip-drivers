@@ -3,20 +3,29 @@
 //! # Examples
 //!
 //! Typical receive sequence:
-//! Method      SPI_TX  Description
+//! Method      SPI_TX      Description
+//! init()      40...       Write primary registers
+//!             6F00...     Write extended registers
+//!             6F0A0002    Write freq calibration
+//!             1142        Enable FIFO
+//!             2600        Normal FIFO mode
+//!             36          IDLE
+//! 
 //! listen()    3A          Flush RX FIFO
 //!             34          Start RX
 //!
 //! receive()   2840        Set infinite packet length mode
 //!             34          Start RX, i.e. restart demodulator
-//!             AFD700FF    Empty FIFO
+//!             AFD700FF... Empty FIFO
 //!             1D02        Set FIFO threshold to 3 bytes
 //!             0306        Set IRQ output to SOF detected
-//!                         Wait for SOF to be detected
+//! 
+//!             --- Wait for IRQ, i.e. SOF to be detected ---
+//! 
 //!             0300        Set IRQ output to FIFO threshold
 //!                         Wait for FIFO threshold to be reached
 //!
-//! read()      AFD700FF    Read FIFO
+//! read()      AFD700FF... Read FIFO
 //!             1D0F        Set FIFO threshold to 16 bytes
 //!
 //! accept()    2EXX        Set packet length PKT_LEN
@@ -26,7 +35,7 @@
 //! read()      2800        Use fixed packet length mode (PKT_LEN is used)
 //!             0346        Set IRQ output to EOF detected
 //!                         Wait for EOF to be detected
-//!             AFD700FF    Read FIFO
+//!             AFD700FF... Read FIFO
 
 use core::marker::PhantomData;
 
@@ -37,7 +46,7 @@ use crate::{
         ext::Freq2,
         pri::{
             FifoCfg, LengthConfigValue, Mdmcfg1, PktCfg0, PktCfg2, PktFormatValue, PktLen,
-            RfendCfg0, RfendCfg1, RxoffModeValue, TxoffModeValue,
+            RfendCfg0, RfendCfg1, RxoffModeValue, TxoffModeValue, PktCfg1,
         },
         Iocfg, Register,
     },
@@ -122,6 +131,11 @@ where
         let mut pktcfg2 = self.config.get::<PktCfg2>().unwrap_or_default();
         pktcfg2.set_pkt_format(PktFormatValue::NormalModeFifoMode);
         self.driver.write_reg(pktcfg2).await?;
+
+        // Status byte must not be appended
+        let mut pktcfg1 = self.config.get::<PktCfg1>().unwrap_or_default();
+        pktcfg1.set_append_status(false);
+        self.driver.write_reg(pktcfg1).await?;
 
         self.idle().await?;
 
