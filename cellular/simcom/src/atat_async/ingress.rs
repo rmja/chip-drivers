@@ -1,6 +1,7 @@
 use atat::{helpers::LossyStr, DigestResult, Digester};
 use bbqueue::framed::FrameProducer;
 use embedded_io::asynch::Read;
+use embedded_io::Error;
 use heapless::Vec;
 
 use super::frame::Frame;
@@ -13,9 +14,14 @@ pub trait AtatIngress {
     async fn read_from(&mut self, serial: &mut impl Read) -> ! {
         loop {
             let mut buffer = [0; 32];
-            if let Ok(received) = serial.read(&mut buffer).await {
-                if received > 0 {
-                    self.write(&buffer[..received]);
+            match serial.read(&mut buffer).await {
+                Ok(received) => {
+                    if received > 0 {
+                        self.write(&buffer[..received])
+                    }
+                }
+                Err(e) => {
+                    error!("Got serial read error {:?}", e.kind());
                 }
             }
         }

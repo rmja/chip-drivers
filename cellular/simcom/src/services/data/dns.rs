@@ -1,6 +1,5 @@
 use embedded_hal_async::delay::DelayUs;
-use embedded_nal::AddrType;
-use embedded_nal_async::Dns;
+use embedded_nal_async::{Dns, AddrType};
 
 use crate::{
     atat_async::AtatClient,
@@ -12,7 +11,7 @@ use super::{DataService, SocketError};
 impl<'a, AtCl: AtatClient, Delay: DelayUs + Clone> Dns for DataService<'a, AtCl, Delay> {
     type Error = SocketError;
 
-    async fn get_host_by_name<'m>(
+    async fn get_host_by_name(
         &self,
         host: &str,
         addr_type: AddrType,

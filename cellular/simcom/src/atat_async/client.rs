@@ -149,7 +149,7 @@ impl<
             debug!("Sending command: {:?}", LossyStr(cmd_slice));
         } else {
             debug!(
-                "Sending command with too long payload ({} bytes) to log!",
+                "Sending command with long payload ({} bytes)",
                 cmd_slice.len(),
             );
         }
