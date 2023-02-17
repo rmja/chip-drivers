@@ -217,7 +217,7 @@ impl<AtCl: AtatClient, Delay: DelayUs> Write for TcpSocket<'_, AtCl, Delay> {
         }
 
         // We have received prompt and are ready to write data
-        
+
         // Clear the flushed flag
         self.handle.flushed[self.id].store(false, Ordering::Release);
 
@@ -235,15 +235,8 @@ impl<AtCl: AtatClient, Delay: DelayUs> Write for TcpSocket<'_, AtCl, Delay> {
 
         const TRIALS: u32 = WriteData::MAX_TIMEOUT_MS / 100;
         for _ in 0..TRIALS {
-            let mut data_available = false;
             let mut client = self.handle.client.lock().await;
-            client.try_read_urc_with::<Urc, _>(|urc, _| match urc {
-                Urc::DataAvailable(id) if id == self.id => {
-                    data_available = true;
-                    true
-                }
-                urc => self.handle.handle_urc(&urc),
-            });
+            client.try_read_urc_with::<Urc, _>(|urc, _| self.handle.handle_urc(&urc));
 
             // The socket may have closed while handling urc
             self.ensure_in_use()?;
@@ -251,8 +244,6 @@ impl<AtCl: AtatClient, Delay: DelayUs> Write for TcpSocket<'_, AtCl, Delay> {
             if self.handle.flushed[self.id].load(Ordering::Acquire) {
                 trace!("SEND OK RECEIVED");
                 return Ok(());
-            } else if data_available {
-                return Err(SocketError::MustReadBeforeWrite);
             }
 
             self.delay.delay_ms(100).await.unwrap();
