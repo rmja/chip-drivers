@@ -16,7 +16,7 @@ use crate::{
         tcpip::{ReadData, SendData, StartConnection, WriteData},
         urc::Urc,
     },
-    device::Handle,
+    device::{Handle, CONNECTED_STATE_CONNECTED, CONNECTED_STATE_UNKNOWN, CONNECTED_STATE_FAILED},
 };
 
 use super::{DataService, SocketError, SOCKET_STATE_DROPPED, SOCKET_STATE_USED};
@@ -35,9 +35,8 @@ impl<'a, AtCl: AtatClient, Delay: DelayUs + Clone> TcpConnect for DataService<'a
         // Close any sockets that have been dropped
         self.close_dropped_sockets().await;
 
-        let id = self.take_socket_id()?;
-        let socket = TcpSocket::new(id, self.handle, self.delay.clone());
-        debug!("[{}] Socket created", id);
+        let socket = TcpSocket::try_new(self.handle, self.delay.clone())?;
+        info!("[{}] Socket created", socket.id);
 
         let mut ip = String::<15>::new();
         write!(ip, "{}", remote.ip()).unwrap();
@@ -58,40 +57,26 @@ impl<'a, AtCl: AtatClient, Delay: DelayUs + Clone> TcpConnect for DataService<'a
                 .await?;
         }
 
-        let mut connected = None;
         let mut delay = self.delay.clone();
         const TRIALS: u32 = StartConnection::MAX_TIMEOUT_MS / 200;
-        for _ in 0..TRIALS {
+        for trial in 1..=TRIALS {
+            debug!("[{}] Testing connection status trial #{}", socket.id, trial);
             {
                 let mut client = self.handle.client.lock().await;
-                client.try_read_urc_with::<Urc, _>(|urc, _| match urc {
-                    Urc::ConnectOk(x) if x == id => {
-                        connected = Some(true);
-                        true
-                    }
-                    Urc::ConnectFail(x) if x == id => {
-                        connected = Some(false);
-                        true
-                    }
-                    urc => self.handle.handle_urc(&urc),
-                });
+                client.try_read_urc_with::<Urc, _>(|urc, _| self.handle.handle_urc(&urc));
             }
 
-            if connected.is_some() {
+            if self.handle.connected_state[socket.id].load(Ordering::Relaxed) != CONNECTED_STATE_UNKNOWN {
                 break;
             }
 
             delay.delay_ms(200).await.unwrap();
         }
 
-        if let Some(connected) = connected {
-            if connected {
-                Ok(socket)
-            } else {
-                Err(SocketError::UnableToConnect)
-            }
-        } else {
-            Err(SocketError::ConnectTimeout)
+        match self.handle.connected_state[socket.id].load(Ordering::Relaxed) {
+            CONNECTED_STATE_CONNECTED => Ok(socket),
+            CONNECTED_STATE_FAILED => Err(SocketError::UnableToConnect),
+            _ => Err(SocketError::ConnectTimeout)
         }
     }
 }
@@ -103,18 +88,16 @@ pub struct TcpSocket<'a, AtCl: AtatClient, Delay: DelayUs> {
 }
 
 impl<'a, AtCl: AtatClient, Delay: DelayUs> TcpSocket<'a, AtCl, Delay> {
-    pub(crate) fn new(
-        id: usize,
-        // state: &'a SocketState,
+    pub(crate) fn try_new(
         handle: &'a Handle<AtCl>,
         delay: Delay,
-    ) -> Self {
-        Self {
+    ) -> Result<Self, SocketError> {
+        let id = handle.take_unused()?;
+        Ok(Self {
             id,
-            // state,
             handle,
             delay,
-        }
+        })
     }
 
     fn ensure_in_use(&self) -> Result<(), SocketError> {

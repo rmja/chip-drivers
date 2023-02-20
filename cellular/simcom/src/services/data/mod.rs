@@ -31,6 +31,7 @@ use super::network::NetworkError;
 const CONTEXT_ID: ContextId = ContextId(1);
 
 #[derive(Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum SocketError {
     Atat(atat::Error),
     NoAvailableSockets,

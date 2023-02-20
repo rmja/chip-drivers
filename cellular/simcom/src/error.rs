@@ -1,6 +1,7 @@
 use crate::services::{data::SocketError, network::NetworkError};
 
 #[derive(Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum DriverError {
     BaudDetection,
     UnsupportedManufacturer,

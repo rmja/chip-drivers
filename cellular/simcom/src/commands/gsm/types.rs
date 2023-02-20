@@ -47,6 +47,7 @@ pub enum MobileEquipmentError {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum PinStatusCode {
     /// READY: MT is not pending for any password
     Ready,

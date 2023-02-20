@@ -80,7 +80,7 @@ impl<
 
     /// Process all bytes currently in the ingress buffer
     fn process(&mut self) {
-        debug!("Digesting: {:?}", LossyStr(&self.buffer));
+        trace!("Digesting: {:?}", LossyStr(&self.buffer));
 
         while !self.buffer.is_empty() {
             let swallowed = match self.digester.digest(&self.buffer) {
