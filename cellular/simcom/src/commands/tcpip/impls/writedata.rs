@@ -20,7 +20,7 @@ impl AtatCmd<0> for WriteData<'_> {
         Vec::new()
     }
 
-    fn get_slice(&self, _bytes: &Vec<u8, 0>) -> &[u8] {
+    fn get_slice<'a>(&'a self, _bytes: &'a Vec<u8, 0>) -> &'a [u8] {
         self.buf
     }
 }
