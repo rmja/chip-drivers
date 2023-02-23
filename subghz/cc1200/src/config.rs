@@ -45,13 +45,13 @@ impl<'a> ConfigPatch<'a> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        configs::WMBUS_MODECMTO,
+        configs::wmbus_modecmto,
         regs::{ext::IfMixCfg, pri::Iocfg3, Register},
     };
 
     #[test]
     fn can_split() {
-        let config = WMBUS_MODECMTO;
+        let config = wmbus_modecmto::<0>();
         let (pri, ext) = config.split();
         let pri = pri.unwrap();
         assert_eq!(Iocfg3::ADDRESS, pri.first_address);

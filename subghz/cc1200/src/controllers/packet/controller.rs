@@ -3,6 +3,7 @@
 //! # Examples
 //!
 //! Typical receive sequence:
+//! ```ignore
 //! Method      SPI_TX      Description
 //! init()      40...       Write primary registers
 //!             6F00...     Write extended registers
@@ -20,7 +21,7 @@
 //!             1D02        Set FIFO threshold to 3 bytes
 //!             0306        Set IRQ output to SOF detected
 //! 
-//!             --- Wait for IRQ, i.e. SOF to be detected ---
+//!             -- Wait for IRQ, i.e. SOF to be detected --
 //! 
 //!             0300        Set IRQ output to FIFO threshold
 //!                         Wait for FIFO threshold to be reached
@@ -36,6 +37,7 @@
 //!             0346        Set IRQ output to EOF detected
 //!                         Wait for EOF to be detected
 //!             AFD700FF... Read FIFO
+//! ```
 
 use core::marker::PhantomData;
 
@@ -53,21 +55,18 @@ use crate::{
     ConfigPatch, Driver, DriverError, Rssi, State, Strobe, RX_FIFO_SIZE, TX_FIFO_SIZE,
 };
 use alloc::vec::Vec;
+use embassy_time::{Instant, Delay};
 use embedded_hal_async::spi;
-use embedded_time::{Clock, Instant};
 
-pub struct PacketController<'a, Spi, SpiBus, Delay, ResetPin, IrqGpio, IrqPin, Clk>
+pub struct PacketController<'a, Spi, SpiBus, ResetPin, IrqGpio, IrqPin>
 where
     Spi: spi::SpiDevice<Bus = SpiBus>,
     SpiBus: embedded_hal_async::spi::SpiBus + 'static,
-    Delay: embedded_hal_async::delay::DelayUs,
     ResetPin: embedded_hal::digital::OutputPin,
     IrqGpio: Gpio,
     IrqPin: embedded_hal_async::digital::Wait,
-    Clk: Clock,
 {
     driver: &'a mut Driver<Spi, SpiBus, Delay, ResetPin>,
-    clock: Clk,
     config: ConfigPatch<'a>,
     pktcfg0: PktCfg0,
     irq_iocfg: IrqGpio::Iocfg,
@@ -78,35 +77,31 @@ where
     is_idle: bool,
 }
 
-pub struct RxToken<Clk: Clock> {
-    pub timestamp: Option<Instant<Clk>>,
+pub struct RxToken {
+    pub timestamp: Instant,
     read_from_rxfifo: usize,
     frame_length: Option<usize>,
 }
 
-impl<'a, Spi, SpiBus, Delay, ResetPin, IrqGpio, IrqPin, Clk>
-    PacketController<'a, Spi, SpiBus, Delay, ResetPin, IrqGpio, IrqPin, Clk>
+impl<'a, Spi, SpiBus, ResetPin, IrqGpio, IrqPin>
+    PacketController<'a, Spi, SpiBus, ResetPin, IrqGpio, IrqPin>
 where
     Spi: spi::SpiDevice<Bus = SpiBus>,
     SpiBus: embedded_hal_async::spi::SpiBus,
-    Delay: embedded_hal_async::delay::DelayUs,
     ResetPin: embedded_hal::digital::OutputPin,
     IrqGpio: Gpio,
     IrqPin: embedded_hal_async::digital::Wait,
-    Clk: Clock,
 {
-    type RxToken = RxToken<Clk>;
+    type RxToken = RxToken;
 
     /// Create a new packet controller
     pub fn new(
         driver: &'a mut Driver<Spi, SpiBus, Delay, ResetPin>,
         irq_pin: &'a mut IrqPin,
-        clock: Clk,
         config: ConfigPatch<'a>,
     ) -> Self {
         Self {
             driver,
-            clock,
             config,
             pktcfg0: config.get::<PktCfg0>().unwrap(),
             irq_iocfg: config.get::<IrqGpio::Iocfg>().unwrap(),
@@ -324,7 +319,7 @@ where
 
         // Wait for SOF to be detected
         self.irq_pin.wait_for_high().await.unwrap();
-        let timestamp = self.clock.try_now().ok();
+        let timestamp = Instant::now();
 
         // Setup fifo pin
         // Asserted when fifo is above threshold and deasserted when drained below threshold.

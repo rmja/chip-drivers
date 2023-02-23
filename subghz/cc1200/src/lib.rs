@@ -23,7 +23,6 @@ pub mod regs;
 mod statusbyte;
 
 pub mod configs;
-#[cfg(feature = "ctrl")]
 pub mod controllers;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
