@@ -4,6 +4,12 @@ use heapless_bytes::Bytes;
 
 use super::types::*;
 
+/// 8.2.6 AT+CIPCLOSE Close TCP or UDP Connection.
+#[derive(Clone, AtatResp)]
+pub struct CloseOk {
+    pub id: usize,
+}
+
 /// 8.2.11 AT+CIFSR Get Local IP Address
 #[derive(Clone, AtatResp)]
 pub struct LocalIP {

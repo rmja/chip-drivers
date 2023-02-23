@@ -14,8 +14,6 @@
 #[macro_use]
 mod fmt;
 
-mod adapters;
-pub mod atat_async;
 pub mod commands;
 mod device;
 mod digester;
@@ -37,6 +35,8 @@ pub use device::Device;
 pub use digester::SimcomDigester;
 pub use error::DriverError;
 use serde::{Deserialize, Serialize};
+
+pub use atat;
 
 #[cfg(feature = "sim900")]
 pub const MAX_SOCKETS: usize = 8;

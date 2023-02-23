@@ -1,14 +1,14 @@
-use embedded_hal_async::delay::DelayUs;
+use atat::asynch::AtatClient;
+use embassy_time::{Timer, Duration};
 use embedded_nal_async::{Dns, AddrType};
 
 use crate::{
-    atat_async::AtatClient,
     commands::{tcpip::ResolveHostIp, urc::Urc},
 };
 
 use super::{DataService, SocketError};
 
-impl<'a, AtCl: AtatClient, Delay: DelayUs + Clone> Dns for DataService<'a, AtCl, Delay> {
+impl<'a, AtCl: AtatClient> Dns for DataService<'a, AtCl> {
     type Error = SocketError;
 
     async fn get_host_by_name(
@@ -30,7 +30,6 @@ impl<'a, AtCl: AtatClient, Delay: DelayUs + Clone> Dns for DataService<'a, AtCl,
 
         // Wait for the URC reporting the resolved ip
         let mut ip = None;
-        let mut delay = self.delay.clone();
         for _ in 0..50 {
             {
                 let mut client = self.handle.client.lock().await;
@@ -47,7 +46,7 @@ impl<'a, AtCl: AtatClient, Delay: DelayUs + Clone> Dns for DataService<'a, AtCl,
                 break;
             }
 
-            delay.delay_ms(200).await.unwrap();
+            Timer::after(Duration::from_millis(200)).await;
         }
 
         ip.ok_or(SocketError::DnsTimeout)

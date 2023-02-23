@@ -1,7 +1,7 @@
-use embedded_hal_async::delay::DelayUs;
+use atat::asynch::AtatClient;
+use embassy_time::{Timer, Duration};
 
 use crate::{
-    atat_async::AtatClient,
     commands::{
         gprs::{
             GPRSAttachedState, GPRSNetworkRegistrationStat, GetGPRSAttached,
@@ -34,16 +34,14 @@ impl From<atat::Error> for NetworkError {
     }
 }
 
-pub struct Network<Delay: DelayUs> {
-    delay: Delay,
+pub struct Network {
     gsm_status: NetworkRegistrationStat,
     gprs_status: GPRSNetworkRegistrationStat,
 }
 
-impl<'a, Delay: DelayUs> Network<Delay> {
-    pub(crate) fn new(delay: Delay) -> Self {
+impl Network {
+    pub(crate) fn new() -> Self {
         Self {
-            delay,
             gsm_status: NetworkRegistrationStat::NotRegistered,
             gprs_status: GPRSNetworkRegistrationStat::NotRegistered,
         }
@@ -64,7 +62,7 @@ impl<'a, Delay: DelayUs> Network<Delay> {
                     return Ok(());
                 }
 
-                self.delay.delay_ms(1_000).await.unwrap();
+                Timer::after(Duration::from_millis(1_000)).await;
             }
             Err(NetworkError::NotReady)
         }
@@ -106,7 +104,7 @@ impl<'a, Delay: DelayUs> Network<Delay> {
                         Err(err) => return Err(err.into()),
                     }
 
-                    self.delay.delay_ms(1_000).await.unwrap();
+                    Timer::after(Duration::from_millis(1_000)).await;
                 }
 
                 Err(NetworkError::NotAttached)

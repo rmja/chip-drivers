@@ -1,8 +1,8 @@
 use core::sync::atomic::Ordering;
 
-use atat::{AtatCmd, Error};
+use atat::{AtatCmd, Error, asynch::AtatClient};
+use embassy_time::{Timer, Duration};
 use core::fmt::Write as _;
-use embedded_hal_async::delay::DelayUs;
 use embedded_io::{
     asynch::{Read, Write},
     Io,
@@ -11,7 +11,6 @@ use embedded_nal_async::{SocketAddr, TcpConnect};
 use heapless::String;
 
 use crate::{
-    atat_async::AtatClient,
     commands::{
         tcpip::{ReadData, SendData, StartConnection, WriteData},
         urc::Urc,
@@ -23,10 +22,10 @@ use super::{DataService, SocketError, SOCKET_STATE_DROPPED, SOCKET_STATE_USED};
 
 // There is an example implementation of TcpConnect here: https://github.com/drogue-iot/esp8266-at-driver/blob/c49a6b469da6991b680a166e7c5e236d5fb4c560/src/lib.rs
 
-impl<'a, AtCl: AtatClient, Delay: DelayUs + Clone> TcpConnect for DataService<'a, AtCl, Delay> {
+impl<'a, AtCl: AtatClient> TcpConnect for DataService<'a, AtCl> {
     type Error = SocketError;
 
-    type Connection<'m> = TcpSocket<'m, AtCl, Delay> where Self : 'm;
+    type Connection<'m> = TcpSocket<'m, AtCl> where Self : 'm;
 
     async fn connect<'m>(&'m self, remote: SocketAddr) -> Result<Self::Connection<'m>, Self::Error>
     where
@@ -35,7 +34,7 @@ impl<'a, AtCl: AtatClient, Delay: DelayUs + Clone> TcpConnect for DataService<'a
         // Close any sockets that have been dropped
         self.close_dropped_sockets().await;
 
-        let socket = TcpSocket::try_new(self.handle, self.delay.clone())?;
+        let socket = TcpSocket::try_new(self.handle)?;
         info!("[{}] Socket created", socket.id);
 
         let mut ip = String::<15>::new();
@@ -57,7 +56,6 @@ impl<'a, AtCl: AtatClient, Delay: DelayUs + Clone> TcpConnect for DataService<'a
                 .await?;
         }
 
-        let mut delay = self.delay.clone();
         const TRIALS: u32 = StartConnection::MAX_TIMEOUT_MS / 200;
         for trial in 1..=TRIALS {
             debug!("[{}] Testing connection status trial #{}", socket.id, trial);
@@ -70,7 +68,7 @@ impl<'a, AtCl: AtatClient, Delay: DelayUs + Clone> TcpConnect for DataService<'a
                 break;
             }
 
-            delay.delay_ms(200).await.unwrap();
+            Timer::after(Duration::from_millis(200)).await;
         }
 
         match self.handle.connected_state[socket.id].load(Ordering::Relaxed) {
@@ -81,22 +79,19 @@ impl<'a, AtCl: AtatClient, Delay: DelayUs + Clone> TcpConnect for DataService<'a
     }
 }
 
-pub struct TcpSocket<'a, AtCl: AtatClient, Delay: DelayUs> {
+pub struct TcpSocket<'a, AtCl: AtatClient> {
     id: usize,
     handle: &'a Handle<AtCl>,
-    delay: Delay,
 }
 
-impl<'a, AtCl: AtatClient, Delay: DelayUs> TcpSocket<'a, AtCl, Delay> {
+impl<'a, AtCl: AtatClient> TcpSocket<'a, AtCl> {
     pub(crate) fn try_new(
         handle: &'a Handle<AtCl>,
-        delay: Delay,
     ) -> Result<Self, SocketError> {
         let id = handle.take_unused()?;
         Ok(Self {
             id,
             handle,
-            delay,
         })
     }
 
@@ -150,11 +145,11 @@ impl<'a, AtCl: AtatClient, Delay: DelayUs> TcpSocket<'a, AtCl, Delay> {
     }
 }
 
-impl<AtCl: AtatClient, Delay: DelayUs> Io for TcpSocket<'_, AtCl, Delay> {
+impl<AtCl: AtatClient> Io for TcpSocket<'_, AtCl> {
     type Error = SocketError;
 }
 
-impl<AtCl: AtatClient, Delay: DelayUs> Read for TcpSocket<'_, AtCl, Delay> {
+impl<AtCl: AtatClient> Read for TcpSocket<'_, AtCl> {
     async fn read(&mut self, buf: &mut [u8]) -> Result<usize, SocketError> {
         self.ensure_in_use()?;
 
@@ -166,7 +161,7 @@ impl<AtCl: AtatClient, Delay: DelayUs> Read for TcpSocket<'_, AtCl, Delay> {
     }
 }
 
-impl<AtCl: AtatClient, Delay: DelayUs> Write for TcpSocket<'_, AtCl, Delay> {
+impl<AtCl: AtatClient> Write for TcpSocket<'_, AtCl> {
     async fn write(&mut self, buf: &[u8]) -> Result<usize, SocketError> {
         self.ensure_in_use()?;
         self.flush().await?;
@@ -202,7 +197,7 @@ impl<AtCl: AtatClient, Delay: DelayUs> Write for TcpSocket<'_, AtCl, Delay> {
         // We have received prompt and are ready to write data
 
         // Clear the flushed flag
-        self.handle.flushed[self.id].store(false, Ordering::Release);
+        self.handle.is_flushed[self.id].store(false, Ordering::Release);
 
         // Write the data buffer
         client.send(&WriteData { buf }).await?;
@@ -212,7 +207,7 @@ impl<AtCl: AtatClient, Delay: DelayUs> Write for TcpSocket<'_, AtCl, Delay> {
 
     async fn flush(&mut self) -> Result<(), Self::Error> {
         self.ensure_in_use()?;
-        if self.handle.flushed[self.id].load(Ordering::Acquire) {
+        if self.handle.is_flushed[self.id].load(Ordering::Acquire) {
             return Ok(());
         }
 
@@ -224,19 +219,19 @@ impl<AtCl: AtatClient, Delay: DelayUs> Write for TcpSocket<'_, AtCl, Delay> {
             // The socket may have closed while handling urc
             self.ensure_in_use()?;
 
-            if self.handle.flushed[self.id].load(Ordering::Acquire) {
+            if self.handle.is_flushed[self.id].load(Ordering::Acquire) {
                 trace!("SEND OK RECEIVED");
                 return Ok(());
             }
 
-            self.delay.delay_ms(100).await.unwrap();
+            Timer::after(Duration::from_millis(100)).await;
         }
 
         Err(SocketError::WriteTimeout)
     }
 }
 
-impl<AtCl: AtatClient, Delay: DelayUs> Drop for TcpSocket<'_, AtCl, Delay> {
+impl<AtCl: AtatClient> Drop for TcpSocket<'_, AtCl> {
     fn drop(&mut self) {
         // Only set DROPPED state if the connection is not already closed
         if self.handle.socket_state[self.id]

@@ -1,32 +1,79 @@
-use core::sync::atomic::{AtomicBool, Ordering};
+use core::sync::atomic::{AtomicBool, Ordering, AtomicU8};
 
-use embedded_hal_async::delay::DelayUs;
+use atat::asynch::AtatClient;
 use embedded_io::asynch::Write;
-use embedded_time::Clock;
 use futures_intrusive::sync::LocalMutex;
 use heapless::Vec;
 
 use crate::{
-    atat_async::{self, AtatClient, Ingress},
     commands::{gsm, urc::Urc, v25ter, AT},
     services::{
-        data::{SocketState, SOCKET_STATE_UNKNOWN, SOCKET_STATE_UNUSED},
+        data::{
+            SocketError,
+        },
         network::Network,
     },
     DriverError, PartNumber, SimcomDigester, MAX_SOCKETS,
 };
 
+pub(crate) type SocketState = AtomicU8;
+pub(crate) const SOCKET_STATE_UNKNOWN: u8 = 0;
+pub(crate) const SOCKET_STATE_UNUSED: u8 = 1;
+pub(crate) const SOCKET_STATE_USED: u8 = 2;
+pub(crate) const SOCKET_STATE_DROPPED: u8 = 3;
+
+pub(crate) type ConnectedState = AtomicU8;
+pub(crate) const CONNECTED_STATE_UNKNOWN: u8 = 0;
+pub(crate) const CONNECTED_STATE_CONNECTED: u8 = 1;
+pub(crate) const CONNECTED_STATE_FAILED: u8 = 2;
+
 pub struct Handle<AtCl: AtatClient> {
     pub(crate) client: LocalMutex<AtCl>,
     pub(crate) socket_state: Vec<SocketState, MAX_SOCKETS>,
-    pub(crate) flushed: [AtomicBool; MAX_SOCKETS],
+    pub(crate) connected_state: [ConnectedState; MAX_SOCKETS],
+    pub(crate) is_flushed: [AtomicBool; MAX_SOCKETS],
 }
 
 impl<AtCl: AtatClient> Handle<AtCl> {
+    pub(crate) fn take_unused(&self) -> Result<usize, SocketError> {
+        for id in 0..self.socket_state.len() {
+            if self.try_take(id) {
+                return Ok(id);
+            }
+        }
+        Err(SocketError::NoAvailableSockets)
+    }
+
+    fn try_take(&self, id: usize) -> bool {
+        if self.socket_state[id]
+            .compare_exchange(
+                SOCKET_STATE_UNUSED,
+                SOCKET_STATE_USED,
+                Ordering::AcqRel,
+                Ordering::Relaxed,
+            )
+            .is_ok()
+        {
+            self.connected_state[id].store(CONNECTED_STATE_UNKNOWN, Ordering::Relaxed);
+            self.is_flushed[id].store(true, Ordering::Relaxed);
+            true
+        } else {
+            false
+        }
+    }
+
     pub(crate) fn handle_urc(&self, urc: &Urc) -> bool {
         match urc {
+            Urc::ConnectOk(id) => {
+                self.connected_state[*id].store(CONNECTED_STATE_CONNECTED, Ordering::Release);
+                true
+            }
+            Urc::ConnectFail(id) => {
+                self.connected_state[*id].store(CONNECTED_STATE_FAILED, Ordering::Release);
+                true
+            }
             Urc::SendOk(id) => {
-                self.flushed[*id].store(true, Ordering::Release);
+                self.is_flushed[*id].store(true, Ordering::Release);
                 true
             }
             Urc::Closed(id) => {
@@ -43,58 +90,52 @@ impl<AtCl: AtatClient> Handle<AtCl> {
     }
 }
 
-pub struct Device<AtCl: AtatClient, Delay: DelayUs + Clone> {
+pub struct Device<AtCl: AtatClient> {
     pub handle: Handle<AtCl>,
-    pub(crate) delay: Delay,
     pub(crate) part_number: Option<PartNumber>,
-    pub network: Network<Delay>,
+    pub network: Network,
     pub(crate) data_service_taken: AtomicBool,
 }
 
 impl<
         'a,
         Tx: Write,
-        Clk: Clock<T = u64>,
-        Delay: DelayUs + Clone,
         const RES_CAPACITY: usize,
         const URC_CAPACITY: usize,
-    > Device<atat_async::Client<'a, Tx, Clk, Delay, RES_CAPACITY, URC_CAPACITY>, Delay>
+    > Device<atat::asynch::Client<'a, Tx, RES_CAPACITY, URC_CAPACITY>>
 {
     /// Create a new device with a default AT client
     pub fn new<const INGRESS_BUF_SIZE: usize>(
         tx: Tx,
-        buffers: &'a mut atat_async::Buffers<INGRESS_BUF_SIZE, RES_CAPACITY, URC_CAPACITY>,
-        clock: &'a Clk,
-        delay: Delay,
+        buffers: &'a mut atat::Buffers<INGRESS_BUF_SIZE, RES_CAPACITY, URC_CAPACITY>,
     ) -> (
-        Ingress<'a, SimcomDigester, INGRESS_BUF_SIZE, RES_CAPACITY, URC_CAPACITY>,
+        atat::Ingress<'a, SimcomDigester, INGRESS_BUF_SIZE, RES_CAPACITY, URC_CAPACITY>,
         Self,
     ) {
         let (ingress, at_client) = buffers.split(
             tx,
-            clock,
-            delay.clone(),
             SimcomDigester::new(),
-            atat_async::Config::default(),
+            atat::Config::default(),
         );
 
-        let device = Self::with_at_client(at_client, delay);
+        let device = Self::with_at_client(at_client);
         (ingress, device)
     }
 }
 
-impl<AtCl: AtatClient, Delay: DelayUs + Clone> Device<AtCl, Delay> {
+impl<AtCl: AtatClient> Device<AtCl> {
     /// Create a new device given an AT client
-    pub fn with_at_client(at_client: AtCl, delay: Delay) -> Self {
-        let network = Network::new(delay.clone());
-        const TRUE: AtomicBool = AtomicBool::new(true);
+    pub fn with_at_client(at_client: AtCl) -> Self {
+        let network = Network::new();
+        // The actual state values, except for socket_state, are cleared
+        // when a socket goes from [`SOCKET_STATE_UNUSED`] to [`SOCKET_STATE_USED`].
         Self {
             handle: Handle {
                 client: LocalMutex::new(at_client, true),
                 socket_state: Vec::new(),
-                flushed: [TRUE; MAX_SOCKETS],
+                connected_state: Default::default(),
+                is_flushed: Default::default(),
             },
-            delay,
             part_number: None,
             network,
             data_service_taken: AtomicBool::new(false),

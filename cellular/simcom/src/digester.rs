@@ -15,7 +15,18 @@ impl SimcomDigester {
                     combinator::success(&b""[..]),
                     combinator::success(&b""[..]),
                     bytes::streaming::tag(b"\r\nSHUT OK\r\n"),
-                )),))(buf)?;
+                )),
+                sequence::tuple((
+                    bytes::streaming::tag(b"\r\n"),
+                    combinator::recognize(sequence::tuple((
+                        character::streaming::u8,
+                        bytes::streaming::tag(", CLOSE OK")
+
+                    ))),
+                    bytes::streaming::tag(b"\r\n"),
+                ))
+            
+            ))(buf)?;
 
                 Ok((data, head.len() + data.len() + tail.len()))
             })

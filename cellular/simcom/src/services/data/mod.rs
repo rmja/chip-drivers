@@ -4,14 +4,13 @@ mod tcp;
 
 use core::{
     str::from_utf8,
-    sync::atomic::{AtomicU8, Ordering},
+    sync::atomic::Ordering,
 };
-use embedded_hal_async::delay::DelayUs;
+use atat::asynch::AtatClient;
 use embedded_io::ErrorKind;
 use embedded_nal_async::Ipv4Addr;
 
 use crate::{
-    atat_async::AtatClient,
     commands::{
         gprs,
         tcpip::{
@@ -20,7 +19,7 @@ use crate::{
             StartMultiIpConnection, StartTaskAndSetApn,
         },
     },
-    device::Handle,
+    device::{Handle, SOCKET_STATE_UNUSED, SOCKET_STATE_USED, SOCKET_STATE_DROPPED},
     ContextId, Device, DriverError,
 };
 
@@ -56,29 +55,22 @@ impl From<atat::Error> for SocketError {
     }
 }
 
-pub(crate) type SocketState = AtomicU8;
-pub(crate) const SOCKET_STATE_UNKNOWN: u8 = 0;
-pub(crate) const SOCKET_STATE_UNUSED: u8 = 1;
-pub(crate) const SOCKET_STATE_USED: u8 = 2;
-pub(crate) const SOCKET_STATE_DROPPED: u8 = 3;
-
-pub struct DataService<'a, AtCl: AtatClient, Delay: DelayUs> {
+pub struct DataService<'a, AtCl: AtatClient> {
     handle: &'a Handle<AtCl>,
-    delay: Delay,
     pub local_ip: Option<Ipv4Addr>,
 }
 
-impl<'a, AtCl: AtatClient, Delay: DelayUs + Clone> Device<AtCl, Delay> {
+impl<'a, AtCl: AtatClient> Device<AtCl> {
     pub async fn data(
         &'a self,
         apn: &ApnInfo<'_>,
-    ) -> Result<DataService<'a, AtCl, Delay>, DriverError> {
+    ) -> Result<DataService<'a, AtCl>, DriverError> {
         if self
             .data_service_taken
             .compare_exchange(false, true, Ordering::AcqRel, Ordering::Relaxed)
             .is_ok()
         {
-            let mut service = DataService::new(&self.handle, self.delay.clone());
+            let mut service = DataService::new(&self.handle);
 
             service.setup(apn).await?;
 
@@ -89,11 +81,10 @@ impl<'a, AtCl: AtatClient, Delay: DelayUs + Clone> Device<AtCl, Delay> {
     }
 }
 
-impl<'a, AtCl: AtatClient, Delay: DelayUs> DataService<'a, AtCl, Delay> {
-    fn new(handle: &'a Handle<AtCl>, delay: Delay) -> Self {
+impl<'a, AtCl: AtatClient> DataService<'a, AtCl> {
+    fn new(handle: &'a Handle<AtCl>) -> Self {
         Self {
             handle,
-            delay,
             local_ip: None,
         }
     }
@@ -148,30 +139,17 @@ impl<'a, AtCl: AtatClient, Delay: DelayUs> DataService<'a, AtCl, Delay> {
         Ok(())
     }
 
-    fn take_socket_id(&self) -> Result<usize, SocketError> {
-        for (id, state) in self.handle.socket_state.iter().enumerate() {
-            if state
-                .compare_exchange(
-                    SOCKET_STATE_UNUSED,
-                    SOCKET_STATE_USED,
-                    Ordering::AcqRel,
-                    Ordering::Relaxed,
-                )
-                .is_ok()
-            {
-                return Ok(id);
-            }
-        }
-
-        Err(SocketError::NoAvailableSockets)
-    }
-
     async fn close_dropped_sockets(&self) {
         for (id, state) in self.handle.socket_state.iter().enumerate() {
             if state.load(Ordering::Relaxed) == SOCKET_STATE_DROPPED {
                 let mut client = self.handle.client.lock().await;
-                if client.send(&CloseConnection { id }).await.is_ok() {
-                    state.store(SOCKET_STATE_UNUSED, Ordering::Release);
+
+                // The close connection command does not return anything.
+                // The actual transition from USED to UNUSED happens in URC handling,
+                // as a "<id>, CLOSE OK" URC is sent when the connection is closed.
+                if let Err(e) = client.send(&CloseConnection { id }).await {
+                    // If the close is not sent, we will simply retry later when `close_dropped_sockets()` is called again.
+                    error!("[{}] Close request failed with error {}", id, e);
                 }
             }
         }
