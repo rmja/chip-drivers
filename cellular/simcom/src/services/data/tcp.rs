@@ -1,8 +1,8 @@
 use core::sync::atomic::Ordering;
 
-use atat::{AtatCmd, Error, asynch::AtatClient};
-use embassy_time::{Timer, Duration};
+use atat::{asynch::AtatClient, AtatCmd, Error};
 use core::fmt::Write as _;
+use embassy_time::{Duration, Timer};
 use embedded_io::{
     asynch::{Read, Write},
     Io,
@@ -15,7 +15,7 @@ use crate::{
         tcpip::{ReadData, SendData, StartConnection, WriteData},
         urc::Urc,
     },
-    device::{Handle, CONNECTED_STATE_CONNECTED, CONNECTED_STATE_UNKNOWN, CONNECTED_STATE_FAILED},
+    device::{Handle, CONNECTED_STATE_CONNECTED, CONNECTED_STATE_FAILED, CONNECTED_STATE_UNKNOWN},
 };
 
 use super::{DataService, SocketError, SOCKET_STATE_DROPPED, SOCKET_STATE_USED};
@@ -64,7 +64,9 @@ impl<'a, AtCl: AtatClient> TcpConnect for DataService<'a, AtCl> {
                 client.try_read_urc_with::<Urc, _>(|urc, _| self.handle.handle_urc(&urc));
             }
 
-            if self.handle.connected_state[socket.id].load(Ordering::Relaxed) != CONNECTED_STATE_UNKNOWN {
+            if self.handle.connected_state[socket.id].load(Ordering::Relaxed)
+                != CONNECTED_STATE_UNKNOWN
+            {
                 break;
             }
 
@@ -74,7 +76,7 @@ impl<'a, AtCl: AtatClient> TcpConnect for DataService<'a, AtCl> {
         match self.handle.connected_state[socket.id].load(Ordering::Relaxed) {
             CONNECTED_STATE_CONNECTED => Ok(socket),
             CONNECTED_STATE_FAILED => Err(SocketError::UnableToConnect),
-            _ => Err(SocketError::ConnectTimeout)
+            _ => Err(SocketError::ConnectTimeout),
         }
     }
 }
@@ -85,14 +87,9 @@ pub struct TcpSocket<'a, AtCl: AtatClient> {
 }
 
 impl<'a, AtCl: AtatClient> TcpSocket<'a, AtCl> {
-    pub(crate) fn try_new(
-        handle: &'a Handle<AtCl>,
-    ) -> Result<Self, SocketError> {
+    pub(crate) fn try_new(handle: &'a Handle<AtCl>) -> Result<Self, SocketError> {
         let id = handle.take_unused()?;
-        Ok(Self {
-            id,
-            handle,
-        })
+        Ok(Self { id, handle })
     }
 
     fn ensure_in_use(&self) -> Result<(), SocketError> {

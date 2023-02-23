@@ -123,7 +123,7 @@ pub struct ReadData {
 #[cfg(test)]
 mod tests {
     use assert_hex::assert_eq_hex;
-    use atat::{AtatCmd, AtatIngress, DigestResult, Digester, asynch::AtatClient};
+    use atat::{asynch::AtatClient, AtatCmd, AtatIngress, DigestResult, Digester};
 
     use crate::{
         commands::{tests::TestWriter, urc::Urc},
@@ -210,10 +210,8 @@ mod tests {
 
         let mut written = Vec::new();
         let mut atat_buffers = atat::Buffers::<128, 512, 512>::new();
-        let (mut ingress, device) = crate::device::Device::new(
-            TestWriter::new(&mut written),
-            &mut atat_buffers,
-        );
+        let (mut ingress, device) =
+            crate::device::Device::new(TestWriter::new(&mut written), &mut atat_buffers);
 
         ingress.write(b"\r\n10.0.109.44\r\n").await;
         ingress.write(b"\r\nOK\r\n").await;
@@ -230,12 +228,12 @@ mod tests {
 
         let mut written = Vec::new();
         let mut atat_buffers = atat::Buffers::<128, 512, 512>::new();
-        let (mut ingress, device) = crate::device::Device::new(
-            TestWriter::new(&mut written),
-            &mut atat_buffers,
-        );
+        let (mut ingress, device) =
+            crate::device::Device::new(TestWriter::new(&mut written), &mut atat_buffers);
 
-        ingress.write(b"\r\n+CIPSTATUS: 2,,\"\",\"\",\"\",\"INITIAL\"\r\n\r\nOK\r\n").await;
+        ingress
+            .write(b"\r\n+CIPSTATUS: 2,,\"\",\"\",\"\",\"INITIAL\"\r\n\r\nOK\r\n")
+            .await;
 
         let mut at_client = device.handle.client.lock().await;
         let response = at_client.send(&cmd).await.unwrap();
@@ -253,10 +251,8 @@ mod tests {
 
         let mut written = Vec::new();
         let mut atat_buffers = atat::Buffers::<128, 512, 512>::new();
-        let (mut ingress, device) = crate::device::Device::new(
-            TestWriter::new(&mut written),
-            &mut atat_buffers,
-        );
+        let (mut ingress, device) =
+            crate::device::Device::new(TestWriter::new(&mut written), &mut atat_buffers);
 
         ingress.write(
             b"\r\n+CIPSTATUS: 2,0,\"TCP\",\"123.123.123.123\",\"80\",\"CONNECTED\"\r\n\r\nOK\r\n",
@@ -280,13 +276,13 @@ mod tests {
 
         let mut written = Vec::new();
         let mut atat_buffers = atat::Buffers::<128, 512, 512>::new();
-        let (mut ingress, device) = crate::device::Device::new(
-            TestWriter::new(&mut written),
-            &mut atat_buffers,
-        );
+        let (mut ingress, device) =
+            crate::device::Device::new(TestWriter::new(&mut written), &mut atat_buffers);
 
         ingress.write(b"\r\nOK\r\n").await;
-        ingress.write(b"\r\n+CDNSGIP: 1,\"utiliread.dk\",\"1.2.3.4\"\r\n").await;
+        ingress
+            .write(b"\r\n+CDNSGIP: 1,\"utiliread.dk\",\"1.2.3.4\"\r\n")
+            .await;
 
         let mut at_client = device.handle.client.lock().await;
         _ = at_client.send(&cmd).await.unwrap();
@@ -308,20 +304,17 @@ mod tests {
 
     #[tokio::test]
     async fn can_read_data() {
-        let cmd = ReadData {
-            id: 5,
-            max_len: 16,
-        };
+        let cmd = ReadData { id: 5, max_len: 16 };
         assert_eq_hex!(b"AT+CIPRXGET=2,5,16\r", cmd.as_bytes());
 
         let mut written = Vec::new();
         let mut atat_buffers = atat::Buffers::<128, 512, 512>::new();
-        let (mut ingress, device) = crate::device::Device::new(
-            TestWriter::new(&mut written),
-            &mut atat_buffers,
-        );
+        let (mut ingress, device) =
+            crate::device::Device::new(TestWriter::new(&mut written), &mut atat_buffers);
 
-        ingress.write(b"\r\n+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n").await;
+        ingress
+            .write(b"\r\n+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n")
+            .await;
         ingress.write(b"\r\nOK\r\n").await;
 
         let mut at_client = device.handle.client.lock().await;

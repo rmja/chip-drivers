@@ -1,4 +1,4 @@
-use core::sync::atomic::{AtomicBool, Ordering, AtomicU8};
+use core::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 
 use atat::asynch::AtatClient;
 use embedded_io::asynch::Write;
@@ -7,12 +7,7 @@ use heapless::Vec;
 
 use crate::{
     commands::{gsm, urc::Urc, v25ter, AT},
-    services::{
-        data::{
-            SocketError,
-        },
-        network::Network,
-    },
+    services::{data::SocketError, network::Network},
     DriverError, PartNumber, SimcomDigester, MAX_SOCKETS,
 };
 
@@ -97,12 +92,8 @@ pub struct Device<AtCl: AtatClient> {
     pub(crate) data_service_taken: AtomicBool,
 }
 
-impl<
-        'a,
-        Tx: Write,
-        const RES_CAPACITY: usize,
-        const URC_CAPACITY: usize,
-    > Device<atat::asynch::Client<'a, Tx, RES_CAPACITY, URC_CAPACITY>>
+impl<'a, Tx: Write, const RES_CAPACITY: usize, const URC_CAPACITY: usize>
+    Device<atat::asynch::Client<'a, Tx, RES_CAPACITY, URC_CAPACITY>>
 {
     /// Create a new device with a default AT client
     pub fn new<const INGRESS_BUF_SIZE: usize>(
@@ -112,11 +103,8 @@ impl<
         atat::Ingress<'a, SimcomDigester, INGRESS_BUF_SIZE, RES_CAPACITY, URC_CAPACITY>,
         Self,
     ) {
-        let (ingress, at_client) = buffers.split(
-            tx,
-            SimcomDigester::new(),
-            atat::Config::default(),
-        );
+        let (ingress, at_client) =
+            buffers.split(tx, SimcomDigester::new(), atat::Config::default());
 
         let device = Self::with_at_client(at_client);
         (ingress, device)

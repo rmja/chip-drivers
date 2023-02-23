@@ -1,10 +1,8 @@
 use atat::asynch::AtatClient;
-use embassy_time::{Timer, Duration};
-use embedded_nal_async::{Dns, AddrType};
+use embassy_time::{Duration, Timer};
+use embedded_nal_async::{AddrType, Dns};
 
-use crate::{
-    commands::{tcpip::ResolveHostIp, urc::Urc},
-};
+use crate::commands::{tcpip::ResolveHostIp, urc::Urc};
 
 use super::{DataService, SocketError};
 

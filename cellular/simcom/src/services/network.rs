@@ -1,5 +1,5 @@
 use atat::asynch::AtatClient;
-use embassy_time::{Timer, Duration};
+use embassy_time::{Duration, Timer};
 
 use crate::{
     commands::{

@@ -2,11 +2,8 @@ mod apn;
 mod dns;
 mod tcp;
 
-use core::{
-    str::from_utf8,
-    sync::atomic::Ordering,
-};
 use atat::asynch::AtatClient;
+use core::{str::from_utf8, sync::atomic::Ordering};
 use embedded_io::ErrorKind;
 use embedded_nal_async::Ipv4Addr;
 
@@ -19,7 +16,7 @@ use crate::{
             StartMultiIpConnection, StartTaskAndSetApn,
         },
     },
-    device::{Handle, SOCKET_STATE_UNUSED, SOCKET_STATE_USED, SOCKET_STATE_DROPPED},
+    device::{Handle, SOCKET_STATE_DROPPED, SOCKET_STATE_UNUSED, SOCKET_STATE_USED},
     ContextId, Device, DriverError,
 };
 
@@ -61,10 +58,7 @@ pub struct DataService<'a, AtCl: AtatClient> {
 }
 
 impl<'a, AtCl: AtatClient> Device<AtCl> {
-    pub async fn data(
-        &'a self,
-        apn: &ApnInfo<'_>,
-    ) -> Result<DataService<'a, AtCl>, DriverError> {
+    pub async fn data(&'a self, apn: &ApnInfo<'_>) -> Result<DataService<'a, AtCl>, DriverError> {
         if self
             .data_service_taken
             .compare_exchange(false, true, Ordering::AcqRel, Ordering::Relaxed)
