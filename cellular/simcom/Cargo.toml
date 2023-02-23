@@ -12,7 +12,7 @@ sim900 = []
 [dependencies]
 atat = { path = "../../../atat/atat", features = ["async"] }
 defmt = { version = "0.3", optional = true }
-embassy-time = "0.1.0"
+embassy-time = "0.1"
 embedded-io = { version = "0.4", features = ["async"] }
 embedded-nal-async = "0.4"
 futures = { version = "0.3", default-features = false }
@@ -24,5 +24,5 @@ serde = { version = "1", default-features = false, features = ["derive"] }
 [dev-dependencies]
 assert_hex = "0.2"
 critical-section = { version = "1", features = ["std"] }
-embassy-time = { version = "0.1.0", features = ["std", "generic-queue"] }
+embassy-time = { version = "0.1", features = ["std", "generic-queue"] }
 tokio = { version = "1", features = ["macros", "rt", "time"] }
