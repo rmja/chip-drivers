@@ -11,7 +11,7 @@
 //!             1142        Enable FIFO
 //!             2600        Normal FIFO mode
 //!             36          IDLE
-//! 
+//!
 //! listen()    3A          Flush RX FIFO
 //!             34          Start RX
 //!
@@ -20,9 +20,9 @@
 //!             AFD700FF... Empty FIFO
 //!             1D02        Set FIFO threshold to 3 bytes
 //!             0306        Set IRQ output to SOF detected
-//! 
+//!
 //!             -- Wait for IRQ, i.e. SOF to be detected --
-//! 
+//!
 //!             0300        Set IRQ output to FIFO threshold
 //!                         Wait for FIFO threshold to be reached
 //!
@@ -47,15 +47,15 @@ use crate::{
     regs::{
         ext::Freq2,
         pri::{
-            FifoCfg, LengthConfigValue, Mdmcfg1, PktCfg0, PktCfg2, PktFormatValue, PktLen,
-            RfendCfg0, RfendCfg1, RxoffModeValue, TxoffModeValue, PktCfg1,
+            FifoCfg, LengthConfigValue, Mdmcfg1, PktCfg0, PktCfg1, PktCfg2, PktFormatValue, PktLen,
+            RfendCfg0, RfendCfg1, RxoffModeValue, TxoffModeValue,
         },
         Iocfg, Register,
     },
     ConfigPatch, Driver, DriverError, Rssi, State, Strobe, RX_FIFO_SIZE, TX_FIFO_SIZE,
 };
 use alloc::vec::Vec;
-use embassy_time::{Instant, Delay};
+use embassy_time::{Delay, Instant};
 use embedded_hal_async::spi;
 
 pub struct PacketController<'a, Spi, SpiBus, ResetPin, IrqGpio, IrqPin>

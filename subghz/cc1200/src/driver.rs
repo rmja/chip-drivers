@@ -6,7 +6,7 @@ use crate::{
         Register, RegisterAddress,
     },
     statusbyte::{State, StatusByte},
-    ConfigPatch, DriverError, PartNumber, RX_FIFO_SIZE, TX_FIFO_SIZE, Rssi,
+    ConfigPatch, DriverError, PartNumber, Rssi, RX_FIFO_SIZE, TX_FIFO_SIZE,
 };
 use embedded_hal::digital::OutputPin;
 use embedded_hal_async::{delay, spi, spi_transaction};
