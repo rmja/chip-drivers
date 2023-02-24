@@ -6,8 +6,7 @@
 extern crate alloc;
 
 mod driver;
-#[cfg(feature = "embedded-io")]
-pub mod embeddedio;
+mod embeddedio;
 mod error;
 mod opcode;
 

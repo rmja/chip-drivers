@@ -4,13 +4,10 @@ version = "0.1.0"
 edition = "2021"
 description = "AT25010, AT25020, and AT25040 (and B series) Serial EEPROM driver"
 
-[features]
-all = ["embedded-io"]
-
 [dependencies]
 bitfield = "0.14"
 embedded-hal-async = "0.2.0-alpha.0"
-embedded-io = { version = "0.4", features = ["async"], optional = true }
+embedded-io = "0.4"
 futures = { version = "0.3", default-features = false }
 
 [dev-dependencies]
