@@ -37,6 +37,7 @@ pub enum SocketError {
     ConnectTimeout,
     MustReadBeforeWrite,
     Closed,
+    ReadTimeout,
     WriteTimeout,
 }
 

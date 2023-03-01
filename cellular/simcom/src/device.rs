@@ -27,6 +27,7 @@ pub struct Handle<AtCl: AtatClient> {
     pub(crate) socket_state: Vec<SocketState, MAX_SOCKETS>,
     pub(crate) connected_state: [ConnectedState; MAX_SOCKETS],
     pub(crate) is_flushed: [AtomicBool; MAX_SOCKETS],
+    pub(crate) data_available: [AtomicBool; MAX_SOCKETS],
 }
 
 impl<AtCl: AtatClient> Handle<AtCl> {
@@ -51,6 +52,7 @@ impl<AtCl: AtatClient> Handle<AtCl> {
         {
             self.connected_state[id].store(CONNECTED_STATE_UNKNOWN, Ordering::Relaxed);
             self.is_flushed[id].store(true, Ordering::Relaxed);
+            self.data_available[id].store(false, Ordering::Relaxed);
             true
         } else {
             false
@@ -76,7 +78,11 @@ impl<AtCl: AtatClient> Handle<AtCl> {
                 self.socket_state[*id].store(SOCKET_STATE_UNUSED, Ordering::Release);
                 true
             }
-            Urc::DataAvailable(_id) => true, // Discard
+            Urc::DataAvailable(id) => {
+                debug!("[{}] Data available", *id);
+                self.data_available[*id].store(true, Ordering::Release);
+                true
+            }
             urc => {
                 error!("Uhandled URC: {:?}", urc);
                 false
@@ -123,6 +129,7 @@ impl<AtCl: AtatClient> Device<AtCl> {
                 socket_state: Vec::new(),
                 connected_state: Default::default(),
                 is_flushed: Default::default(),
+                data_available: Default::default(),
             },
             part_number: None,
             network,
