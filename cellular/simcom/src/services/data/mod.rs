@@ -141,9 +141,22 @@ impl<'a, AtCl: AtatClient> DataService<'a, AtCl> {
                 // The close connection command does not return anything.
                 // The actual transition from USED to UNUSED happens in URC handling,
                 // as a "<id>, CLOSE OK" URC is sent when the connection is closed.
-                if let Err(e) = client.send(&CloseConnection { id }).await {
-                    // If the close is not sent, we will simply retry later when `close_dropped_sockets()` is called again.
-                    error!("[{}] Close request failed with error {}", id, e);
+                match client.send(&CloseConnection { id }).await {
+                    Ok(_) => {}
+                    Err(atat::Error::CmeError(e)) if e == e.into() => {
+                        // CME Error seems to be returned if the connection is already closed
+                        // Verify that it is actually the case
+                        if let Ok(status) = client.send(&GetConnectionStatus { id }).await {
+                            if status.state == ClientState::Closed {
+                                warn!("[{}] Socket already closed", id);
+                                state.store(SOCKET_STATE_UNUSED, Ordering::Release);
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        // If the close is not sent, we will simply retry later when `close_dropped_sockets()` is called again.
+                        error!("[{}] Close request failed with error {}", id, e);
+                    }
                 }
             }
         }
