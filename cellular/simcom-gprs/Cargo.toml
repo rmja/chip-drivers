@@ -1,5 +1,5 @@
 [package]
-name = "simcom-driver"
+name = "simcom-gprs-driver"
 version = "0.1.0"
 edition = "2021"
 

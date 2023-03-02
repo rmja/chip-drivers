@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "cellular/simcom",
+    "cellular/simcom-gprs",
     "eeprom/at25010",
     "embedded-hal-async-mocks",
     "subghz/cc1200",
