@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct Apn<'a> {
     pub apn: &'a str,
     pub username: &'a str,
