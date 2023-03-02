@@ -20,7 +20,7 @@ use crate::{
     ContextId, Device, DriverError,
 };
 
-pub use apn::ApnInfo;
+pub use apn::Apn;
 
 use super::network::NetworkError;
 
@@ -59,7 +59,7 @@ pub struct DataService<'a, AtCl: AtatClient> {
 }
 
 impl<'a, AtCl: AtatClient> Device<AtCl> {
-    pub async fn data(&'a self, apn: &ApnInfo<'_>) -> Result<DataService<'a, AtCl>, DriverError> {
+    pub async fn data(&'a self, apn: Apn<'_>) -> Result<DataService<'a, AtCl>, DriverError> {
         if self
             .data_service_taken
             .compare_exchange(false, true, Ordering::AcqRel, Ordering::Relaxed)
@@ -84,7 +84,7 @@ impl<'a, AtCl: AtatClient> DataService<'a, AtCl> {
         }
     }
 
-    async fn setup(&mut self, apn: &ApnInfo<'_>) -> Result<(), NetworkError> {
+    async fn setup(&mut self, apn: Apn<'_>) -> Result<(), NetworkError> {
         let mut client = self.handle.client.lock().await;
 
         client
