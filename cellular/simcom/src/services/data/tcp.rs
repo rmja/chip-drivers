@@ -112,22 +112,27 @@ impl<AtCl: AtatClient> Handle<AtCl> {
             AtCl::max_urc_len() - MAX_HEADER_LEN - TAIL_LEN,
         );
 
-        let mut client = self.client.lock().await;
-        client.send(&ReadData { id, max_len }).await?;
+        {
+            let mut client = self.client.lock().await;
+            client.send(&ReadData { id, max_len }).await?;
+        }
 
         let mut result = None;
 
         loop {
-            client.try_read_urc_with::<Urc, _>(|urc, urc_buf| match urc {
-                Urc::ReadData(r) => {
-                    // The data is in the end of the urc buffer
-                    let offset = urc_buf.len() - r.data_len;
-                    buf[..r.data_len].copy_from_slice(&urc_buf[offset..]);
-                    result = Some(r);
-                    true
-                }
-                urc => self.handle_urc(&urc),
-            });
+            let handled = {
+                let mut client = self.client.lock().await;
+                client.try_read_urc_with::<Urc, _>(|urc, urc_buf| match urc {
+                    Urc::ReadData(r) => {
+                        // The data is in the end of the urc buffer
+                        let offset = urc_buf.len() - r.data_len;
+                        buf[..r.data_len].copy_from_slice(&urc_buf[offset..]);
+                        result = Some(r);
+                        true
+                    }
+                    urc => self.handle_urc(&urc),
+                })
+            };
 
             // The socket may have closed while handling urc
             self.ensure_in_use(id)?;
@@ -135,6 +140,10 @@ impl<AtCl: AtatClient> Handle<AtCl> {
             if let Some(result) = result {
                 self.data_available[id].store(result.pending_len > 0, Ordering::Release);
                 return Ok((result.data_len, result.pending_len));
+            }
+
+            if !handled {
+                Timer::after(Duration::from_millis(10)).await;
             }
         }
     }
@@ -159,6 +168,8 @@ impl<AtCl: AtatClient> Handle<AtCl> {
             if self.data_available[id].load(Ordering::Acquire) {
                 trace!("[{}] Data found to be available in {} trials", id, trial);
                 return Ok(());
+            } else {
+                trace!("[{}] Data is not yet available, trial #{}", id, trial);
             }
 
             Timer::after(Duration::from_millis(100)).await;
