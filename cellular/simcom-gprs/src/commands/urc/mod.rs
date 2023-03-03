@@ -20,7 +20,6 @@ pub enum Urc {
     IpLookup(HostIp),
     DataAvailable(usize),
     ReadData(ReadResult),
-    Receive(Receive),
 }
 
 #[derive(Debug, Clone, AtatUrc)]
@@ -48,14 +47,6 @@ pub struct ReadResult {
     pub pending_len: usize,
 }
 
-/// 19.3 Summary of Unsolicited Result Codes
-#[derive(Debug, Clone, AtatResp, PartialEq)]
-#[cfg_attr(feature = "defmt", derive(defmt::Format))]
-pub struct Receive {
-    pub id: usize,
-    pub len: usize,
-}
-
 impl From<UrcInner> for Urc {
     fn from(value: UrcInner) -> Self {
         match value {
@@ -73,8 +64,6 @@ impl AtatUrc for Urc {
         } else if let Some(urc) = complete::parse_data_available(resp) {
             Some(urc)
         } else if let Some(urc) = complete::parse_read_data(resp) {
-            Some(urc)
-        } else if let Some(urc) = complete::parse_receive(resp) {
             Some(urc)
         } else {
             UrcInner::parse(resp).map(|x| x.into())
@@ -167,17 +156,5 @@ mod tests {
             }),
             urc
         );
-    }
-
-    #[test]
-    fn can_parse_receive() {
-        let mut digester = SimcomDigester::new();
-
-        assert_eq!(
-            (DigestResult::Urc(b"+RECEIVE,2,1234:"), 20),
-            digester.digest(b"\r\n+RECEIVE,2,1234:\r\nHTTP\r\n")
-        );
-        let urc = Urc::parse(b"+RECEIVE,2,1234:").unwrap();
-        assert_eq!(Urc::Receive(Receive { id: 2, len: 1234 }), urc);
     }
 }

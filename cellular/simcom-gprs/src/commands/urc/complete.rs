@@ -1,4 +1,4 @@
-use super::{ReadResult, Receive, Urc};
+use super::{ReadResult, Urc};
 use atat::nom::{branch, bytes, character, combinator, sequence};
 
 pub(super) fn parse_connection_status(resp: &[u8]) -> Option<Urc> {
@@ -55,21 +55,6 @@ pub(super) fn parse_read_data(resp: &[u8]) -> Option<Urc> {
             }),
     ))(resp) && reminder.is_empty() {
         Some(Urc::ReadData(ReadResult { id: id as usize, data_len: data.len(), pending_len: pending_len as usize }))
-    }
-    else {
-        None
-    }
-}
-
-pub(super) fn parse_receive(resp: &[u8]) -> Option<Urc> {
-    if let Ok((reminder, (_, id, _, len, _))) = sequence::tuple::<_, _, (), _>((
-        bytes::complete::tag("+RECEIVE,"),
-            character::complete::u8,
-            bytes::complete::tag(","),
-            character::complete::u16,
-            bytes::complete::tag(":"),
-    ))(resp) && reminder.is_empty() {
-        Some(Urc::Receive(Receive { id: id as usize, len: len as usize}))
     }
     else {
         None
