@@ -26,7 +26,7 @@ pub struct Handle<AtCl: AtatClient> {
     pub(crate) client: LocalMutex<AtCl>,
     pub(crate) socket_state: Vec<SocketState, MAX_SOCKETS>,
     pub(crate) connected_state: [ConnectedState; MAX_SOCKETS],
-    pub(crate) is_flushed: [AtomicBool; MAX_SOCKETS],
+    pub(crate) data_written: [AtomicBool; MAX_SOCKETS],
     pub(crate) data_available: [AtomicBool; MAX_SOCKETS],
 }
 
@@ -51,7 +51,7 @@ impl<AtCl: AtatClient> Handle<AtCl> {
             .is_ok()
         {
             self.connected_state[id].store(CONNECTED_STATE_UNKNOWN, Ordering::Relaxed);
-            self.is_flushed[id].store(true, Ordering::Relaxed);
+            self.data_written[id].store(true, Ordering::Relaxed);
             self.data_available[id].store(false, Ordering::Relaxed);
             true
         } else {
@@ -70,7 +70,7 @@ impl<AtCl: AtatClient> Handle<AtCl> {
                 true
             }
             Urc::SendOk(id) => {
-                self.is_flushed[*id].store(true, Ordering::Release);
+                self.data_written[*id].store(true, Ordering::Release);
                 true
             }
             Urc::Closed(id) => {
@@ -128,7 +128,7 @@ impl<AtCl: AtatClient> Device<AtCl> {
                 client: LocalMutex::new(at_client, true),
                 socket_state: Vec::new(),
                 connected_state: Default::default(),
-                is_flushed: Default::default(),
+                data_written: Default::default(),
                 data_available: Default::default(),
             },
             part_number: None,
