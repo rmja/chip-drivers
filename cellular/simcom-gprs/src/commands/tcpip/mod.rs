@@ -123,11 +123,11 @@ pub struct ReadData {
 #[cfg(test)]
 mod tests {
     use assert_hex::assert_eq_hex;
-    use atat::{asynch::AtatClient, AtatCmd, AtatIngress, DigestResult, Digester};
+    use atat::{asynch::AtatClient, AtatCmd, AtatIngress, AtatUrcChannel, DigestResult, Digester};
 
     use crate::{
         commands::{tests::TestWriter, urc::Urc},
-        SimcomDigester,
+        SimcomAtatBuffers, SimcomDigester,
     };
 
     use super::*;
@@ -209,7 +209,7 @@ mod tests {
         assert_eq_hex!(b"AT+CIFSR\rAT\r", cmd.as_bytes());
 
         let mut written = Vec::new();
-        let mut atat_buffers = atat::Buffers::<128, 512, 512>::new();
+        let mut atat_buffers = SimcomAtatBuffers::<128, 512>::new();
         let (mut ingress, device) =
             crate::device::Device::new(TestWriter::new(&mut written), &mut atat_buffers);
 
@@ -227,7 +227,7 @@ mod tests {
         assert_eq_hex!(b"AT+CIPSTATUS=2\r", cmd.as_bytes());
 
         let mut written = Vec::new();
-        let mut atat_buffers = atat::Buffers::<128, 512, 512>::new();
+        let mut atat_buffers = SimcomAtatBuffers::<128, 512>::new();
         let (mut ingress, device) =
             crate::device::Device::new(TestWriter::new(&mut written), &mut atat_buffers);
 
@@ -250,7 +250,7 @@ mod tests {
         assert_eq_hex!(b"AT+CIPSTATUS=2\r", cmd.as_bytes());
 
         let mut written = Vec::new();
-        let mut atat_buffers = atat::Buffers::<128, 512, 512>::new();
+        let mut atat_buffers = SimcomAtatBuffers::<128, 512>::new();
         let (mut ingress, device) =
             crate::device::Device::new(TestWriter::new(&mut written), &mut atat_buffers);
 
@@ -275,9 +275,11 @@ mod tests {
         assert_eq_hex!(b"AT+CDNSGIP=\"utiliread.dk\"\r", cmd.as_bytes());
 
         let mut written = Vec::new();
-        let mut atat_buffers = atat::Buffers::<128, 512, 512>::new();
+        let mut atat_buffers = SimcomAtatBuffers::<128, 512>::new();
         let (mut ingress, device) =
             crate::device::Device::new(TestWriter::new(&mut written), &mut atat_buffers);
+
+        let mut subscription = device.urc_channel.subscribe().unwrap();
 
         ingress.write(b"\r\nOK\r\n").await;
         ingress
@@ -286,14 +288,14 @@ mod tests {
 
         let mut at_client = device.handle.client.lock().await;
         _ = at_client.send(&cmd).await.unwrap();
-        if let Urc::IpLookup(res) = at_client.try_read_urc::<Urc>().unwrap() {
+        if let Urc::IpLookup(res) = subscription.try_next_message_pure().unwrap() {
             assert_eq!("utiliread.dk", res.host);
             assert_eq!("1.2.3.4", res.ip);
         } else {
             panic!("Invalid URC");
         }
 
-        assert!(at_client.try_read_urc::<Urc>().is_none());
+        assert_eq!(0, subscription.available());
     }
 
     #[test]
@@ -308,9 +310,11 @@ mod tests {
         assert_eq_hex!(b"AT+CIPRXGET=2,5,16\r", cmd.as_bytes());
 
         let mut written = Vec::new();
-        let mut atat_buffers = atat::Buffers::<128, 512, 512>::new();
+        let mut atat_buffers = SimcomAtatBuffers::<128, 512>::new();
         let (mut ingress, device) =
             crate::device::Device::new(TestWriter::new(&mut written), &mut atat_buffers);
+
+        let mut subscription = device.urc_channel.subscribe().unwrap();
 
         ingress
             .write(b"\r\n+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n")
@@ -319,18 +323,15 @@ mod tests {
 
         let mut at_client = device.handle.client.lock().await;
         at_client.send(&cmd).await.unwrap();
-        assert!(at_client.try_read_urc_with::<Urc, _>(|urc, urc_buf| {
-            if let Urc::ReadData(data) = urc {
-                assert_eq!(5, data.id);
-                assert_eq!(8, data.data_len);
-                assert_eq!(0, data.pending_len);
+        if let Urc::ReadData(data) = subscription.try_next_message_pure().unwrap() {
+            assert_eq!(5, data.id);
+            assert_eq!(8, data.data_len);
+            assert_eq!(0, data.pending_len);
+            assert_eq!(b"HTTP\r\n\r\n", data.data.take().unwrap().as_slice());
+        } else {
+            panic!("Invalid URC");
+        }
 
-                let offset = urc_buf.len() - data.data_len;
-                assert_eq!(b"HTTP\r\n\r\n", &urc_buf[offset..]);
-                true
-            } else {
-                false
-            }
-        }));
+        assert_eq!(0, subscription.available());
     }
 }

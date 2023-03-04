@@ -1,6 +1,6 @@
 use core::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 
-use atat::asynch::AtatClient;
+use atat::{asynch::AtatClient, AtatUrcChannel};
 use embedded_io::asynch::Write;
 use futures_intrusive::sync::LocalMutex;
 use heapless::Vec;
@@ -8,8 +8,12 @@ use heapless::Vec;
 use crate::{
     commands::{gsm, urc::Urc, v25ter, AT},
     services::{data::SocketError, network::Network},
-    DriverError, PartNumber, SimcomDigester, MAX_SOCKETS,
+    DriverError, PartNumber, SimcomAtatBuffers, SimcomAtatIngress, SimcomAtatUrcChannel,
+    SimcomDigester, MAX_SOCKETS,
 };
+
+pub(crate) const URC_CAPACITY: usize = 1 + 2 * MAX_SOCKETS; // A SEND OK and RXGET per socket
+pub(crate) const URC_SUBSCRIBERS: usize = 1 + MAX_SOCKETS; // One for dns + one for each socket
 
 pub(crate) type SocketState = AtomicU8;
 pub(crate) const SOCKET_STATE_UNKNOWN: u8 = 0;
@@ -17,15 +21,9 @@ pub(crate) const SOCKET_STATE_UNUSED: u8 = 1;
 pub(crate) const SOCKET_STATE_USED: u8 = 2;
 pub(crate) const SOCKET_STATE_DROPPED: u8 = 3;
 
-pub(crate) type ConnectedState = AtomicU8;
-pub(crate) const CONNECTED_STATE_UNKNOWN: u8 = 0;
-pub(crate) const CONNECTED_STATE_CONNECTED: u8 = 1;
-pub(crate) const CONNECTED_STATE_FAILED: u8 = 2;
-
 pub struct Handle<AtCl: AtatClient> {
     pub(crate) client: LocalMutex<AtCl>,
     pub(crate) socket_state: Vec<SocketState, MAX_SOCKETS>,
-    pub(crate) connected_state: [ConnectedState; MAX_SOCKETS],
     pub(crate) data_written: [AtomicBool; MAX_SOCKETS],
     pub(crate) data_available: [AtomicBool; MAX_SOCKETS],
 }
@@ -50,7 +48,6 @@ impl<AtCl: AtatClient> Handle<AtCl> {
             )
             .is_ok()
         {
-            self.connected_state[id].store(CONNECTED_STATE_UNKNOWN, Ordering::Relaxed);
             self.data_written[id].store(true, Ordering::Relaxed);
             self.data_available[id].store(false, Ordering::Relaxed);
             true
@@ -59,78 +56,74 @@ impl<AtCl: AtatClient> Handle<AtCl> {
         }
     }
 
-    pub(crate) fn handle_urc(&self, urc: &Urc) -> bool {
+    pub(crate) fn handle_urc(&self, urc: &Urc) {
         match urc {
-            Urc::ConnectOk(id) => {
-                self.connected_state[*id].store(CONNECTED_STATE_CONNECTED, Ordering::Release);
-                true
+            Urc::ConnectOk(_id) => {}
+            Urc::ConnectFail(_id) => {}
+            Urc::AlreadyConnect(id) => {
+                error!("[{}] Already connected", *id);
             }
-            Urc::ConnectFail(id) => {
-                self.connected_state[*id].store(CONNECTED_STATE_FAILED, Ordering::Release);
-                true
-            }
-            Urc::SendOk(id) => {
-                self.data_written[*id].store(true, Ordering::Release);
-                true
-            }
+            Urc::SendOk(id) => self.data_written[*id].store(true, Ordering::Release),
             Urc::Closed(id) => {
                 warn!("[{}] Socket closed", *id);
                 self.socket_state[*id].store(SOCKET_STATE_UNUSED, Ordering::Release);
-                true
+            }
+            Urc::IpLookup(result) => {
+                debug!("Resolved IP for host {}", result.host);
             }
             Urc::DataAvailable(id) => {
-                debug!("[{}] Data available", *id);
+                debug!("[{}] Data available to be read", *id);
                 self.data_available[*id].store(true, Ordering::Release);
-                true
             }
-            urc => {
-                error!("Uhandled URC: {:?}", urc);
-                false
+            Urc::ReadData(result) => {
+                debug!("[{}] Data read", result.id);
+                self.data_available[result.id].store(result.pending_len > 0, Ordering::Release);
             }
         }
     }
 }
 
-pub struct Device<AtCl: AtatClient> {
+pub struct Device<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
     pub handle: Handle<AtCl>,
+    pub(crate) urc_channel: AtUrcCh,
     pub(crate) part_number: Option<PartNumber>,
     pub network: Network,
     pub(crate) data_service_taken: AtomicBool,
 }
 
-impl<'a, Tx: Write, const RES_CAPACITY: usize, const URC_CAPACITY: usize>
-    Device<atat::asynch::Client<'a, Tx, RES_CAPACITY, URC_CAPACITY>>
+impl<'a, Tx: Write, const INGRESS_BUF_SIZE: usize, const RES_CAPACITY: usize>
+    Device<
+        atat::asynch::Client<'a, Tx, INGRESS_BUF_SIZE, RES_CAPACITY>,
+        SimcomAtatUrcChannel<'a, INGRESS_BUF_SIZE>,
+    >
 {
     /// Create a new device with a default AT client
-    pub fn new<const INGRESS_BUF_SIZE: usize>(
+    pub fn new(
         tx: Tx,
-        buffers: &'a mut atat::Buffers<INGRESS_BUF_SIZE, RES_CAPACITY, URC_CAPACITY>,
-    ) -> (
-        atat::Ingress<'a, SimcomDigester, INGRESS_BUF_SIZE, RES_CAPACITY, URC_CAPACITY>,
-        Self,
-    ) {
-        let (ingress, at_client) =
+        buffers: &'a mut SimcomAtatBuffers<INGRESS_BUF_SIZE, RES_CAPACITY>,
+    ) -> (SimcomAtatIngress<'a, INGRESS_BUF_SIZE, RES_CAPACITY>, Self) {
+        let (ingress, client, urc_channel) =
             buffers.split(tx, SimcomDigester::new(), atat::Config::default());
 
-        let device = Self::with_at_client(at_client);
+        let device = Self::with_atat(client, urc_channel);
         (ingress, device)
     }
 }
 
-impl<AtCl: AtatClient> Device<AtCl> {
+impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<AtCl, AtUrcCh> {
     /// Create a new device given an AT client
-    pub fn with_at_client(at_client: AtCl) -> Self {
+    pub fn with_atat(client: AtCl, urc_channel: AtUrcCh) -> Self {
         let network = Network::new();
         // The actual state values, except for socket_state, are cleared
         // when a socket goes from [`SOCKET_STATE_UNUSED`] to [`SOCKET_STATE_USED`].
         Self {
             handle: Handle {
-                client: LocalMutex::new(at_client, true),
+                client: LocalMutex::new(client, true),
                 socket_state: Vec::new(),
-                connected_state: Default::default(),
                 data_written: Default::default(),
                 data_available: Default::default(),
             },
+            urc_channel,
             part_number: None,
             network,
             data_service_taken: AtomicBool::new(false),

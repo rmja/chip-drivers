@@ -1,14 +1,13 @@
 use core::sync::atomic::Ordering;
 
-use atat::{asynch::AtatClient, AtatCmd, Error};
+use atat::{asynch::AtatClient, AtatCmd, AtatUrcChannel, Error};
 use core::fmt::Write as _;
-use embassy_time::{Duration, Timer};
+use embassy_time::{with_timeout, Duration, Instant};
 use embedded_io::{
     asynch::{Read, Write},
     Io,
 };
 use embedded_nal_async::{SocketAddr, TcpConnect};
-use futures::{future::select, pin_mut};
 use heapless::String;
 
 use crate::{
@@ -16,17 +15,19 @@ use crate::{
         tcpip::{ReadData, SendData, StartConnection, WriteData},
         urc::Urc,
     },
-    device::{Handle, CONNECTED_STATE_CONNECTED, CONNECTED_STATE_FAILED, CONNECTED_STATE_UNKNOWN},
+    device::Handle,
 };
 
 use super::{DataService, SocketError, SOCKET_STATE_DROPPED, SOCKET_STATE_USED};
 
 // There is an example implementation of TcpConnect here: https://github.com/drogue-iot/esp8266-at-driver/blob/c49a6b469da6991b680a166e7c5e236d5fb4c560/src/lib.rs
 
-impl<'a, AtCl: AtatClient> TcpConnect for DataService<'a, AtCl> {
+impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpConnect
+    for DataService<'a, AtCl, AtUrcCh>
+{
     type Error = SocketError;
 
-    type Connection<'m> = TcpSocket<'m, AtCl> where Self : 'm;
+    type Connection<'m> = TcpSocket<'m, AtCl, AtUrcCh> where Self : 'm;
 
     async fn connect<'m>(&'m self, remote: SocketAddr) -> Result<Self::Connection<'m>, Self::Error>
     where
@@ -35,7 +36,7 @@ impl<'a, AtCl: AtatClient> TcpConnect for DataService<'a, AtCl> {
         // Close any sockets that have been dropped
         self.close_dropped_sockets().await;
 
-        let socket = TcpSocket::try_new(self.handle)?;
+        let mut socket = TcpSocket::try_new(self.handle, self.urc_channel)?;
         info!("[{}] Socket created", socket.id);
 
         let mut ip = String::<15>::new();
@@ -44,197 +45,155 @@ impl<'a, AtCl: AtatClient> TcpConnect for DataService<'a, AtCl> {
         let mut port = String::<5>::new();
         write!(port, "{}", remote.port()).unwrap();
 
+        socket.connect(&ip, &port).await?;
+        Ok(socket)
+    }
+}
+
+pub struct TcpSocket<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
+    id: usize,
+    handle: &'a Handle<AtCl>,
+    urc_channel: &'a AtUrcCh,
+    max_urc_len: usize,
+}
+
+impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpSocket<'a, AtCl, AtUrcCh> {
+    pub(crate) fn try_new(
+        handle: &'a Handle<AtCl>,
+        urc_channel: &'a AtUrcCh,
+    ) -> Result<Self, SocketError> {
+        let id = handle.take_unused()?;
+        Ok(Self {
+            id,
+            handle,
+            urc_channel,
+            max_urc_len: AtUrcCh::max_urc_len(),
+        })
+    }
+
+    async fn connect(&mut self, ip: &str, port: &str) -> Result<(), SocketError> {
+        let mut urc_subscription = self.urc_channel.subscribe().unwrap();
+
         {
             let mut client = self.handle.client.lock().await;
 
             client
                 .send(&StartConnection {
-                    id: socket.id,
+                    id: self.id,
                     mode: "TCP",
-                    ip: &ip,
-                    port: &port,
+                    ip,
+                    port,
                 })
                 .await?;
         }
 
-        const TRIALS: u32 = StartConnection::MAX_TIMEOUT_MS / 200;
-        for trial in 1..=TRIALS {
-            debug!("[{}] Testing connection status trial #{}", socket.id, trial);
-            {
-                let mut client = self.handle.client.lock().await;
-                client.try_read_urc_with::<Urc, _>(|urc, _| self.handle.handle_urc(&urc));
-            }
+        let timeout_instant =
+            Instant::now() + Duration::from_millis(StartConnection::MAX_TIMEOUT_MS as u64);
+        while let Some(timeout) = timeout_instant.checked_duration_since(Instant::now()) {
+            // Wait for next urc
+            let urc = with_timeout(timeout, urc_subscription.next_message_pure())
+                .await
+                .map_err(|_| SocketError::ConnectTimeout)?;
 
-            if self.handle.connected_state[socket.id].load(Ordering::Relaxed)
-                != CONNECTED_STATE_UNKNOWN
-            {
-                break;
-            }
-
-            Timer::after(Duration::from_millis(200)).await;
-        }
-
-        match self.handle.connected_state[socket.id].load(Ordering::Relaxed) {
-            CONNECTED_STATE_CONNECTED => Ok(socket),
-            CONNECTED_STATE_FAILED => Err(SocketError::UnableToConnect),
-            _ => Err(SocketError::ConnectTimeout),
-        }
-    }
-}
-
-pub struct TcpSocket<'a, AtCl: AtatClient> {
-    id: usize,
-    handle: &'a Handle<AtCl>,
-}
-
-impl<'a, AtCl: AtatClient> TcpSocket<'a, AtCl> {
-    pub(crate) fn try_new(handle: &'a Handle<AtCl>) -> Result<Self, SocketError> {
-        let id = handle.take_unused()?;
-        Ok(Self { id, handle })
-    }
-
-    async fn read(&mut self, buf: &mut [u8]) -> Result<usize, SocketError> {
-        self.handle.ensure_in_use(self.id)?;
-        if buf.is_empty() {
-            return Ok(0);
-        }
-
-        if !self.handle.data_available[self.id].load(Ordering::Acquire) {
-            let data_available = self.handle.wait_for_data_available(self.id);
-            let read_data = self.handle.read(self.id, buf);
-
-            pin_mut!(data_available);
-            pin_mut!(read_data);
-
-            match select(data_available, read_data).await {
-                futures::future::Either::Left(_) => {}
-                futures::future::Either::Right((result, data_available)) => {
-                    // ReadData was first, lets see if there was actually any data
-                    let (len, _pending) = result?;
-                    if len > 0 {
-                        return Ok(len);
-                    } else {
-                        // Wait for data to actually become available
-                        data_available.await?;
-                    }
-                }
+            match urc {
+                Urc::ConnectOk(id) if id == self.id => return Ok(()),
+                Urc::ConnectFail(id) if id == self.id => return Err(SocketError::UnableToConnect),
+                _ => {}
             }
         }
 
-        // Data is now available
-        let len = self
-            .handle
-            .read(self.id, buf)
-            .await
-            .map(|(len, _pending)| len)?;
-        assert!(len > 0);
-        Ok(len)
+        Err(SocketError::ConnectTimeout)
     }
 
-    async fn write(&mut self, buf: &[u8]) -> Result<usize, SocketError> {
-        self.handle.ensure_in_use(self.id)?;
-        if !self.handle.data_written[self.id].load(Ordering::Acquire) {
-            self.handle.wait_data_written(self.id).await?;
-        }
-        self.handle.write(self.id, buf).await
-    }
-}
-
-impl<AtCl: AtatClient> Handle<AtCl> {
-    fn ensure_in_use(&self, id: usize) -> Result<(), SocketError> {
-        if self.socket_state[id].load(Ordering::Acquire) == SOCKET_STATE_USED {
+    fn ensure_in_use(&self) -> Result<(), SocketError> {
+        if self.handle.socket_state[self.id].load(Ordering::Acquire) == SOCKET_STATE_USED {
             Ok(())
         } else {
             Err(SocketError::Closed)
         }
     }
 
-    async fn read(&self, id: usize, buf: &mut [u8]) -> Result<(usize, usize), SocketError> {
+    async fn read(&mut self, buf: &mut [u8]) -> Result<usize, SocketError> {
+        self.ensure_in_use()?;
+        if buf.is_empty() {
+            return Ok(0);
+        }
+
         const MAX_READ: usize = 1460;
         const MAX_HEADER_LEN: usize = "\r\n+CIPRXGET: 1,1,4444,4444\r\n".len();
         const TAIL_LEN: usize = "\r\nOK\r\n".len();
         let max_len = usize::min(
             usize::min(buf.len(), MAX_READ),
-            AtCl::max_urc_len() - MAX_HEADER_LEN - TAIL_LEN,
+            self.max_urc_len - MAX_HEADER_LEN - TAIL_LEN,
         );
 
-        {
-            let mut client = self.client.lock().await;
-            client.send(&ReadData { id, max_len }).await?;
-        }
+        let mut urc_subscription = {
+            let mut client = self.handle.client.lock().await;
+            let subscription = self.urc_channel.subscribe().unwrap();
 
-        let mut result = None;
-
-        loop {
-            let handled = {
-                let mut client = self.client.lock().await;
-                client.try_read_urc_with::<Urc, _>(|urc, urc_buf| match urc {
-                    Urc::ReadData(r) => {
-                        // The data is in the end of the urc buffer
-                        let offset = urc_buf.len() - r.data_len;
-                        buf[..r.data_len].copy_from_slice(&urc_buf[offset..]);
-                        result = Some(r);
-                        true
-                    }
-                    urc => self.handle_urc(&urc),
+            client
+                .send(&ReadData {
+                    id: self.id,
+                    max_len,
                 })
-            };
+                .await?;
+
+            subscription
+        };
+
+        let timeout_instant = Instant::now() + Duration::from_secs(10);
+        while let Some(timeout) = timeout_instant.checked_duration_since(Instant::now()) {
+            // Wait for next urc
+            let urc = with_timeout(timeout, urc_subscription.next_message_pure())
+                .await
+                .map_err(|_| SocketError::ReadTimeout)?;
+            self.handle.handle_urc(&urc);
 
             // The socket may have closed while handling urc
-            self.ensure_in_use(id)?;
+            self.ensure_in_use()?;
 
-            if let Some(result) = result {
-                self.data_available[id].store(result.pending_len > 0, Ordering::Release);
-                return Ok((result.data_len, result.pending_len));
+            match urc {
+                Urc::ReadData(r) if r.id == self.id && r.data_len > 0 => {
+                    buf[..r.data_len].copy_from_slice(r.data.take().unwrap().as_slice());
+                    return Ok(r.data_len);
+                }
+                Urc::DataAvailable(id) if id == self.id => {
+                    // Re-request data now when we know that it is available
+                    let mut client = self.handle.client.lock().await;
+                    client
+                        .send(&ReadData {
+                            id: self.id,
+                            max_len,
+                        })
+                        .await?;
+                }
+                _ => {}
             }
-
-            if !handled {
-                Timer::after(Duration::from_millis(10)).await;
-            }
-        }
-    }
-
-    async fn wait_for_data_available(&self, id: usize) -> Result<(), SocketError> {
-        if self.data_available[id].load(Ordering::Acquire) {
-            trace!("[{}] Data is already available", id);
-            return Ok(());
-        }
-
-        const TRIALS: u32 = 10_000 / 100; // Read timeout: 10 seconds
-
-        for trial in 1..=TRIALS {
-            {
-                let mut client = self.client.lock().await;
-                client.try_read_urc_with::<Urc, _>(|urc, _| self.handle_urc(&urc));
-            }
-
-            // The socket may have closed while handling urc
-            self.ensure_in_use(id)?;
-
-            if self.data_available[id].load(Ordering::Acquire) {
-                trace!("[{}] Data found to be available in {} trials", id, trial);
-                return Ok(());
-            } else {
-                trace!("[{}] Data is not yet available, trial #{}", id, trial);
-            }
-
-            Timer::after(Duration::from_millis(100)).await;
         }
 
         Err(SocketError::ReadTimeout)
     }
 
-    async fn write(&self, id: usize, buf: &[u8]) -> Result<usize, SocketError> {
+    async fn write(&mut self, buf: &[u8]) -> Result<usize, SocketError> {
+        self.ensure_in_use()?;
+        self.wait_ongoing_write().await?;
+
         const MAX_WRITE: usize = 1024; // This is the value reported by AT+CIPSEND?
         let len = usize::min(buf.len(), MAX_WRITE);
 
-        let mut client = self.client.lock().await;
-        if let Err(error) = client.send(&SendData { id, len: Some(len) }).await {
+        let mut client = self.handle.client.lock().await;
+        if let Err(error) = client
+            .send(&SendData {
+                id: self.id,
+                len: Some(len),
+            })
+            .await
+        {
             return Err(match error {
                 Error::CmeError(e) if e == 3.into() => {
                     // Determine if there is data available
                     // CME ERROR 3 means invalid operation, and we cannot write when there is data available
-                    if self.data_available[id].load(Ordering::Acquire) {
+                    if self.handle.data_available[self.id].load(Ordering::Acquire) {
                         debug!("CME ERROR 3 during write because of pending data");
                         SocketError::MustReadBeforeWrite
                     } else {
@@ -248,52 +207,59 @@ impl<AtCl: AtatClient> Handle<AtCl> {
         // We have received prompt and are ready to write data
 
         // Clear the flushed flag
-        self.data_written[id].store(false, Ordering::Release);
+        self.handle.data_written[self.id].store(false, Ordering::Release);
 
         // Write the data buffer
         client.send(&WriteData { buf }).await?;
 
-        debug!("[{}] Wrote {} bytes", id, buf.len());
+        debug!("[{}] Wrote {} bytes", self.id, buf.len());
 
         Ok(len)
     }
 
-    async fn wait_data_written(&self, id: usize) -> Result<(), SocketError> {
-        const TRIALS: u32 = WriteData::MAX_TIMEOUT_MS / 100;
-        for trial in 1..=TRIALS {
-            {
-                let mut client = self.client.lock().await;
-                client.try_read_urc_with::<Urc, _>(|urc, _| self.handle_urc(&urc));
-            }
+    async fn wait_ongoing_write(&mut self) -> Result<(), SocketError> {
+        if self.handle.data_written[self.id].load(Ordering::Acquire) {
+            trace!("[{}] Data already written", self.id);
+            return Ok(());
+        }
+
+        let mut urc_subscription = self.urc_channel.subscribe().unwrap();
+
+        let timeout_instant =
+            Instant::now() + Duration::from_millis(WriteData::MAX_TIMEOUT_MS as u64);
+        while let Some(timeout) = timeout_instant.checked_duration_since(Instant::now()) {
+            // Wait for next urc
+            let urc = with_timeout(timeout, urc_subscription.next_message_pure())
+                .await
+                .map_err(|_| SocketError::WriteTimeout)?;
+            self.handle.handle_urc(&urc);
 
             // The socket may have closed while handling urc
-            self.ensure_in_use(id)?;
+            self.ensure_in_use()?;
 
-            if self.data_written[id].load(Ordering::Acquire) {
-                trace!("[{}] Data found to be written in {} trials", id, trial);
+            if self.handle.data_written[self.id].load(Ordering::Acquire) {
+                trace!("[{}] Data was written", self.id);
                 return Ok(());
             } else {
-                trace!("[{}] Data is not yet written, trial #{}", id, trial);
+                trace!("[{}] Data is not yet written", self.id);
             }
-
-            Timer::after(Duration::from_millis(100)).await;
         }
 
         Err(SocketError::WriteTimeout)
     }
 }
 
-impl<AtCl: AtatClient> Io for TcpSocket<'_, AtCl> {
+impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Io for TcpSocket<'_, AtCl, AtUrcCh> {
     type Error = SocketError;
 }
 
-impl<'a, AtCl: AtatClient> Read for TcpSocket<'a, AtCl> {
+impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Read for TcpSocket<'a, AtCl, AtUrcCh> {
     async fn read(&mut self, buf: &mut [u8]) -> Result<usize, SocketError> {
         self.read(buf).await
     }
 }
 
-impl<'a, AtCl: AtatClient + 'a> Write for TcpSocket<'a, AtCl> {
+impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Write for TcpSocket<'a, AtCl, AtUrcCh> {
     async fn write(&mut self, buf: &[u8]) -> Result<usize, SocketError> {
         self.write(buf).await
     }
@@ -306,7 +272,7 @@ impl<'a, AtCl: AtatClient + 'a> Write for TcpSocket<'a, AtCl> {
     }
 }
 
-impl<AtCl: AtatClient> Drop for TcpSocket<'_, AtCl> {
+impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Drop for TcpSocket<'_, AtCl, AtUrcCh> {
     fn drop(&mut self) {
         // Only set DROPPED state if the connection is not already closed
         if self.handle.socket_state[self.id]

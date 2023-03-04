@@ -2,10 +2,11 @@ mod apn;
 mod dns;
 mod tcp;
 
-use atat::asynch::AtatClient;
+use atat::{asynch::AtatClient, AtatUrcChannel};
 use core::{str::from_utf8, sync::atomic::Ordering};
 use embedded_io::ErrorKind;
 use embedded_nal_async::Ipv4Addr;
+use futures_intrusive::sync::LocalMutex;
 
 use crate::{
     commands::{
@@ -15,6 +16,7 @@ use crate::{
             GetConnectionStatus, GetLocalIP, MultiIpValue, SetManualRxGetMode,
             StartMultiIpConnection, StartTaskAndSetApn,
         },
+        urc::Urc,
     },
     device::{Handle, SOCKET_STATE_DROPPED, SOCKET_STATE_UNUSED, SOCKET_STATE_USED},
     ContextId, Device, DriverError,
@@ -53,19 +55,24 @@ impl From<atat::Error> for SocketError {
     }
 }
 
-pub struct DataService<'a, AtCl: AtatClient> {
+pub struct DataService<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
     handle: &'a Handle<AtCl>,
+    urc_channel: &'a AtUrcCh,
+    dns_lock: LocalMutex<()>,
     pub local_ip: Option<Ipv4Addr>,
 }
 
-impl<'a, AtCl: AtatClient> Device<AtCl> {
-    pub async fn data(&'a self, apn: Apn<'_>) -> Result<DataService<'a, AtCl>, DriverError> {
+impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<AtCl, AtUrcCh> {
+    pub async fn data(
+        &'a self,
+        apn: Apn<'_>,
+    ) -> Result<DataService<'a, AtCl, AtUrcCh>, DriverError> {
         if self
             .data_service_taken
             .compare_exchange(false, true, Ordering::AcqRel, Ordering::Relaxed)
             .is_ok()
         {
-            let mut service = DataService::new(&self.handle);
+            let mut service = DataService::new(&self.handle, &self.urc_channel);
 
             service.setup(apn).await?;
 
@@ -76,10 +83,12 @@ impl<'a, AtCl: AtatClient> Device<AtCl> {
     }
 }
 
-impl<'a, AtCl: AtatClient> DataService<'a, AtCl> {
-    fn new(handle: &'a Handle<AtCl>) -> Self {
+impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> DataService<'a, AtCl, AtUrcCh> {
+    fn new(handle: &'a Handle<AtCl>, urc_channel: &'a AtUrcCh) -> Self {
         Self {
             handle,
+            urc_channel,
+            dns_lock: LocalMutex::new((), true),
             local_ip: None,
         }
     }
@@ -144,7 +153,7 @@ impl<'a, AtCl: AtatClient> DataService<'a, AtCl> {
                 // as a "<id>, CLOSE OK" URC is sent when the connection is closed.
                 match client.send(&CloseConnection { id }).await {
                     Ok(_) => {}
-                    Err(atat::Error::CmeError(e)) if e == e.into() => {
+                    Err(atat::Error::CmeError(e)) if e == 3.into() => {
                         // CME Error seems to be returned if the connection is already closed
                         // Verify that it is actually the case
                         if let Ok(status) = client.send(&GetConnectionStatus { id }).await {

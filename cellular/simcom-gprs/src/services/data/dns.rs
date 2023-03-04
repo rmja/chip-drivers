@@ -1,12 +1,12 @@
-use atat::asynch::AtatClient;
-use embassy_time::{Duration, Timer};
+use atat::{asynch::AtatClient, AtatUrcChannel};
+use embassy_time::{with_timeout, Duration, Instant};
 use embedded_nal_async::{AddrType, Dns};
 
 use crate::commands::{tcpip::ResolveHostIp, urc::Urc};
 
 use super::{DataService, SocketError};
 
-impl<'a, AtCl: AtatClient> Dns for DataService<'a, AtCl> {
+impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Dns for DataService<'a, AtCl, AtUrcCh> {
     type Error = SocketError;
 
     async fn get_host_by_name(
@@ -19,35 +19,33 @@ impl<'a, AtCl: AtatClient> Dns for DataService<'a, AtCl> {
         }
         assert!(addr_type == AddrType::IPv4 || addr_type == AddrType::Either);
 
-        {
+        // For now we can only have one lookup going at a time,
+        // as having more would require that we have multiple dns subscriptions
+        self.dns_lock.lock().await;
+        let mut subscription = {
             let mut client = self.handle.client.lock().await;
+            let subscription = self.urc_channel.subscribe().unwrap();
 
             // Start resolving the host ip
             client.send(&ResolveHostIp { host }).await?;
-        }
+
+            subscription
+        };
 
         // Wait for the URC reporting the resolved ip
-        let mut ip = None;
-        for _ in 0..50 {
-            {
-                let mut client = self.handle.client.lock().await;
-                client.try_read_urc_with::<Urc, _>(|urc, _| match urc {
-                    Urc::IpLookup(urc) if urc.host == host => {
-                        ip = Some(urc.ip.parse().unwrap());
-                        true
-                    }
-                    _ => false,
-                });
-            }
+        let timeout_instant = Instant::now() + Duration::from_secs(10);
+        while let Some(remaining) = timeout_instant.checked_duration_since(Instant::now()) {
+            let urc = with_timeout(remaining, subscription.next_message_pure())
+                .await
+                .map_err(|_| SocketError::DnsTimeout)?;
+            self.handle.handle_urc(&urc);
 
-            if ip.is_some() {
-                break;
+            if let Urc::IpLookup(result) = urc && result.host == host {
+                return Ok(result.ip.parse().unwrap());
             }
-
-            Timer::after(Duration::from_millis(200)).await;
         }
 
-        ip.ok_or(SocketError::DnsTimeout)
+        Err(SocketError::DnsTimeout)
     }
 
     async fn get_host_by_address(

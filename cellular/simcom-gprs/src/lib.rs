@@ -9,6 +9,7 @@
 #![feature(const_mut_refs)]
 #![feature(let_chains)]
 #![feature(exclusive_range_pattern)]
+#![feature(assert_matches)]
 
 // This mod MUST go first, so that the others see its macros.
 #[macro_use]
@@ -30,8 +31,27 @@ pub struct ProfileId(pub u8);
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ContextId(pub u8);
 
+pub type SimcomAtatBuffers<const INGRESS_BUF_SIZE: usize, const RES_CAPACITY: usize> =
+    atat::Buffers<Urc, INGRESS_BUF_SIZE, RES_CAPACITY, URC_CAPACITY, URC_SUBSCRIBERS>;
+
+pub type SimcomAtatIngress<'a, const INGRESS_BUF_SIZE: usize, const RES_CAPACITY: usize> =
+    atat::Ingress<
+        'a,
+        SimcomDigester,
+        Urc,
+        INGRESS_BUF_SIZE,
+        RES_CAPACITY,
+        URC_CAPACITY,
+        URC_SUBSCRIBERS,
+    >;
+
+pub type SimcomAtatUrcChannel<'a, const INGRESS_BUF_SIZE: usize> =
+    atat::UrcChannel<'a, Urc, INGRESS_BUF_SIZE, URC_CAPACITY, URC_SUBSCRIBERS>;
+
 use atat::atat_derive::AtatLen;
+use commands::urc::Urc;
 pub use device::Device;
+use device::{URC_CAPACITY, URC_SUBSCRIBERS};
 pub use digester::SimcomDigester;
 pub use error::DriverError;
 use serde::{Deserialize, Serialize};
