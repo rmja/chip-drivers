@@ -19,86 +19,20 @@ pub(crate) const SOCKET_STATE_UNUSED: u8 = 1;
 pub(crate) const SOCKET_STATE_USED: u8 = 2;
 pub(crate) const SOCKET_STATE_DROPPED: u8 = 3;
 
-pub struct Handle<'a, AtCl: AtatClient> {
-    pub(crate) client: LocalMutex<AtCl>,
-    pub(crate) socket_state: Vec<SocketState, MAX_SOCKETS>,
-    pub(crate) data_written: [AtomicBool; MAX_SOCKETS],
-    pub(crate) data_available: [AtomicBool; MAX_SOCKETS],
-    background_subscription: LocalMutex<UrcSubscription<'a, Urc>>,
-}
-
-impl<AtCl: AtatClient> Handle<'_, AtCl> {
-    pub(crate) fn take_unused(&self) -> Result<usize, SocketError> {
-        for id in 0..self.socket_state.len() {
-            if self.try_take(id) {
-                return Ok(id);
-            }
-        }
-        Err(SocketError::NoAvailableSockets)
-    }
-
-    fn try_take(&self, id: usize) -> bool {
-        if self.socket_state[id]
-            .compare_exchange(
-                SOCKET_STATE_UNUSED,
-                SOCKET_STATE_USED,
-                Ordering::AcqRel,
-                Ordering::Relaxed,
-            )
-            .is_ok()
-        {
-            self.data_written[id].store(true, Ordering::Relaxed);
-            self.data_available[id].store(false, Ordering::Relaxed);
-            true
-        } else {
-            false
-        }
-    }
-
-    pub(crate) fn drain_background_urcs(&self) {
-        if let Some(mut subscription) = self.background_subscription.try_lock() {
-            while let Some(urc) = subscription.try_next_message_pure() {
-                self.handle_urc(urc);
-            }
-        }
-    }
-
-    fn handle_urc(&self, urc: Urc) {
-        match urc {
-            Urc::ConnectOk(_id) => {}
-            Urc::ConnectFail(_id) => {}
-            Urc::AlreadyConnect(id) => {
-                error!("[{}] Already connected", id);
-            }
-            Urc::SendOk(id) => {
-                debug!("[{}] Data was written", id);
-                self.data_written[id].store(true, Ordering::Release);
-            }
-            Urc::Closed(id) => {
-                warn!("[{}] Socket closed", id);
-                self.socket_state[id].store(SOCKET_STATE_UNUSED, Ordering::Release);
-            }
-            Urc::IpLookup(result) => {
-                debug!("Resolved IP for host {}", result.host);
-            }
-            Urc::DataAvailable(id) => {
-                debug!("[{}] Data available to be read", id);
-                self.data_available[id].store(true, Ordering::Release);
-            }
-            Urc::ReadData(result) => {
-                debug!("[{}] Data read", result.id);
-                self.data_available[result.id].store(result.pending_len > 0, Ordering::Release);
-            }
-        }
-    }
-}
-
 pub struct Device<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
     pub handle: Handle<'a, AtCl>,
     pub(crate) urc_channel: &'a AtUrcCh,
     pub(crate) part_number: Option<PartNumber>,
     pub network: Network,
     pub(crate) data_service_taken: AtomicBool,
+}
+
+pub struct Handle<'a, AtCl: AtatClient> {
+    pub(crate) client: LocalMutex<AtCl>,
+    pub(crate) socket_state: Vec<SocketState, MAX_SOCKETS>,
+    pub(crate) data_written: [AtomicBool; MAX_SOCKETS],
+    pub(crate) data_available: [AtomicBool; MAX_SOCKETS],
+    background_subscription: LocalMutex<UrcSubscription<'a, Urc>>,
 }
 
 impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'a, AtCl, AtUrcCh> {
@@ -121,9 +55,7 @@ impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'a, AtCl, AtUrcC
             data_service_taken: AtomicBool::new(false),
         }
     }
-}
 
-impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'_, AtCl, AtUrcCh> {
     /// Setup the fundamentals for communicating with the modem
     pub async fn setup(&mut self) -> Result<(), DriverError> {
         self.is_alive(20).await?;
@@ -196,5 +128,71 @@ impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'_, AtCl, AtUrcCh> {
             };
         }
         Err(error)
+    }
+}
+
+impl<AtCl: AtatClient> Handle<'_, AtCl> {
+    pub(crate) fn take_unused(&self) -> Result<usize, SocketError> {
+        for id in 0..self.socket_state.len() {
+            if self.try_take(id) {
+                return Ok(id);
+            }
+        }
+        Err(SocketError::NoAvailableSockets)
+    }
+
+    fn try_take(&self, id: usize) -> bool {
+        if self.socket_state[id]
+            .compare_exchange(
+                SOCKET_STATE_UNUSED,
+                SOCKET_STATE_USED,
+                Ordering::AcqRel,
+                Ordering::Relaxed,
+            )
+            .is_ok()
+        {
+            self.data_written[id].store(true, Ordering::Relaxed);
+            self.data_available[id].store(false, Ordering::Relaxed);
+            true
+        } else {
+            false
+        }
+    }
+
+    pub(crate) fn drain_background_urcs(&self) {
+        if let Some(mut subscription) = self.background_subscription.try_lock() {
+            while let Some(urc) = subscription.try_next_message_pure() {
+                self.handle_urc(urc);
+            }
+        }
+    }
+
+    fn handle_urc(&self, urc: Urc) {
+        match urc {
+            Urc::ConnectOk(_id) => {}
+            Urc::ConnectFail(_id) => {}
+            Urc::AlreadyConnect(id) => {
+                error!("[{}] Already connected", id);
+            }
+            Urc::SendOk(id) => {
+                debug!("[{}] Data was written", id);
+                self.data_written[id].store(true, Ordering::Release);
+            }
+            Urc::Closed(id) => {
+                warn!("[{}] Socket closed", id);
+                self.socket_state[id].store(SOCKET_STATE_UNUSED, Ordering::Release);
+            }
+            Urc::IpLookup(result) => {
+                debug!("Resolved IP for host {}", result.host);
+            }
+            Urc::DataAvailable(id) => {
+                debug!("[{}] Data available to be read", id);
+                self.data_available[id].store(true, Ordering::Release);
+            }
+            Urc::ReadData(result) => {
+                debug!("[{}] Data read", result.id);
+                self.data_available[result.id].store(result.pending_len > 0, Ordering::Release);
+            }
+        }
     }
 }
