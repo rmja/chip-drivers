@@ -10,8 +10,8 @@ use crate::{
     DriverError, PartNumber, MAX_SOCKETS,
 };
 
-pub(crate) const URC_CAPACITY: usize = 1 + 2 * MAX_SOCKETS; // A SEND OK and RXGET per socket
-pub(crate) const URC_SUBSCRIBERS: usize = 1 + MAX_SOCKETS; // One for dns + one for each socket
+pub(crate) const URC_CAPACITY: usize = 1 + 2 * (1 + MAX_SOCKETS); // A dns reply, and SEND OK and RXGET per socket + handle background
+pub(crate) const URC_SUBSCRIBERS: usize = 2 + MAX_SOCKETS; // One for dns, one for handle background, and one for each socket
 
 pub(crate) type SocketState = AtomicU8;
 pub(crate) const SOCKET_STATE_UNKNOWN: u8 = 0;
@@ -59,18 +59,21 @@ impl<AtCl: AtatClient> Handle<AtCl> {
             Urc::ConnectOk(_id) => {}
             Urc::ConnectFail(_id) => {}
             Urc::AlreadyConnect(id) => {
-                error!("[{}] Already connected", *id);
+                error!("[{}] Already connected", id);
             }
-            Urc::SendOk(id) => self.data_written[*id].store(true, Ordering::Release),
+            Urc::SendOk(id) => {
+                debug!("[{}] Data was written", id);
+                self.data_written[*id].store(true, Ordering::Release);
+            }
             Urc::Closed(id) => {
-                warn!("[{}] Socket closed", *id);
+                warn!("[{}] Socket closed", id);
                 self.socket_state[*id].store(SOCKET_STATE_UNUSED, Ordering::Release);
             }
             Urc::IpLookup(result) => {
                 debug!("Resolved IP for host {}", result.host);
             }
             Urc::DataAvailable(id) => {
-                debug!("[{}] Data available to be read", *id);
+                debug!("[{}] Data available to be read", id);
                 self.data_available[*id].store(true, Ordering::Release);
             }
             Urc::ReadData(result) => {
@@ -83,7 +86,8 @@ impl<AtCl: AtatClient> Handle<AtCl> {
 
 pub struct Device<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
     pub handle: Handle<AtCl>,
-    pub(crate) urc_channel: &'a mut AtUrcCh,
+    background_subscription: LocalMutex<UrcSubscription<'a, Urc>>,
+    pub(crate) urc_channel: &'a AtUrcCh,
     pub(crate) part_number: Option<PartNumber>,
     pub network: Network,
     pub(crate) data_service_taken: AtomicBool,
@@ -91,7 +95,7 @@ pub struct Device<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
 
 impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'a, AtCl, AtUrcCh> {
     /// Create a new device given an AT client
-    pub fn new(client: AtCl, urc_channel: &'a mut AtUrcCh) -> Self {
+    pub fn new(client: AtCl, urc_channel: &'a AtUrcCh) -> Self {
         let network = Network::new();
         // The actual state values, except for socket_state, are cleared
         // when a socket goes from [`SOCKET_STATE_UNUSED`] to [`SOCKET_STATE_USED`].
