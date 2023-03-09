@@ -1,13 +1,18 @@
 use core::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 
-use atat::{asynch::AtatClient, AtatUrcChannel, UrcSubscription};
+use atat::{
+    asynch::{AtatClient, Client},
+    AtatUrcChannel, Config, UrcSubscription,
+};
+use embedded_io::asynch::Write;
 use futures_intrusive::sync::LocalMutex;
 use heapless::Vec;
 
 use crate::{
     commands::{gsm, urc::Urc, v25ter, AT},
-    services::{data::SocketError, network::Network},
-    DriverError, PartNumber, MAX_SOCKETS,
+    services::data::SocketError,
+    DriverError, PartNumber, SimcomAtatBuffers, SimcomAtatIngress, SimcomAtatUrcChannel,
+    SimcomDigester, MAX_SOCKETS,
 };
 
 pub(crate) const URC_CAPACITY: usize = 1 + 2 * (1 + MAX_SOCKETS); // A dns reply, and SEND OK and RXGET per socket + handle background
@@ -23,7 +28,6 @@ pub struct Device<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
     pub handle: Handle<'a, AtCl>,
     pub(crate) urc_channel: &'a AtUrcCh,
     pub(crate) part_number: Option<PartNumber>,
-    pub network: Network,
     pub(crate) data_service_taken: AtomicBool,
 }
 
@@ -35,10 +39,33 @@ pub struct Handle<'a, AtCl: AtatClient> {
     background_subscription: LocalMutex<UrcSubscription<'a, Urc>>,
 }
 
+impl<'a, W: Write, const INGRESS_BUF_SIZE: usize, const RES_CAPACITY: usize>
+    Device<
+        'a,
+        Client<'a, W, INGRESS_BUF_SIZE, RES_CAPACITY>,
+        SimcomAtatUrcChannel<INGRESS_BUF_SIZE>,
+    >
+{
+    pub fn from_buffers(
+        buffers: &'a SimcomAtatBuffers<INGRESS_BUF_SIZE, RES_CAPACITY>,
+        tx: W,
+    ) -> (
+        SimcomAtatIngress<INGRESS_BUF_SIZE, RES_CAPACITY>,
+        Device<
+            'a,
+            Client<'a, W, INGRESS_BUF_SIZE, RES_CAPACITY>,
+            SimcomAtatUrcChannel<INGRESS_BUF_SIZE>,
+        >,
+    ) {
+        let (ingress, client) = buffers.split(tx, SimcomDigester::new(), Config::new());
+
+        (ingress, Device::new(client, &buffers.urc_channel))
+    }
+}
+
 impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'a, AtCl, AtUrcCh> {
     /// Create a new device given an AT client
     pub fn new(client: AtCl, urc_channel: &'a AtUrcCh) -> Self {
-        let network = Network::new();
         // The actual state values, except for socket_state, are cleared
         // when a socket goes from [`SOCKET_STATE_UNUSED`] to [`SOCKET_STATE_USED`].
         Self {
@@ -51,7 +78,6 @@ impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'a, AtCl, AtUrcC
             },
             urc_channel,
             part_number: None,
-            network,
             data_service_taken: AtomicBool::new(false),
         }
     }

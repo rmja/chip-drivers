@@ -1,4 +1,4 @@
-use atat::asynch::AtatClient;
+use atat::{asynch::AtatClient, AtatUrcChannel};
 use embassy_time::{Duration, Timer};
 
 use crate::{
@@ -12,8 +12,10 @@ use crate::{
             PinStatusCode,
         },
         simcom::{CallReady, GetCallReady},
+        urc::Urc,
     },
     device::Handle,
+    Device,
 };
 
 #[derive(Debug)]
@@ -34,26 +36,26 @@ impl From<atat::Error> for NetworkError {
     }
 }
 
-pub struct Network {
+pub struct Network<'a, AtCl: AtatClient> {
+    handle: &'a Handle<'a, AtCl>,
     gsm_status: NetworkRegistrationStat,
     gprs_status: GPRSNetworkRegistrationStat,
 }
 
-impl Network {
-    pub(crate) fn new() -> Self {
-        Self {
+impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'a, AtCl, AtUrcCh> {
+    pub async fn network(&'a self) -> Network<'a, AtCl> {
+        Network {
+            handle: &self.handle,
             gsm_status: NetworkRegistrationStat::NotRegistered,
             gprs_status: GPRSNetworkRegistrationStat::NotRegistered,
         }
     }
+}
 
+impl<'a, AtCl: AtatClient> Network<'a, AtCl> {
     /// Attach the modem to the network
-    pub async fn attach<AtCl: AtatClient>(
-        &mut self,
-        handle: &Handle<'_, AtCl>,
-        pin: Option<&str>,
-    ) -> Result<(), NetworkError> {
-        let mut client = handle.client.lock().await;
+    pub async fn attach(&mut self, pin: Option<&str>) -> Result<(), NetworkError> {
+        let mut client = self.handle.client.lock().await;
 
         async {
             for _ in 0..20 {
@@ -127,11 +129,8 @@ impl Network {
     }
 
     /// Get the current signal quality from modem
-    pub async fn get_signal_quality<AtCl: AtatClient>(
-        &mut self,
-        handle: &Handle<'_, AtCl>,
-    ) -> Result<i8, NetworkError> {
-        let mut client = handle.client.lock().await;
+    pub async fn get_signal_quality(&mut self) -> Result<i8, NetworkError> {
+        let mut client = self.handle.client.lock().await;
         client
             .send(&gsm::GetSignalQuality)
             .await?
@@ -155,10 +154,7 @@ impl Network {
         .contains(&self.gprs_status)
     }
 
-    async fn update_registration<AtCl: AtatClient>(
-        &mut self,
-        client: &mut AtCl,
-    ) -> Result<(), NetworkError> {
+    async fn update_registration(&mut self, client: &mut AtCl) -> Result<(), NetworkError> {
         let response = client.send(&GetNetworkRegistrationStatus).await?;
         self.gsm_status = response.stat;
 

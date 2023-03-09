@@ -45,8 +45,8 @@ pub type SimcomAtatIngress<'a, const INGRESS_BUF_SIZE: usize, const RES_CAPACITY
         URC_SUBSCRIBERS,
     >;
 
-pub type SimcomAtatUrcChannel<'a, const INGRESS_BUF_SIZE: usize> =
-    atat::UrcChannel<'a, Urc, INGRESS_BUF_SIZE, URC_CAPACITY, URC_SUBSCRIBERS>;
+pub type SimcomAtatUrcChannel<const INGRESS_BUF_SIZE: usize> =
+    atat::UrcChannel<Urc, INGRESS_BUF_SIZE, URC_CAPACITY, URC_SUBSCRIBERS>;
 
 use atat::atat_derive::AtatLen;
 use commands::urc::Urc;
