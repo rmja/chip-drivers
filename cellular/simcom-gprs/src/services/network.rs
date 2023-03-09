@@ -43,7 +43,7 @@ pub struct Network<'a, AtCl: AtatClient> {
 }
 
 impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'a, AtCl, AtUrcCh> {
-    pub async fn network(&'a self) -> Network<'a, AtCl> {
+    pub fn network(&'a self) -> Network<'a, AtCl> {
         Network {
             handle: &self.handle,
             gsm_status: NetworkRegistrationStat::NotRegistered,
