@@ -25,12 +25,14 @@ impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpConnect
 {
     type Error = SocketError;
 
-    type Connection<'m> = TcpSocket<'m, AtCl, AtUrcCh> where Self : 'm;
+    type Connection<'m> = TcpSocket<'m, 'a, AtCl, AtUrcCh> where Self : 'm;
 
     async fn connect<'m>(&'m self, remote: SocketAddr) -> Result<Self::Connection<'m>, Self::Error>
     where
         Self: 'm,
     {
+        self.handle.drain_background_urcs();
+
         // Close any sockets that have been dropped
         self.close_dropped_sockets().await;
 
@@ -48,16 +50,16 @@ impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpConnect
     }
 }
 
-pub struct TcpSocket<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
+pub struct TcpSocket<'a, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
     id: usize,
-    handle: &'a Handle<AtCl>,
+    handle: &'a Handle<'sub, AtCl>,
     urc_channel: &'a AtUrcCh,
     max_urc_len: usize,
 }
 
-impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpSocket<'a, AtCl, AtUrcCh> {
+impl<'a, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpSocket<'a, 'sub, AtCl, AtUrcCh> {
     pub(crate) fn try_new(
-        handle: &'a Handle<AtCl>,
+        handle: &'a Handle<'sub, AtCl>,
         urc_channel: &'a AtUrcCh,
     ) -> Result<Self, SocketError> {
         let id = handle.take_unused()?;
@@ -70,6 +72,8 @@ impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpSocket<'a, AtCl, AtU
     }
 
     async fn connect(&mut self, ip: &str, port: &str) -> Result<(), SocketError> {
+        self.handle.drain_background_urcs();
+
         let mut urc_subscription = self.urc_channel.subscribe().unwrap();
 
         {
@@ -92,6 +96,7 @@ impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpSocket<'a, AtCl, AtU
             let urc = with_timeout(timeout, urc_subscription.next_message_pure())
                 .await
                 .map_err(|_| SocketError::ConnectTimeout)?;
+            self.handle.drain_background_urcs();
 
             match urc {
                 Urc::ConnectOk(id) if id == self.id => return Ok(()),
@@ -112,6 +117,7 @@ impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpSocket<'a, AtCl, AtU
     }
 
     async fn read(&mut self, buf: &mut [u8]) -> Result<usize, SocketError> {
+        self.handle.drain_background_urcs();
         self.ensure_in_use()?;
         if buf.is_empty() {
             return Ok(0);
@@ -145,7 +151,7 @@ impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpSocket<'a, AtCl, AtU
             let urc = with_timeout(timeout, urc_subscription.next_message_pure())
                 .await
                 .map_err(|_| SocketError::ReadTimeout)?;
-            self.handle.handle_urc(&urc);
+            self.handle.drain_background_urcs();
 
             // The socket may have closed while handling urc
             self.ensure_in_use()?;
@@ -173,6 +179,7 @@ impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpSocket<'a, AtCl, AtU
     }
 
     async fn write(&mut self, buf: &[u8]) -> Result<usize, SocketError> {
+        self.handle.drain_background_urcs();
         self.ensure_in_use()?;
         self.wait_ongoing_write().await?;
 
@@ -216,6 +223,8 @@ impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpSocket<'a, AtCl, AtU
     }
 
     async fn wait_ongoing_write(&mut self) -> Result<(), SocketError> {
+        self.handle.drain_background_urcs();
+
         if self.handle.data_written[self.id].load(Ordering::Acquire) {
             trace!("[{}] Data already written", self.id);
             return Ok(());
@@ -227,10 +236,10 @@ impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpSocket<'a, AtCl, AtU
             Instant::now() + Duration::from_millis(WriteData::MAX_TIMEOUT_MS as u64);
         while let Some(timeout) = timeout_instant.checked_duration_since(Instant::now()) {
             // Wait for next urc
-            let urc = with_timeout(timeout, urc_subscription.next_message_pure())
+            with_timeout(timeout, urc_subscription.next_message_pure())
                 .await
                 .map_err(|_| SocketError::WriteTimeout)?;
-            self.handle.handle_urc(&urc);
+            self.handle.drain_background_urcs();
 
             // The socket may have closed while handling urc
             self.ensure_in_use()?;
@@ -247,17 +256,17 @@ impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpSocket<'a, AtCl, AtU
     }
 }
 
-impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Io for TcpSocket<'_, AtCl, AtUrcCh> {
+impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Io for TcpSocket<'_, '_, AtCl, AtUrcCh> {
     type Error = SocketError;
 }
 
-impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Read for TcpSocket<'a, AtCl, AtUrcCh> {
+impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Read for TcpSocket<'_, '_, AtCl, AtUrcCh> {
     async fn read(&mut self, buf: &mut [u8]) -> Result<usize, SocketError> {
         self.read(buf).await
     }
 }
 
-impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Write for TcpSocket<'a, AtCl, AtUrcCh> {
+impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Write for TcpSocket<'_, '_, AtCl, AtUrcCh> {
     async fn write(&mut self, buf: &[u8]) -> Result<usize, SocketError> {
         self.write(buf).await
     }
@@ -270,7 +279,7 @@ impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Write for TcpSocket<'a,
     }
 }
 
-impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Drop for TcpSocket<'_, AtCl, AtUrcCh> {
+impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Drop for TcpSocket<'_, '_, AtCl, AtUrcCh> {
     fn drop(&mut self) {
         // Only set DROPPED state if the connection is not already closed
         if self.handle.socket_state[self.id]

@@ -56,7 +56,7 @@ impl From<atat::Error> for SocketError {
 }
 
 pub struct DataService<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
-    handle: &'a Handle<AtCl>,
+    handle: &'a Handle<'a, AtCl>,
     urc_channel: &'a AtUrcCh,
     dns_lock: LocalMutex<()>,
     pub local_ip: Option<Ipv4Addr>,
@@ -84,7 +84,7 @@ impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'a, AtCl, AtUrcC
 }
 
 impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> DataService<'a, AtCl, AtUrcCh> {
-    fn new(handle: &'a Handle<AtCl>, urc_channel: &'a AtUrcCh) -> Self {
+    fn new(handle: &'a Handle<'a, AtCl>, urc_channel: &'a AtUrcCh) -> Self {
         Self {
             handle,
             urc_channel,

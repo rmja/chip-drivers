@@ -50,7 +50,7 @@ impl Network {
     /// Attach the modem to the network
     pub async fn attach<AtCl: AtatClient>(
         &mut self,
-        handle: &Handle<AtCl>,
+        handle: &Handle<'_, AtCl>,
         pin: Option<&str>,
     ) -> Result<(), NetworkError> {
         let mut client = handle.client.lock().await;
@@ -129,7 +129,7 @@ impl Network {
     /// Get the current signal quality from modem
     pub async fn get_signal_quality<AtCl: AtatClient>(
         &mut self,
-        handle: &Handle<AtCl>,
+        handle: &Handle<'_, AtCl>,
     ) -> Result<i8, NetworkError> {
         let mut client = handle.client.lock().await;
         client

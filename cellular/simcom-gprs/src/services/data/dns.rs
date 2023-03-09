@@ -19,6 +19,8 @@ impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Dns for DataService<'a,
         }
         assert!(addr_type == AddrType::IPv4 || addr_type == AddrType::Either);
 
+        self.handle.drain_background_urcs();
+
         // For now we can only have one lookup going at a time,
         // as having more would require that we have multiple dns subscriptions
         self.dns_lock.lock().await;
@@ -38,7 +40,7 @@ impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Dns for DataService<'a,
             let urc = with_timeout(remaining, subscription.next_message_pure())
                 .await
                 .map_err(|_| SocketError::DnsTimeout)?;
-            self.handle.handle_urc(&urc);
+            self.handle.drain_background_urcs();
 
             if let Urc::IpLookup(result) = urc && result.host == host {
                 return Ok(result.ip.parse().unwrap());
