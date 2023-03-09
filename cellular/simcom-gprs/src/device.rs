@@ -86,7 +86,6 @@ impl<AtCl: AtatClient> Handle<AtCl> {
 
 pub struct Device<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
     pub handle: Handle<AtCl>,
-    background_subscription: LocalMutex<UrcSubscription<'a, Urc>>,
     pub(crate) urc_channel: &'a AtUrcCh,
     pub(crate) part_number: Option<PartNumber>,
     pub network: Network,
