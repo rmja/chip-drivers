@@ -5,7 +5,7 @@ use mockall::mock;
 pub struct SpiError;
 impl spi::Error for SpiError {
     fn kind(&self) -> spi::ErrorKind {
-        todo!()
+        spi::ErrorKind::Other
     }
 }
 

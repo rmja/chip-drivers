@@ -52,6 +52,6 @@ impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Dns for DataService<'a,
         &self,
         _addr: embedded_nal_async::IpAddr,
     ) -> Result<heapless::String<256>, Self::Error> {
-        todo!()
+        unimplemented!()
     }
 }

@@ -16,11 +16,8 @@ pub struct NoResponse;
 
 #[cfg(test)]
 mod tests {
-    use core::convert::Infallible;
-
     use assert_hex::assert_eq_hex;
     use atat::{AtatCmd, DigestResult, Digester};
-    use embedded_io::{asynch::Write, Io};
 
     use crate::SimcomDigester;
 
@@ -36,26 +33,5 @@ mod tests {
             (DigestResult::Response(Ok(&[])), 9),
             digester.digest(b"AT\r\r\nOK\r\n")
         );
-    }
-
-    pub struct TestWriter<'a> {
-        written: &'a mut Vec<u8>,
-    }
-
-    impl<'a> TestWriter<'a> {
-        pub const fn new(written: &'a mut Vec<u8>) -> Self {
-            Self { written }
-        }
-    }
-
-    impl Io for TestWriter<'_> {
-        type Error = Infallible;
-    }
-
-    impl Write for TestWriter<'_> {
-        async fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
-            self.written.extend_from_slice(buf);
-            Ok(buf.len())
-        }
     }
 }

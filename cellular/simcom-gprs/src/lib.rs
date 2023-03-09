@@ -23,7 +23,7 @@ pub mod services;
 
 extern crate alloc;
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, /* Hash32, */ Serialize, Deserialize, AtatLen)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize, AtatLen)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ProfileId(pub u8);
 

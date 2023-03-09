@@ -20,8 +20,6 @@ use crate::{
 
 use super::{DataService, SocketError, SOCKET_STATE_DROPPED, SOCKET_STATE_USED};
 
-// There is an example implementation of TcpConnect here: https://github.com/drogue-iot/esp8266-at-driver/blob/c49a6b469da6991b680a166e7c5e236d5fb4c560/src/lib.rs
-
 impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpConnect
     for DataService<'a, AtCl, AtUrcCh>
 {

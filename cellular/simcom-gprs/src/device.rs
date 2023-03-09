@@ -1,15 +1,13 @@
 use core::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 
 use atat::{asynch::AtatClient, AtatUrcChannel};
-use embedded_io::asynch::Write;
 use futures_intrusive::sync::LocalMutex;
 use heapless::Vec;
 
 use crate::{
     commands::{gsm, urc::Urc, v25ter, AT},
     services::{data::SocketError, network::Network},
-    DriverError, PartNumber, SimcomAtatBuffers, SimcomAtatIngress, SimcomAtatUrcChannel,
-    SimcomDigester, MAX_SOCKETS,
+    DriverError, PartNumber, MAX_SOCKETS,
 };
 
 pub(crate) const URC_CAPACITY: usize = 1 + 2 * MAX_SOCKETS; // A SEND OK and RXGET per socket
@@ -83,36 +81,17 @@ impl<AtCl: AtatClient> Handle<AtCl> {
     }
 }
 
-pub struct Device<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
+pub struct Device<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
     pub handle: Handle<AtCl>,
-    pub(crate) urc_channel: AtUrcCh,
+    pub(crate) urc_channel: &'a mut AtUrcCh,
     pub(crate) part_number: Option<PartNumber>,
     pub network: Network,
     pub(crate) data_service_taken: AtomicBool,
 }
 
-impl<'a, Tx: Write, const INGRESS_BUF_SIZE: usize, const RES_CAPACITY: usize>
-    Device<
-        atat::asynch::Client<'a, Tx, INGRESS_BUF_SIZE, RES_CAPACITY>,
-        SimcomAtatUrcChannel<'a, INGRESS_BUF_SIZE>,
-    >
-{
-    /// Create a new device with a default AT client
-    pub fn new(
-        tx: Tx,
-        buffers: &'a mut SimcomAtatBuffers<INGRESS_BUF_SIZE, RES_CAPACITY>,
-    ) -> (SimcomAtatIngress<'a, INGRESS_BUF_SIZE, RES_CAPACITY>, Self) {
-        let (ingress, client, urc_channel) =
-            buffers.split(tx, SimcomDigester::new(), atat::Config::default());
-
-        let device = Self::with_atat(client, urc_channel);
-        (ingress, device)
-    }
-}
-
-impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<AtCl, AtUrcCh> {
+impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'a, AtCl, AtUrcCh> {
     /// Create a new device given an AT client
-    pub fn with_atat(client: AtCl, urc_channel: AtUrcCh) -> Self {
+    pub fn new(client: AtCl, urc_channel: &'a mut AtUrcCh) -> Self {
         let network = Network::new();
         // The actual state values, except for socket_state, are cleared
         // when a socket goes from [`SOCKET_STATE_UNUSED`] to [`SOCKET_STATE_USED`].
@@ -129,7 +108,9 @@ impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<AtCl, AtUrcCh> {
             data_service_taken: AtomicBool::new(false),
         }
     }
+}
 
+impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'_, AtCl, AtUrcCh> {
     /// Setup the fundamentals for communicating with the modem
     pub async fn setup(&mut self) -> Result<(), DriverError> {
         self.is_alive(20).await?;

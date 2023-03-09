@@ -45,8 +45,7 @@ pub struct GetPinStatus;
 #[derive(Clone, AtatCmd)]
 #[at_cmd("+CPIN", NoResponse, timeout_ms = 5_000, termination = "\r")]
 pub struct EnterPin<'a> {
-    // TODO: See https://github.com/BlackbirdHQ/atat/issues/136
-    #[at_arg(len = 6)]
+    #[at_arg(len = 4)]
     pub pin: &'a str,
 }
 

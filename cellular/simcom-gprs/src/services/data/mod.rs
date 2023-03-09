@@ -62,7 +62,7 @@ pub struct DataService<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
     pub local_ip: Option<Ipv4Addr>,
 }
 
-impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<AtCl, AtUrcCh> {
+impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'a, AtCl, AtUrcCh> {
     pub async fn data(
         &'a self,
         apn: Apn<'_>,
@@ -72,7 +72,7 @@ impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<AtCl, AtUrcCh> {
             .compare_exchange(false, true, Ordering::AcqRel, Ordering::Relaxed)
             .is_ok()
         {
-            let mut service = DataService::new(&self.handle, &self.urc_channel);
+            let mut service = DataService::new(&self.handle, self.urc_channel);
 
             service.setup(apn).await?;
 
