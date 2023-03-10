@@ -9,7 +9,7 @@ packet-ctrl = ["embassy-time"]
 
 [dependencies]
 bitfield = "0.14"
-embassy-time = { path = "../../../embassy/embassy-time", features = ["nightly", "unstable-traits"], optional = true }
+embassy-time = { version = "0.1", optional = true }
 embedded-hal = "1.0.0-alpha.9"
 embedded-hal-async = "0.2.0-alpha.0"
 futures = { version = "0.3", default-features = false }
