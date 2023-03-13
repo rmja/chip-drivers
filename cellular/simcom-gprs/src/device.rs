@@ -212,11 +212,14 @@ impl<AtCl: AtatClient> Handle<'_, AtCl> {
                 debug!("Resolved IP for host {}", result.host);
             }
             Urc::DataAvailable(id) => {
-                debug!("[{}] Data available to be read", id);
+                debug!("[{}] Data is available to be read", id);
                 self.data_available[id].store(true, Ordering::Release);
             }
             Urc::ReadData(result) => {
-                debug!("[{}] Data read", result.id);
+                debug!(
+                    "[{}] Received {} bytes, there are {} pending bytes available",
+                    result.id, result.data_len, result.pending_len
+                );
                 self.data_available[result.id].store(result.pending_len > 0, Ordering::Release);
             }
         }

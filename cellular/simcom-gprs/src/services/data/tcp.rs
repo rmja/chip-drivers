@@ -144,6 +144,7 @@ impl<'a, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpSocket<'a, 'su
 
             subscription
         };
+        let mut no_data_response_received = false;
 
         let timeout_instant = Instant::now() + Duration::from_secs(10);
         while let Some(timeout) = timeout_instant.checked_duration_since(Instant::now()) {
@@ -157,19 +158,27 @@ impl<'a, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpSocket<'a, 'su
             self.ensure_in_use()?;
 
             match urc {
-                Urc::ReadData(r) if r.id == self.id && r.data_len > 0 => {
-                    buf[..r.data_len].copy_from_slice(r.data.take().unwrap().as_slice());
-                    return Ok(r.data_len);
+                Urc::ReadData(r) if r.id == self.id => {
+                    if r.data_len > 0 {
+                        buf[..r.data_len].copy_from_slice(r.data.take().unwrap().as_slice());
+                        return Ok(r.data_len);
+                    }
+
+                    // There was no data - start waiting for the DataAvailable urc
+                    no_data_response_received = true;
                 }
                 Urc::DataAvailable(id) if id == self.id => {
                     // Re-request data now when we know that it is available
-                    let mut client = self.handle.client.lock().await;
-                    client
-                        .send(&ReadData {
-                            id: self.id,
-                            max_len,
-                        })
-                        .await?;
+                    // Only do so if we have not yet processed the ReadData urc
+                    if no_data_response_received {
+                        let mut client = self.handle.client.lock().await;
+                        client
+                            .send(&ReadData {
+                                id: self.id,
+                                max_len,
+                            })
+                            .await?;
+                    }
                 }
                 _ => {}
             }
