@@ -20,8 +20,10 @@ use crate::{
 
 use super::{DataService, SocketError, SOCKET_STATE_DROPPED, SOCKET_STATE_USED};
 
-impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpConnect
-    for DataService<'a, AtCl, AtUrcCh>
+impl<'a, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpConnect
+    for DataService<'a, 'sub, AtCl, AtUrcCh>
+where
+    'a: 'sub,
 {
     type Error = SocketError;
 

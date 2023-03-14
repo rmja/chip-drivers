@@ -133,7 +133,8 @@ mod tests {
         () => {{
             static mut BUFFERS: SimcomAtatBuffers<128, 512> = SimcomAtatBuffers::new();
             let buffers = unsafe { &mut BUFFERS };
-            Device::from_buffers(buffers, Vec::new())
+            let (ingress, device) = Device::from_buffers(buffers, Vec::new());
+            (ingress, device, &buffers.urc_channel)
         }};
     }
 
@@ -213,7 +214,7 @@ mod tests {
         let cmd = GetLocalIP;
         assert_eq_hex!(b"AT+CIFSR\rAT\r", cmd.as_bytes());
 
-        let (mut ingress, device) = setup_atat!();
+        let (mut ingress, device, _) = setup_atat!();
 
         ingress.write(b"\r\n10.0.109.44\r\n").await;
         ingress.write(b"\r\nOK\r\n").await;
@@ -228,7 +229,7 @@ mod tests {
         let cmd = GetConnectionStatus { id: 2 };
         assert_eq_hex!(b"AT+CIPSTATUS=2\r", cmd.as_bytes());
 
-        let (mut ingress, device) = setup_atat!();
+        let (mut ingress, device, _) = setup_atat!();
 
         ingress
             .write(b"\r\n+CIPSTATUS: 2,,\"\",\"\",\"\",\"INITIAL\"\r\n\r\nOK\r\n")
@@ -248,7 +249,7 @@ mod tests {
         let cmd = GetConnectionStatus { id: 2 };
         assert_eq_hex!(b"AT+CIPSTATUS=2\r", cmd.as_bytes());
 
-        let (mut ingress, device) = setup_atat!();
+        let (mut ingress, device, _) = setup_atat!();
 
         ingress.write(
             b"\r\n+CIPSTATUS: 2,0,\"TCP\",\"123.123.123.123\",\"80\",\"CONNECTED\"\r\n\r\nOK\r\n",
@@ -270,9 +271,9 @@ mod tests {
         };
         assert_eq_hex!(b"AT+CDNSGIP=\"utiliread.dk\"\r", cmd.as_bytes());
 
-        let (mut ingress, device) = setup_atat!();
+        let (mut ingress, device, urc_channel) = setup_atat!();
 
-        let mut subscription = device.urc_channel.subscribe().unwrap();
+        let mut subscription = urc_channel.subscribe().unwrap();
 
         ingress.write(b"\r\nOK\r\n").await;
         ingress
@@ -302,9 +303,9 @@ mod tests {
         let cmd = ReadData { id: 5, max_len: 16 };
         assert_eq_hex!(b"AT+CIPRXGET=2,5,16\r", cmd.as_bytes());
 
-        let (mut ingress, device) = setup_atat!();
+        let (mut ingress, device, urc_channel) = setup_atat!();
 
-        let mut subscription = device.urc_channel.subscribe().unwrap();
+        let mut subscription = urc_channel.subscribe().unwrap();
 
         ingress
             .write(b"\r\n+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n")
