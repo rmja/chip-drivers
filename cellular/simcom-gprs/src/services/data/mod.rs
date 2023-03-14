@@ -55,18 +55,20 @@ impl From<atat::Error> for SocketError {
     }
 }
 
-pub struct DataService<'a, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
-    handle: &'a Handle<'sub, AtCl>,
-    urc_channel: &'a AtUrcCh,
+pub struct DataService<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
+    handle: &'dev Handle<'sub, AtCl>,
+    urc_channel: &'buf AtUrcCh,
     dns_lock: LocalMutex<()>,
     pub local_ip: Option<Ipv4Addr>,
 }
 
-impl<'a, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'sub, AtCl, AtUrcCh> {
+impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
+    Device<'buf, 'sub, AtCl, AtUrcCh>
+{
     pub async fn data(
-        &'a self,
+        &'dev self,
         apn: Apn<'_>,
-    ) -> Result<DataService<'a, 'sub, AtCl, AtUrcCh>, DriverError> {
+    ) -> Result<DataService<'buf, 'dev, 'sub, AtCl, AtUrcCh>, DriverError> {
         if self
             .data_service_taken
             .compare_exchange(false, true, Ordering::AcqRel, Ordering::Relaxed)
@@ -81,10 +83,10 @@ impl<'a, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'sub, AtCl
     }
 }
 
-impl<'a, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
-    DataService<'a, 'sub, AtCl, AtUrcCh>
+impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
+    DataService<'buf, 'dev, 'sub, AtCl, AtUrcCh>
 {
-    fn new(handle: &'a Handle<'sub, AtCl>, urc_channel: &'a AtUrcCh) -> Self {
+    fn new(handle: &'dev Handle<'sub, AtCl>, urc_channel: &'buf AtUrcCh) -> Self {
         Self {
             handle,
             urc_channel,

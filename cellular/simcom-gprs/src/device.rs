@@ -24,36 +24,40 @@ pub(crate) const SOCKET_STATE_UNUSED: u8 = 1;
 pub(crate) const SOCKET_STATE_USED: u8 = 2;
 pub(crate) const SOCKET_STATE_DROPPED: u8 = 3;
 
-pub struct Device<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
-    pub handle: Handle<'a, AtCl>,
-    pub(crate) urc_channel: &'a AtUrcCh,
+pub struct Device<'buf, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
+    pub handle: Handle<'sub, AtCl>,
+    pub(crate) urc_channel: &'buf AtUrcCh,
     pub(crate) part_number: Option<PartNumber>,
     pub(crate) data_service_taken: AtomicBool,
 }
 
-pub struct Handle<'a, AtCl: AtatClient> {
+pub struct Handle<'sub, AtCl: AtatClient> {
     pub(crate) client: LocalMutex<AtCl>,
     pub(crate) socket_state: Vec<SocketState, MAX_SOCKETS>,
     pub(crate) data_written: [AtomicBool; MAX_SOCKETS],
     pub(crate) data_available: [AtomicBool; MAX_SOCKETS],
-    background_subscription: LocalMutex<UrcSubscription<'a, Urc>>,
+    background_subscription: LocalMutex<UrcSubscription<'sub, Urc>>,
 }
 
-impl<'a, W: Write, const INGRESS_BUF_SIZE: usize, const RES_CAPACITY: usize>
+impl<'buf, 'sub, W: Write, const INGRESS_BUF_SIZE: usize, const RES_CAPACITY: usize>
     Device<
-        'a,
-        Client<'a, W, INGRESS_BUF_SIZE, RES_CAPACITY>,
+        'buf,
+        'sub,
+        Client<'buf, W, INGRESS_BUF_SIZE, RES_CAPACITY>,
         SimcomAtatUrcChannel<INGRESS_BUF_SIZE>,
     >
+where
+    'buf: 'sub,
 {
     pub fn from_buffers(
-        buffers: &'a SimcomAtatBuffers<INGRESS_BUF_SIZE, RES_CAPACITY>,
+        buffers: &'buf SimcomAtatBuffers<INGRESS_BUF_SIZE, RES_CAPACITY>,
         tx: W,
     ) -> (
         SimcomAtatIngress<INGRESS_BUF_SIZE, RES_CAPACITY>,
         Device<
-            'a,
-            Client<'a, W, INGRESS_BUF_SIZE, RES_CAPACITY>,
+            'buf,
+            'sub,
+            Client<'buf, W, INGRESS_BUF_SIZE, RES_CAPACITY>,
             SimcomAtatUrcChannel<INGRESS_BUF_SIZE>,
         >,
     ) {
@@ -63,9 +67,12 @@ impl<'a, W: Write, const INGRESS_BUF_SIZE: usize, const RES_CAPACITY: usize>
     }
 }
 
-impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'a, AtCl, AtUrcCh> {
+impl<'buf, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'buf, 'sub, AtCl, AtUrcCh>
+where
+    'buf: 'sub,
+{
     /// Create a new device given an AT client
-    pub fn new(client: AtCl, urc_channel: &'a AtUrcCh) -> Self {
+    pub fn new(client: AtCl, urc_channel: &'buf AtUrcCh) -> Self {
         // The actual state values, except for socket_state, are cleared
         // when a socket goes from [`SOCKET_STATE_UNUSED`] to [`SOCKET_STATE_USED`].
         Self {

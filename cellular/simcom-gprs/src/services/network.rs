@@ -36,14 +36,14 @@ impl From<atat::Error> for NetworkError {
     }
 }
 
-pub struct Network<'a, AtCl: AtatClient> {
-    handle: &'a Handle<'a, AtCl>,
+pub struct Network<'dev, 'sub, AtCl: AtatClient> {
+    handle: &'dev Handle<'sub, AtCl>,
     gsm_status: NetworkRegistrationStat,
     gprs_status: GPRSNetworkRegistrationStat,
 }
 
-impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'a, AtCl, AtUrcCh> {
-    pub fn network(&'a self) -> Network<'a, AtCl> {
+impl<'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'dev, 'sub, AtCl, AtUrcCh> {
+    pub fn network(&'dev self) -> Network<'dev, 'sub, AtCl> {
         Network {
             handle: &self.handle,
             gsm_status: NetworkRegistrationStat::NotRegistered,
@@ -52,7 +52,7 @@ impl<'a, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'a, AtCl, AtUrcC
     }
 }
 
-impl<'a, AtCl: AtatClient> Network<'a, AtCl> {
+impl<AtCl: AtatClient> Network<'_, '_, AtCl> {
     /// Attach the modem to the network
     pub async fn attach(&mut self, pin: Option<&str>) -> Result<(), NetworkError> {
         let mut client = self.handle.client.lock().await;

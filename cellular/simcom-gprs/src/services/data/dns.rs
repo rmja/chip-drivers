@@ -6,7 +6,9 @@ use crate::commands::{tcpip::ResolveHostIp, urc::Urc};
 
 use super::{DataService, SocketError};
 
-impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Dns for DataService<'_, '_, AtCl, AtUrcCh> {
+impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Dns
+    for DataService<'_, '_, '_, AtCl, AtUrcCh>
+{
     type Error = SocketError;
 
     async fn get_host_by_name(

@@ -20,14 +20,12 @@ use crate::{
 
 use super::{DataService, SocketError, SOCKET_STATE_DROPPED, SOCKET_STATE_USED};
 
-impl<'a, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpConnect
-    for DataService<'a, 'sub, AtCl, AtUrcCh>
-where
-    'a: 'sub,
+impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpConnect
+    for DataService<'buf, 'dev, 'sub, AtCl, AtUrcCh>
 {
     type Error = SocketError;
 
-    type Connection<'m> = TcpSocket<'m, 'a, AtCl, AtUrcCh> where Self : 'm;
+    type Connection<'m> = TcpSocket<'buf, 'dev, 'sub, AtCl, AtUrcCh> where Self : 'm;
 
     async fn connect<'m>(&'m self, remote: SocketAddr) -> Result<Self::Connection<'m>, Self::Error>
     where
@@ -52,17 +50,19 @@ where
     }
 }
 
-pub struct TcpSocket<'a, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
+pub struct TcpSocket<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
     id: usize,
-    handle: &'a Handle<'sub, AtCl>,
-    urc_channel: &'a AtUrcCh,
+    handle: &'dev Handle<'sub, AtCl>,
+    urc_channel: &'buf AtUrcCh,
     max_urc_len: usize,
 }
 
-impl<'a, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpSocket<'a, 'sub, AtCl, AtUrcCh> {
+impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
+    TcpSocket<'buf, 'dev, 'sub, AtCl, AtUrcCh>
+{
     pub(crate) fn try_new(
-        handle: &'a Handle<'sub, AtCl>,
-        urc_channel: &'a AtUrcCh,
+        handle: &'dev Handle<'sub, AtCl>,
+        urc_channel: &'buf AtUrcCh,
     ) -> Result<Self, SocketError> {
         let id = handle.take_unused()?;
         Ok(Self {
@@ -267,17 +267,19 @@ impl<'a, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpSocket<'a, 'su
     }
 }
 
-impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Io for TcpSocket<'_, '_, AtCl, AtUrcCh> {
+impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Io for TcpSocket<'_, '_, '_, AtCl, AtUrcCh> {
     type Error = SocketError;
 }
 
-impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Read for TcpSocket<'_, '_, AtCl, AtUrcCh> {
+impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Read for TcpSocket<'_, '_, '_, AtCl, AtUrcCh> {
     async fn read(&mut self, buf: &mut [u8]) -> Result<usize, SocketError> {
         self.read(buf).await
     }
 }
 
-impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Write for TcpSocket<'_, '_, AtCl, AtUrcCh> {
+impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Write
+    for TcpSocket<'_, '_, '_, AtCl, AtUrcCh>
+{
     async fn write(&mut self, buf: &[u8]) -> Result<usize, SocketError> {
         self.write(buf).await
     }
@@ -290,7 +292,7 @@ impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Write for TcpSocket<'_, '_,
     }
 }
 
-impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Drop for TcpSocket<'_, '_, AtCl, AtUrcCh> {
+impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Drop for TcpSocket<'_, '_, '_, AtCl, AtUrcCh> {
     fn drop(&mut self) {
         // Only set DROPPED state if the connection is not already closed
         if self.handle.socket_state[self.id]
