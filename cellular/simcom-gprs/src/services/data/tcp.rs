@@ -74,10 +74,9 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
     async fn connect(&mut self, ip: &str, port: &str) -> Result<(), SocketError> {
         self.handle.drain_background_urcs();
 
-        let mut urc_subscription = self.urc_channel.subscribe().unwrap();
-
-        {
+        let mut urc_subscription = {
             let mut client = self.handle.client.lock().await;
+            let urc_subscription = self.urc_channel.subscribe().unwrap();
 
             client
                 .send(&StartConnection {
@@ -87,7 +86,9 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
                     port,
                 })
                 .await?;
-        }
+
+            urc_subscription
+        };
 
         let timeout_instant =
             Instant::now() + Duration::from_millis(StartConnection::MAX_TIMEOUT_MS as u64);

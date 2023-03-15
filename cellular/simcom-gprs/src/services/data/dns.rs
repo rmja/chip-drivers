@@ -26,7 +26,7 @@ impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Dns
         // For now we can only have one lookup going at a time,
         // as having more would require that we have multiple dns subscriptions
         self.dns_lock.lock().await;
-        let mut subscription = {
+        let mut urc_subscription = {
             let mut client = self.handle.client.lock().await;
             let subscription = self.urc_channel.subscribe().unwrap();
 
@@ -39,7 +39,7 @@ impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Dns
         // Wait for the URC reporting the resolved ip
         let timeout_instant = Instant::now() + Duration::from_secs(10);
         while let Some(remaining) = timeout_instant.checked_duration_since(Instant::now()) {
-            let urc = with_timeout(remaining, subscription.next_message_pure())
+            let urc = with_timeout(remaining, urc_subscription.next_message_pure())
                 .await
                 .map_err(|_| SocketError::DnsTimeout)?;
             self.handle.drain_background_urcs();
