@@ -88,9 +88,9 @@ mod tests {
     //! Note that this will cause all log `defmt::` log statements to be thrown away.
 
     #[defmt::global_logger]
-    struct GlobalLogger;
+    struct TestLogger;
 
-    unsafe impl defmt::Logger for GlobalLogger {
+    unsafe impl defmt::Logger for TestLogger {
         fn acquire() {}
         unsafe fn flush() {}
         unsafe fn release() {}

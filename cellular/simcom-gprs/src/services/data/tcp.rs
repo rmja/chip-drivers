@@ -97,6 +97,7 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
             let urc = with_timeout(timeout, urc_subscription.next_message_pure())
                 .await
                 .map_err(|_| SocketError::ConnectTimeout)?;
+
             self.handle.drain_background_urcs();
 
             match urc {
@@ -109,7 +110,9 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
         Err(SocketError::ConnectTimeout)
     }
 
-    fn ensure_in_use(&self) -> Result<(), SocketError> {
+    fn drain_background_urcs_and_ensure_in_use(&self) -> Result<(), SocketError> {
+        self.handle.drain_background_urcs();
+
         if self.handle.socket_state[self.id].load(Ordering::Acquire) == SOCKET_STATE_USED {
             Ok(())
         } else {
@@ -118,8 +121,7 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
     }
 
     async fn read(&mut self, buf: &mut [u8]) -> Result<usize, SocketError> {
-        self.handle.drain_background_urcs();
-        self.ensure_in_use()?;
+        self.drain_background_urcs_and_ensure_in_use()?;
         if buf.is_empty() {
             return Ok(0);
         }
@@ -134,7 +136,9 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
 
         let mut urc_subscription = {
             let mut client = self.handle.client.lock().await;
-            let subscription = self.urc_channel.subscribe().unwrap();
+            let urc_subscription = self.urc_channel.subscribe().unwrap();
+
+            trace!("[{}] Sending ReadData", self.id);
 
             client
                 .send(&ReadData {
@@ -143,20 +147,19 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
                 })
                 .await?;
 
-            subscription
+            urc_subscription
         };
+
         let mut no_data_response_received = false;
 
-        let timeout_instant = Instant::now() + Duration::from_secs(10);
+        let mut timeout_instant = Instant::now() + Duration::from_secs(10);
         while let Some(timeout) = timeout_instant.checked_duration_since(Instant::now()) {
             // Wait for next urc
             let urc = with_timeout(timeout, urc_subscription.next_message_pure())
                 .await
                 .map_err(|_| SocketError::ReadTimeout)?;
-            self.handle.drain_background_urcs();
 
-            // The socket may have closed while handling urc
-            self.ensure_in_use()?;
+            self.drain_background_urcs_and_ensure_in_use()?;
 
             match urc {
                 Urc::ReadData(r) if r.id == self.id => {
@@ -172,13 +175,37 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
                     // Re-request data now when we know that it is available
                     // Only do so if we have not yet processed the ReadData urc
                     if no_data_response_received {
+                        debug!("[{}] Re-sending data read request", id);
+
                         let mut client = self.handle.client.lock().await;
+
+                        // Drain all messages in subscription before re-sending ReadData
+                        let mut cnt = 0;
+                        while urc_subscription.try_next_message_pure().is_some() {
+                            cnt += 1;
+                        }
+                        trace!(
+                            "[{}] Drained {} messages before re-sending data read request",
+                            id,
+                            cnt
+                        );
+
+                        trace!("[{}] Sending ReadData", id);
+
                         client
                             .send(&ReadData {
                                 id: self.id,
                                 max_len,
                             })
                             .await?;
+
+                        // Reset timeout to ensure that we in fact read the response
+                        timeout_instant = Instant::now() + Duration::from_secs(10);
+                    } else {
+                        debug!(
+                            "[{}] Data available urc received before read data response urc",
+                            id
+                        );
                     }
                 }
                 _ => {}
@@ -189,35 +216,19 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
     }
 
     async fn write(&mut self, buf: &[u8]) -> Result<usize, SocketError> {
-        self.handle.drain_background_urcs();
-        self.ensure_in_use()?;
         self.wait_ongoing_write().await?;
 
         const MAX_WRITE: usize = 1024; // This is the value reported by AT+CIPSEND?
         let len = usize::min(buf.len(), MAX_WRITE);
 
         let mut client = self.handle.client.lock().await;
-        if let Err(error) = client
+        // Hold client all the way from request prompt to actually writing data
+        client
             .send(&SendData {
                 id: self.id,
                 len: Some(len),
             })
-            .await
-        {
-            return Err(match error {
-                Error::CmeError(e) if e == 3.into() => {
-                    // Determine if there is data available
-                    // CME ERROR 3 means invalid operation, and we cannot write when there is data available
-                    if self.handle.data_available[self.id].load(Ordering::Acquire) {
-                        debug!("CME ERROR 3 during write because of pending data");
-                        SocketError::MustReadBeforeWrite
-                    } else {
-                        SocketError::Atat(Error::CmeError(e))
-                    }
-                }
-                e => SocketError::Atat(e),
-            });
-        }
+            .await?;
 
         // We have received prompt and are ready to write data
 
@@ -233,14 +244,14 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
     }
 
     async fn wait_ongoing_write(&mut self) -> Result<(), SocketError> {
-        self.handle.drain_background_urcs();
+        let mut urc_subscription = self.urc_channel.subscribe().unwrap();
+
+        self.drain_background_urcs_and_ensure_in_use()?;
 
         if self.handle.data_written[self.id].load(Ordering::Acquire) {
             trace!("[{}] Data already written", self.id);
             return Ok(());
         }
-
-        let mut urc_subscription = self.urc_channel.subscribe().unwrap();
 
         let timeout_instant =
             Instant::now() + Duration::from_millis(WriteData::MAX_TIMEOUT_MS as u64);
@@ -249,13 +260,11 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
             with_timeout(timeout, urc_subscription.next_message_pure())
                 .await
                 .map_err(|_| SocketError::WriteTimeout)?;
-            self.handle.drain_background_urcs();
 
-            // The socket may have closed while handling urc
-            self.ensure_in_use()?;
+            self.drain_background_urcs_and_ensure_in_use()?;
 
             if self.handle.data_written[self.id].load(Ordering::Acquire) {
-                trace!("[{}] Data was written", self.id);
+                trace!("[{}] Data is now written", self.id);
                 return Ok(());
             } else {
                 trace!("[{}] Data is not yet written", self.id);
@@ -305,5 +314,195 @@ impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Drop for TcpSocket<'_, '_, 
         {
             warn!("[{}] Socket dropped", self.id);
         };
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use core::convert::Infallible;
+
+    use atat::{
+        bbqueue::{
+            framed::{FrameConsumer, FrameProducer},
+            BBBuffer,
+        },
+        AtatIngress,
+    };
+    use embedded_nal_async::{IpAddr, Ipv4Addr, SocketAddr};
+
+    use crate::{
+        device::{SocketState, SOCKET_STATE_UNKNOWN, SOCKET_STATE_UNUSED},
+        Device, SimcomAtatBuffers, MAX_SOCKETS,
+    };
+
+    use super::*;
+
+    struct FrameWriter<'a, const N: usize>(FrameProducer<'a, N>);
+
+    impl<const N: usize> Io for FrameWriter<'_, N> {
+        type Error = Infallible;
+    }
+
+    impl<const N: usize> Write for FrameWriter<'_, N> {
+        async fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
+            let len = buf.len();
+            println!("REQUESTING WRITE GRANT");
+            let mut grant = self.0.grant(len).unwrap();
+            grant[..len].copy_from_slice(buf);
+            grant.commit(len);
+            println!("COMMIT COMPLETED");
+            Ok(len)
+        }
+    }
+
+    macro_rules! setup_atat {
+        () => {{
+            static mut BUFFERS: SimcomAtatBuffers<128, 512> = SimcomAtatBuffers::new();
+            static SERIAL: BBBuffer<1000> = BBBuffer::new();
+            let buffers = unsafe { &mut BUFFERS };
+            let (producer, consumer) = SERIAL.try_split_framed().unwrap();
+            let (ingress, device) = Device::from_buffers(buffers, FrameWriter(producer));
+            (ingress, device, consumer)
+        }};
+    }
+
+    async fn connect<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>(
+        ingress: &mut impl AtatIngress,
+        device: &'dev mut Device<'buf, 'sub, AtCl, AtUrcCh>,
+        serial: &mut FrameConsumer<'_, 1000>,
+        id: usize,
+    ) -> TcpSocket<'buf, 'dev, 'sub, AtCl, AtUrcCh> {
+        for _ in 0..MAX_SOCKETS {
+            device
+                .handle
+                .socket_state
+                .push(SocketState::new(SOCKET_STATE_UNKNOWN))
+                .unwrap();
+        }
+        device.handle.socket_state[id].store(SOCKET_STATE_UNUSED, Ordering::Relaxed);
+
+        let data = DataService::new(&device.handle, device.urc_channel);
+
+        let socket = async {
+            data.connect(SocketAddr::new(
+                IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+                8080,
+            ))
+            .await
+            .unwrap()
+        };
+        let receive = async {
+            let request = with_timeout(Duration::from_millis(100), serial.read_async())
+                .await
+                .unwrap()
+                .unwrap();
+            assert_eq!(
+                format!("AT+CIPSTART={},\"TCP\",\"127.0.0.1\",\"8080\"\r", id).as_bytes(),
+                request.as_ref()
+            );
+            request.release();
+
+            ingress.write(b"\r\nOK\r\n").await;
+            ingress
+                .write(format!("\r\n{}, CONNECT OK\r\n", id).as_bytes())
+                .await;
+        };
+
+        tokio::join!(socket, receive).0
+    }
+
+    #[tokio::test]
+    async fn can_read_available_data() {
+        let (mut ingress, mut device, mut serial) = setup_atat!();
+        let mut socket = connect(&mut ingress, &mut device, &mut serial, 5).await;
+
+        let read = async {
+            let mut buf = [0; 16];
+            assert_eq!(8, socket.read(&mut buf).await.unwrap());
+        };
+        let receive = async {
+            // Expect ReadData request
+            let request = with_timeout(Duration::from_millis(100), serial.read_async())
+                .await
+                .unwrap()
+                .unwrap();
+            assert_eq!(b"AT+CIPRXGET=2,5,16\r", request.as_ref());
+            request.release();
+
+            ingress
+                .write(b"\r\n+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n")
+                .await;
+            ingress.write(b"\r\nOK\r\n").await;
+        };
+
+        tokio::join!(read, receive);
+    }
+
+    #[tokio::test]
+    async fn can_read_data_with_data_available_before_read_data() {
+        let (mut ingress, mut device, mut serial) = setup_atat!();
+        let mut socket = connect(&mut ingress, &mut device, &mut serial, 5).await;
+
+        let read = async {
+            let mut buf = [0; 16];
+            assert_eq!(8, socket.read(&mut buf).await.unwrap());
+        };
+        let receive = async {
+            // Expect ReadData request
+            let request = with_timeout(Duration::from_millis(100), serial.read_async())
+                .await
+                .unwrap()
+                .unwrap();
+            assert_eq!(b"AT+CIPRXGET=2,5,16\r", request.as_ref());
+            request.release();
+
+            ingress.write(b"\r\n+CIPRXGET: 1,5\r\n").await; // Transmitted by modem before it understands our read request
+            ingress
+                .write(b"\r\n+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n")
+                .await;
+            ingress.write(b"\r\nOK\r\n").await;
+        };
+
+        tokio::join!(read, receive);
+    }
+
+    #[tokio::test]
+    async fn can_read_data_with_no_data_initially_available_retrying() {
+        let (mut ingress, mut device, mut serial) = setup_atat!();
+        let mut socket = connect(&mut ingress, &mut device, &mut serial, 5).await;
+
+        let read = async {
+            let mut buf = [0; 16];
+            assert_eq!(8, socket.read(&mut buf).await.unwrap());
+        };
+        let receive = async {
+            // Expect ReadData request
+            let request = with_timeout(Duration::from_millis(100), serial.read_async())
+                .await
+                .unwrap()
+                .unwrap();
+            assert_eq!(b"AT+CIPRXGET=2,5,16\r", request.as_ref());
+            request.release();
+
+            ingress.write(b"\r\n+CIPRXGET: 2,5,0,0\r\n").await; // There is no data available
+            ingress.write(b"\r\nOK\r\n").await;
+
+            ingress.write(b"\r\n+CIPRXGET: 1,5\r\n").await; // Data becomes available
+
+            // Expect ReadData request
+            let request = with_timeout(Duration::from_millis(100), serial.read_async())
+                .await
+                .unwrap()
+                .unwrap();
+            assert_eq!(b"AT+CIPRXGET=2,5,16\r", request.as_ref());
+            request.release();
+
+            ingress
+                .write(b"\r\n+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n")
+                .await;
+            ingress.write(b"\r\nOK\r\n").await;
+        };
+
+        tokio::join!(read, receive);
     }
 }
