@@ -15,8 +15,8 @@ use crate::{
     SimcomDigester, MAX_SOCKETS,
 };
 
-pub(crate) const URC_CAPACITY: usize = 1 + 2 * (1 + MAX_SOCKETS); // A dns reply, and SEND OK and RXGET per socket + handle background
-pub(crate) const URC_SUBSCRIBERS: usize = 2 + MAX_SOCKETS; // One for dns, one for handle background, and one for each socket
+pub(crate) const URC_CAPACITY: usize = 1 + 3 * (1 + MAX_SOCKETS); // A dns reply, and (SEND OK + RXGET + CLOSED) per socket + background subscription
+pub(crate) const URC_SUBSCRIBERS: usize = 2 + MAX_SOCKETS; // One for dns, one for background subscription, and one for each socket reply subscription
 
 pub(crate) type SocketState = AtomicU8;
 pub(crate) const SOCKET_STATE_UNKNOWN: u8 = 0;
