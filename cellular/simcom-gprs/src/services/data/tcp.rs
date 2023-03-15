@@ -329,6 +329,7 @@ mod tests {
         AtatIngress,
     };
     use embedded_nal_async::{IpAddr, Ipv4Addr, SocketAddr};
+    use tokio::task::yield_now;
 
     use crate::{
         device::{SocketState, SOCKET_STATE_UNKNOWN, SOCKET_STATE_UNUSED},
@@ -392,6 +393,8 @@ mod tests {
             .unwrap()
         };
         let receive = async {
+            // Expect StartConnection request
+            yield_now().await;
             let request = with_timeout(Duration::from_millis(100), serial.read_async())
                 .await
                 .unwrap()
@@ -422,6 +425,7 @@ mod tests {
         };
         let receive = async {
             // Expect ReadData request
+            yield_now().await;
             let request = with_timeout(Duration::from_millis(100), serial.read_async())
                 .await
                 .unwrap()
@@ -449,6 +453,7 @@ mod tests {
         };
         let receive = async {
             // Expect ReadData request
+            yield_now().await;
             let request = with_timeout(Duration::from_millis(100), serial.read_async())
                 .await
                 .unwrap()
@@ -477,6 +482,7 @@ mod tests {
         };
         let receive = async {
             // Expect ReadData request
+            yield_now().await;
             let request = with_timeout(Duration::from_millis(100), serial.read_async())
                 .await
                 .unwrap()
@@ -490,6 +496,7 @@ mod tests {
             ingress.write(b"\r\n+CIPRXGET: 1,5\r\n").await; // Data becomes available
 
             // Expect ReadData request
+            yield_now().await;
             let request = with_timeout(Duration::from_millis(100), serial.read_async())
                 .await
                 .unwrap()
