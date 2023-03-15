@@ -36,16 +36,12 @@ pub struct Handle<'sub, AtCl: AtatClient> {
     pub(crate) socket_state: Vec<SocketState, MAX_SOCKETS>,
     pub(crate) data_written: [AtomicBool; MAX_SOCKETS],
     pub(crate) data_available: [AtomicBool; MAX_SOCKETS],
+    pub(crate) max_urc_len: usize,
     background_subscription: LocalMutex<UrcSubscription<'sub, Urc>>,
 }
 
 impl<'buf, 'sub, W: Write, const INGRESS_BUF_SIZE: usize, const RES_CAPACITY: usize>
-    Device<
-        'buf,
-        'sub,
-        Client<'buf, W, INGRESS_BUF_SIZE, RES_CAPACITY>,
-        SimcomAtatUrcChannel<INGRESS_BUF_SIZE>,
-    >
+    Device<'buf, 'sub, Client<'buf, W, INGRESS_BUF_SIZE, RES_CAPACITY>, SimcomAtatUrcChannel>
 where
     'buf: 'sub,
 {
@@ -54,16 +50,14 @@ where
         tx: W,
     ) -> (
         SimcomAtatIngress<INGRESS_BUF_SIZE, RES_CAPACITY>,
-        Device<
-            'buf,
-            'sub,
-            Client<'buf, W, INGRESS_BUF_SIZE, RES_CAPACITY>,
-            SimcomAtatUrcChannel<INGRESS_BUF_SIZE>,
-        >,
+        Device<'buf, 'sub, Client<'buf, W, INGRESS_BUF_SIZE, RES_CAPACITY>, SimcomAtatUrcChannel>,
     ) {
         let (ingress, client) = buffers.split(tx, SimcomDigester::new(), Config::new());
 
-        (ingress, Device::new(client, &buffers.urc_channel))
+        (
+            ingress,
+            Device::new(client, &buffers.urc_channel, INGRESS_BUF_SIZE),
+        )
     }
 }
 
@@ -72,7 +66,7 @@ where
     'buf: 'sub,
 {
     /// Create a new device given an AT client
-    pub fn new(client: AtCl, urc_channel: &'buf AtUrcCh) -> Self {
+    pub fn new(client: AtCl, urc_channel: &'buf AtUrcCh, max_urc_len: usize) -> Self {
         // The actual state values, except for socket_state, are cleared
         // when a socket goes from [`SOCKET_STATE_UNUSED`] to [`SOCKET_STATE_USED`].
         Self {
@@ -81,6 +75,7 @@ where
                 socket_state: Vec::new(),
                 data_written: Default::default(),
                 data_available: Default::default(),
+                max_urc_len,
                 background_subscription: LocalMutex::new(urc_channel.subscribe().unwrap(), false),
             },
             urc_channel,
@@ -193,6 +188,7 @@ impl<AtCl: AtatClient> Handle<'_, AtCl> {
     }
 
     pub(crate) fn drain_background_urcs(&self) {
+        trace!("Draining background URCs");
         if let Some(mut subscription) = self.background_subscription.try_lock() {
             while let Some(urc) = subscription.try_next_message_pure() {
                 self.handle_urc(urc);
@@ -208,7 +204,7 @@ impl<AtCl: AtatClient> Handle<'_, AtCl> {
                 error!("[{}] Already connected", id);
             }
             Urc::SendOk(id) => {
-                debug!("[{}] Data was written", id);
+                debug!("[{}] Data written", id);
                 self.data_written[id].store(true, Ordering::Release);
             }
             Urc::Closed(id) => {
@@ -219,7 +215,7 @@ impl<AtCl: AtatClient> Handle<'_, AtCl> {
                 debug!("Resolved IP for host {}", result.host);
             }
             Urc::DataAvailable(id) => {
-                debug!("[{}] Data is available to be read", id);
+                debug!("[{}] Data available to be read", id);
                 self.data_available[id].store(true, Ordering::Release);
             }
             Urc::ReadData(result) => {

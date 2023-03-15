@@ -1,6 +1,6 @@
 use core::sync::atomic::Ordering;
 
-use atat::{asynch::AtatClient, AtatCmd, AtatUrcChannel, Error};
+use atat::{asynch::AtatClient, AtatCmd, AtatUrcChannel};
 use core::fmt::Write as _;
 use embassy_time::{with_timeout, Duration, Instant};
 use embedded_io::{
@@ -54,7 +54,6 @@ pub struct TcpSocket<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel
     id: usize,
     handle: &'dev Handle<'sub, AtCl>,
     urc_channel: &'buf AtUrcCh,
-    max_urc_len: usize,
 }
 
 impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
@@ -69,7 +68,6 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
             id,
             handle,
             urc_channel,
-            max_urc_len: AtUrcCh::max_urc_len(),
         })
     }
 
@@ -130,7 +128,7 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
         const TAIL_LEN: usize = "\r\nOK\r\n".len();
         let max_len = usize::min(
             usize::min(buf.len(), MAX_READ),
-            self.max_urc_len - MAX_HEADER_LEN - TAIL_LEN,
+            self.handle.max_urc_len - MAX_HEADER_LEN - TAIL_LEN,
         );
 
         let mut urc_subscription = {
