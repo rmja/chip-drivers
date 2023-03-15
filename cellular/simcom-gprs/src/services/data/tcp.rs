@@ -347,11 +347,10 @@ mod tests {
     impl<const N: usize> Write for FrameWriter<'_, N> {
         async fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
             let len = buf.len();
-            println!("REQUESTING WRITE GRANT");
             let mut grant = self.0.grant(len).unwrap();
             grant[..len].copy_from_slice(buf);
             grant.commit(len);
-            println!("COMMIT COMPLETED");
+            yield_now().await;
             Ok(len)
         }
     }
@@ -394,7 +393,6 @@ mod tests {
         };
         let receive = async {
             // Expect StartConnection request
-            yield_now().await;
             let request = with_timeout(Duration::from_millis(100), serial.read_async())
                 .await
                 .unwrap()
@@ -425,7 +423,6 @@ mod tests {
         };
         let receive = async {
             // Expect ReadData request
-            yield_now().await;
             let request = with_timeout(Duration::from_millis(100), serial.read_async())
                 .await
                 .unwrap()
@@ -453,7 +450,6 @@ mod tests {
         };
         let receive = async {
             // Expect ReadData request
-            yield_now().await;
             let request = with_timeout(Duration::from_millis(100), serial.read_async())
                 .await
                 .unwrap()
@@ -482,7 +478,6 @@ mod tests {
         };
         let receive = async {
             // Expect ReadData request
-            yield_now().await;
             let request = with_timeout(Duration::from_millis(100), serial.read_async())
                 .await
                 .unwrap()
@@ -496,7 +491,6 @@ mod tests {
             ingress.write(b"\r\n+CIPRXGET: 1,5\r\n").await; // Data becomes available
 
             // Expect ReadData request
-            yield_now().await;
             let request = with_timeout(Duration::from_millis(100), serial.read_async())
                 .await
                 .unwrap()
