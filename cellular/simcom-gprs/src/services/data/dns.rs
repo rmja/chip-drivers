@@ -21,11 +21,11 @@ impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Dns
         }
         assert!(addr_type == AddrType::IPv4 || addr_type == AddrType::Either);
 
+        // The modem can only handle one dns lookup at a time
+        let _guard = self.dns_lock.lock().await;
+
         self.handle.drain_background_urcs();
 
-        // For now we can only have one lookup going at a time,
-        // as having more would require that we have multiple dns subscriptions
-        self.dns_lock.lock().await;
         let mut urc_subscription = {
             let mut client = self.handle.client.lock().await;
             let subscription = self.urc_channel.subscribe().unwrap();

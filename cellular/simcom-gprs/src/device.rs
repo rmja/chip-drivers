@@ -4,8 +4,8 @@ use atat::{
     asynch::{AtatClient, Client},
     AtatUrcChannel, Config, UrcSubscription,
 };
+use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use embedded_io::asynch::Write;
-use futures_intrusive::sync::LocalMutex;
 use heapless::Vec;
 
 use crate::{
@@ -32,12 +32,12 @@ pub struct Device<'buf, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
 }
 
 pub struct Handle<'sub, AtCl: AtatClient> {
-    pub(crate) client: LocalMutex<AtCl>,
+    pub(crate) client: Mutex<CriticalSectionRawMutex, AtCl>,
     pub(crate) socket_state: Vec<SocketState, MAX_SOCKETS>,
     pub(crate) data_written: [AtomicBool; MAX_SOCKETS],
     pub(crate) data_available: [AtomicBool; MAX_SOCKETS],
     pub(crate) max_urc_len: usize,
-    background_subscription: LocalMutex<UrcSubscription<'sub, Urc>>,
+    background_subscription: Mutex<CriticalSectionRawMutex, UrcSubscription<'sub, Urc>>,
 }
 
 impl<'buf, 'sub, W: Write, const INGRESS_BUF_SIZE: usize, const RES_CAPACITY: usize>
@@ -71,12 +71,12 @@ where
         // when a socket goes from [`SOCKET_STATE_UNUSED`] to [`SOCKET_STATE_USED`].
         Self {
             handle: Handle {
-                client: LocalMutex::new(client, true),
+                client: Mutex::new(client),
                 socket_state: Vec::new(),
                 data_written: Default::default(),
                 data_available: Default::default(),
                 max_urc_len,
-                background_subscription: LocalMutex::new(urc_channel.subscribe().unwrap(), false),
+                background_subscription: Mutex::new(urc_channel.subscribe().unwrap()),
             },
             urc_channel,
             part_number: None,
@@ -188,11 +188,15 @@ impl<AtCl: AtatClient> Handle<'_, AtCl> {
     }
 
     pub(crate) fn drain_background_urcs(&self) {
-        trace!("Draining background URCs");
-        if let Some(mut subscription) = self.background_subscription.try_lock() {
+        if let Ok(mut subscription) = self.background_subscription.try_lock() {
+            trace!("Draining background URCs");
             while let Some(urc) = subscription.try_next_message_pure() {
                 self.handle_urc(urc);
             }
+
+            trace!("All messages are drained");
+        } else {
+            debug!("Unable to get background subscription lock");
         }
     }
 

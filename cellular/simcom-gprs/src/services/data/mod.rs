@@ -4,9 +4,9 @@ mod tcp;
 
 use atat::{asynch::AtatClient, AtatUrcChannel};
 use core::{str::from_utf8, sync::atomic::Ordering};
+use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use embedded_io::ErrorKind;
 use embedded_nal_async::Ipv4Addr;
-use futures_intrusive::sync::LocalMutex;
 
 use crate::{
     commands::{
@@ -57,7 +57,7 @@ impl From<atat::Error> for SocketError {
 pub struct DataService<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
     handle: &'dev Handle<'sub, AtCl>,
     urc_channel: &'buf AtUrcCh,
-    dns_lock: LocalMutex<()>,
+    dns_lock: Mutex<CriticalSectionRawMutex, ()>,
     pub local_ip: Option<Ipv4Addr>,
 }
 
@@ -89,7 +89,7 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
         Self {
             handle,
             urc_channel,
-            dns_lock: LocalMutex::new((), true),
+            dns_lock: Mutex::new(()),
             local_ip: None,
         }
     }
