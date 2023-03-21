@@ -44,13 +44,13 @@ pub(super) fn parse_read_data(resp: &[u8]) -> Option<Urc> {
     if let Ok((reminder, (_, id, _, (_, pending_len, _, data)))) = sequence::tuple::<_, _, (), _>((
         bytes::complete::tag("+CIPRXGET: 2,"),
             character::complete::u8,
-            bytes::streaming::tag(","),
-            combinator::flat_map(character::streaming::u16, |data_len| {
+            bytes::complete::tag(","),
+            combinator::flat_map(character::complete::u16, |data_len| {
                 sequence::tuple((
-                    bytes::streaming::tag(","),
-                    character::streaming::u16,
-                    bytes::streaming::tag("\r\n"),
-                    bytes::streaming::take(data_len),
+                    bytes::complete::tag(","),
+                    character::complete::u16,
+                    bytes::complete::tag("\r\n"),
+                    bytes::complete::take(data_len),
                 ))
             }),
     ))(resp) && reminder.is_empty() {
