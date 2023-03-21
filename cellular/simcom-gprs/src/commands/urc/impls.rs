@@ -1,5 +1,6 @@
 use alloc::{sync::Arc, vec::Vec};
-use core::{cell::Cell, fmt::Debug};
+use core::fmt::Debug;
+use embassy_sync::mutex::Mutex;
 
 use atat::AtatResp;
 
@@ -7,11 +8,11 @@ use super::Data;
 
 impl Data {
     pub fn new(data: &[u8]) -> Self {
-        Self(Arc::new(Cell::new(Some(data.to_vec()))))
+        Self(Arc::new(Mutex::new(Some(data.to_vec()))))
     }
 
     pub fn take(&self) -> Option<Vec<u8>> {
-        self.0.take()
+        self.0.try_lock().unwrap().take()
     }
 }
 

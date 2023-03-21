@@ -2,8 +2,6 @@ mod complete;
 mod impls;
 mod streaming;
 
-use core::cell::Cell;
-
 use alloc::{sync::Arc, vec::Vec};
 use atat::{
     atat_derive::{AtatResp, AtatUrc},
@@ -11,6 +9,7 @@ use atat::{
     nom::branch,
     AtatUrc,
 };
+use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use heapless::String;
 
 #[derive(Debug, Clone)]
@@ -53,7 +52,7 @@ pub struct ReadResult {
 }
 
 #[derive(Clone)]
-pub struct Data(Arc<Cell<Option<Vec<u8>>>>);
+pub struct Data(Arc<Mutex<CriticalSectionRawMutex, Option<Vec<u8>>>>);
 
 impl From<UrcInner> for Urc {
     fn from(value: UrcInner) -> Self {
@@ -166,5 +165,36 @@ mod tests {
         } else {
             panic!("Invalid URC");
         }
+    }
+
+    #[test]
+    fn can_parse_adjacent_urcs_and_ok_and_prompt() {
+        let mut digester = SimcomDigester::new();
+
+        // This can be seen when we are requesting a ReadData for one socket and another socket connects between the request and the response
+        let buf = b"\r\n1, CONNECT OK\r\n\r\n+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n\r\nOK\r\n\r\n> ";
+
+        assert_eq!((DigestResult::None, 0), digester.digest(&buf[..16]));
+        assert_eq!(
+            (DigestResult::Urc(b"1, CONNECT OK"), 17),
+            digester.digest(buf)
+        );
+
+        let buf = &buf[17..];
+        assert_eq!((DigestResult::None, 0), digester.digest(&buf[..29]));
+        assert_eq!(
+            (DigestResult::Urc(b"+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n"), 30),
+            digester.digest(buf)
+        );
+
+        let buf = &buf[30..];
+        assert_eq!((DigestResult::None, 0), digester.digest(&buf[..5]));
+        assert_eq!((DigestResult::Response(Ok(b"")), 6), digester.digest(buf));
+
+        let buf = &buf[6..];
+        assert_eq!((DigestResult::Prompt('>' as u8), 4), digester.digest(buf));
+
+        let buf = &buf[4..];
+        assert!(buf.is_empty());
     }
 }
