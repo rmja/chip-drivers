@@ -40,17 +40,17 @@ pub struct Handle<'sub, AtCl: AtatClient> {
     background_subscription: Mutex<CriticalSectionRawMutex, UrcSubscription<'sub, Urc>>,
 }
 
-impl<'buf, 'sub, W: Write, const INGRESS_BUF_SIZE: usize, const RES_CAPACITY: usize>
-    Device<'buf, 'sub, Client<'buf, W, INGRESS_BUF_SIZE, RES_CAPACITY>, SimcomAtatUrcChannel>
+impl<'buf, 'sub, W: Write, const INGRESS_BUF_SIZE: usize>
+    Device<'buf, 'sub, Client<'buf, W, INGRESS_BUF_SIZE>, SimcomAtatUrcChannel>
 where
     'buf: 'sub,
 {
     pub fn from_buffers(
-        buffers: &'buf SimcomAtatBuffers<INGRESS_BUF_SIZE, RES_CAPACITY>,
+        buffers: &'buf SimcomAtatBuffers<INGRESS_BUF_SIZE>,
         tx: W,
     ) -> (
-        SimcomAtatIngress<INGRESS_BUF_SIZE, RES_CAPACITY>,
-        Device<'buf, 'sub, Client<'buf, W, INGRESS_BUF_SIZE, RES_CAPACITY>, SimcomAtatUrcChannel>,
+        SimcomAtatIngress<INGRESS_BUF_SIZE>,
+        Device<'buf, 'sub, Client<'buf, W, INGRESS_BUF_SIZE>, SimcomAtatUrcChannel>,
     ) {
         let (ingress, client) = buffers.split(tx, SimcomDigester::new(), Config::new());
 
@@ -189,14 +189,9 @@ impl<AtCl: AtatClient> Handle<'_, AtCl> {
 
     pub(crate) fn drain_background_urcs(&self) {
         if let Ok(mut subscription) = self.background_subscription.try_lock() {
-            trace!("Draining background URCs");
             while let Some(urc) = subscription.try_next_message_pure() {
                 self.handle_urc(urc);
             }
-
-            trace!("All messages are drained");
-        } else {
-            debug!("Unable to get background subscription lock");
         }
     }
 

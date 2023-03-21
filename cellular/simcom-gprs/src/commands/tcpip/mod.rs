@@ -123,18 +123,29 @@ pub struct ReadData {
 #[cfg(test)]
 mod tests {
     use assert_hex::assert_eq_hex;
-    use atat::{asynch::AtatClient, AtatCmd, AtatIngress, AtatUrcChannel, DigestResult, Digester};
+    use atat::{
+        AtatCmd, AtatIngress, AtatUrcChannel, DigestResult, Digester, Ingress, ResChannel,
+        ResMessage, UrcChannel,
+    };
 
-    use crate::{commands::urc::Urc, Device, SimcomAtatBuffers, SimcomDigester};
+    use crate::{commands::urc::Urc, SimcomDigester};
 
     use super::*;
 
     macro_rules! setup_atat {
         () => {{
-            static mut BUFFERS: SimcomAtatBuffers<128, 512> = SimcomAtatBuffers::new();
-            let buffers = unsafe { &mut BUFFERS };
-            let (ingress, device) = Device::from_buffers(buffers, Vec::new());
-            (ingress, device, &buffers.urc_channel)
+            static RES_CHANNEL: ResChannel<100> = ResChannel::new();
+            static URC_CHANNEL: UrcChannel<Urc, 1, 1> = UrcChannel::new();
+            let ingress = Ingress::<SimcomDigester, Urc, 100, 1, 1>::new(
+                SimcomDigester::new(),
+                RES_CHANNEL.publisher().unwrap(),
+                URC_CHANNEL.publisher(),
+            );
+
+            let res_sub = RES_CHANNEL.subscriber().unwrap();
+            let urc_sub = URC_CHANNEL.subscribe().unwrap();
+
+            (ingress, res_sub, urc_sub)
         }};
     }
 
@@ -209,87 +220,94 @@ mod tests {
         assert_eq_hex!(b"AT+CIICR\r", cmd.as_bytes());
     }
 
-    #[tokio::test]
-    async fn can_get_local_ip() {
+    #[test]
+    fn can_get_local_ip() {
         let cmd = GetLocalIP;
         assert_eq_hex!(b"AT+CIFSR\rAT\r", cmd.as_bytes());
 
-        let (mut ingress, device, _) = setup_atat!();
+        let (mut ingress, mut res_sub, _) = setup_atat!();
+        ingress.try_write(b"\r\n10.0.109.44\r\n").unwrap();
+        ingress.try_write(b"\r\nOK\r\n").unwrap();
 
-        ingress.write(b"\r\n10.0.109.44\r\n").await;
-        ingress.write(b"\r\nOK\r\n").await;
-
-        let mut at_client = device.handle.client.lock().await;
-        let response = at_client.send(&cmd).await.unwrap();
-        assert_eq!(b"10.0.109.44", response.ip.as_ref());
+        if let ResMessage::Response(message) = res_sub.try_next_message_pure().unwrap() {
+            let response = cmd.parse(Ok(&message)).unwrap();
+            assert_eq!(b"10.0.109.44", response.ip.as_ref());
+        } else {
+            panic!("Invalid response");
+        }
     }
 
-    #[tokio::test]
-    async fn can_get_connection_status_initial() {
+    #[test]
+    fn can_get_connection_status_initial() {
         let cmd = GetConnectionStatus { id: 2 };
         assert_eq_hex!(b"AT+CIPSTATUS=2\r", cmd.as_bytes());
 
-        let (mut ingress, device, _) = setup_atat!();
-
+        let (mut ingress, mut res_sub, _) = setup_atat!();
         ingress
-            .write(b"\r\n+CIPSTATUS: 2,,\"\",\"\",\"\",\"INITIAL\"\r\n\r\nOK\r\n")
-            .await;
+            .try_write(b"\r\n+CIPSTATUS: 2,,\"\",\"\",\"\",\"INITIAL\"\r\n\r\nOK\r\n")
+            .unwrap();
 
-        let mut at_client = device.handle.client.lock().await;
-        let response = at_client.send(&cmd).await.unwrap();
-        assert_eq!(2, response.id);
-        assert_eq!("", response.mode);
-        assert_eq!("", response.ip);
-        assert_eq!("", response.port);
-        assert_eq!(ClientState::Initial, response.state);
+        if let ResMessage::Response(message) = res_sub.try_next_message_pure().unwrap() {
+            let response = cmd.parse(Ok(&message)).unwrap();
+            assert_eq!(2, response.id);
+            assert_eq!("", response.mode);
+            assert_eq!("", response.ip);
+            assert_eq!("", response.port);
+            assert_eq!(ClientState::Initial, response.state);
+        } else {
+            panic!("Invalid response");
+        }
     }
 
-    #[tokio::test]
-    async fn can_get_connection_status_connected() {
+    #[test]
+    fn can_get_connection_status_connected() {
         let cmd = GetConnectionStatus { id: 2 };
         assert_eq_hex!(b"AT+CIPSTATUS=2\r", cmd.as_bytes());
 
-        let (mut ingress, device, _) = setup_atat!();
-
-        ingress.write(
+        let (mut ingress, mut res_sub, _) = setup_atat!();
+        ingress.try_write(
             b"\r\n+CIPSTATUS: 2,0,\"TCP\",\"123.123.123.123\",\"80\",\"CONNECTED\"\r\n\r\nOK\r\n",
-        ).await;
+        ).unwrap();
 
-        let mut at_client = device.handle.client.lock().await;
-        let response = at_client.send(&cmd).await.unwrap();
-        assert_eq!(2, response.id);
-        assert_eq!("TCP", response.mode);
-        assert_eq!("123.123.123.123", response.ip);
-        assert_eq!("80", response.port);
-        assert_eq!(ClientState::Connected, response.state);
+        if let ResMessage::Response(message) = res_sub.try_next_message_pure().unwrap() {
+            let response = cmd.parse(Ok(&message)).unwrap();
+            assert_eq!(2, response.id);
+            assert_eq!("TCP", response.mode);
+            assert_eq!("123.123.123.123", response.ip);
+            assert_eq!("80", response.port);
+            assert_eq!(ClientState::Connected, response.state);
+        } else {
+            panic!("Invalid response");
+        }
     }
 
-    #[tokio::test]
-    async fn can_resolve_host_ip() {
+    #[test]
+    fn can_resolve_host_ip() {
         let cmd = ResolveHostIp {
             host: "utiliread.dk",
         };
         assert_eq_hex!(b"AT+CDNSGIP=\"utiliread.dk\"\r", cmd.as_bytes());
 
-        let (mut ingress, device, urc_channel) = setup_atat!();
-
-        let mut subscription = urc_channel.subscribe().unwrap();
-
-        ingress.write(b"\r\nOK\r\n").await;
+        let (mut ingress, mut res_sub, mut urc_sub) = setup_atat!();
+        ingress.try_write(b"\r\nOK\r\n").unwrap();
         ingress
-            .write(b"\r\n+CDNSGIP: 1,\"utiliread.dk\",\"1.2.3.4\"\r\n")
-            .await;
+            .try_write(b"\r\n+CDNSGIP: 1,\"utiliread.dk\",\"1.2.3.4\"\r\n")
+            .unwrap();
 
-        let mut at_client = device.handle.client.lock().await;
-        _ = at_client.send(&cmd).await.unwrap();
-        if let Urc::IpLookup(res) = subscription.try_next_message_pure().unwrap() {
+        if let ResMessage::Response(message) = res_sub.try_next_message_pure().unwrap() {
+            assert!(message.is_empty());
+        } else {
+            panic!("Invalid response");
+        }
+
+        if let Urc::IpLookup(res) = urc_sub.try_next_message_pure().unwrap() {
             assert_eq!("utiliread.dk", res.host);
             assert_eq!("1.2.3.4", res.ip);
         } else {
             panic!("Invalid URC");
         }
 
-        assert_eq!(0, subscription.available());
+        assert_eq!(0, urc_sub.available());
     }
 
     #[test]
@@ -298,23 +316,24 @@ mod tests {
         assert_eq_hex!(b"AT+CIPRXGET=1\r", cmd.as_bytes());
     }
 
-    #[tokio::test]
-    async fn can_read_data() {
+    #[test]
+    fn can_read_data() {
         let cmd = ReadData { id: 5, max_len: 16 };
         assert_eq_hex!(b"AT+CIPRXGET=2,5,16\r", cmd.as_bytes());
 
-        let (mut ingress, device, urc_channel) = setup_atat!();
-
-        let mut subscription = urc_channel.subscribe().unwrap();
-
+        let (mut ingress, mut res_sub, mut urc_sub) = setup_atat!();
         ingress
-            .write(b"\r\n+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n")
-            .await;
-        ingress.write(b"\r\nOK\r\n").await;
+            .try_write(b"\r\n+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n")
+            .unwrap();
+        ingress.try_write(b"\r\nOK\r\n").unwrap();
 
-        let mut at_client = device.handle.client.lock().await;
-        at_client.send(&cmd).await.unwrap();
-        if let Urc::ReadData(data) = subscription.try_next_message_pure().unwrap() {
+        if let ResMessage::Response(message) = res_sub.try_next_message_pure().unwrap() {
+            assert!(message.is_empty());
+        } else {
+            panic!("Invalid response");
+        }
+
+        if let Urc::ReadData(data) = urc_sub.try_next_message_pure().unwrap() {
             assert_eq!(5, data.id);
             assert_eq!(8, data.data_len);
             assert_eq!(0, data.pending_len);
@@ -323,6 +342,6 @@ mod tests {
             panic!("Invalid URC");
         }
 
-        assert_eq!(0, subscription.available());
+        assert_eq!(0, urc_sub.available());
     }
 }

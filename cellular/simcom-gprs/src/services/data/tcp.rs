@@ -319,57 +319,37 @@ impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Drop for TcpSocket<'_, '_, 
 
 #[cfg(test)]
 mod tests {
-    use core::convert::Infallible;
-
-    use atat::{
-        bbqueue::{
-            framed::{FrameConsumer, FrameProducer},
-            BBBuffer,
-        },
-        AtatIngress,
-    };
+    use atat::AtatIngress;
     use embedded_nal_async::{IpAddr, Ipv4Addr, SocketAddr};
-    use tokio::task::yield_now;
 
     use crate::{
         device::{SocketState, SOCKET_STATE_UNKNOWN, SOCKET_STATE_UNUSED},
+        services::serial_mock::{RxMock, SerialMock},
         Device, SimcomAtatBuffers, MAX_SOCKETS,
     };
 
     use super::*;
 
-    struct FrameWriter<'a, const N: usize>(FrameProducer<'a, N>);
-
-    impl<const N: usize> Io for FrameWriter<'_, N> {
-        type Error = Infallible;
-    }
-
-    impl<const N: usize> Write for FrameWriter<'_, N> {
-        async fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
-            let len = buf.len();
-            let mut grant = self.0.grant(len).unwrap();
-            grant[..len].copy_from_slice(buf);
-            grant.commit(len);
-            yield_now().await;
-            Ok(len)
-        }
-    }
-
     macro_rules! setup_atat {
         () => {{
-            static mut BUFFERS: SimcomAtatBuffers<128, 512> = SimcomAtatBuffers::new();
-            static SERIAL: BBBuffer<1000> = BBBuffer::new();
-            let buffers = unsafe { &mut BUFFERS };
-            let (producer, consumer) = SERIAL.try_split_framed().unwrap();
-            let (ingress, device) = Device::from_buffers(buffers, FrameWriter(producer));
-            (ingress, device, consumer)
+            static BUFFERS: SimcomAtatBuffers<128> = SimcomAtatBuffers::new();
+            static SERIAL: SerialMock = SerialMock::new();
+            let (tx, rx) = SERIAL.split();
+            let (ingress, device) = Device::from_buffers(&BUFFERS, tx);
+            (ingress, device, rx)
         }};
     }
 
-    async fn connect<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>(
+    async fn connect<
+        'buf,
+        'dev,
+        'sub,
+        AtCl: AtatClient,
+        AtUrcCh: AtatUrcChannel<Urc> + Send + 'static,
+    >(
         ingress: &mut impl AtatIngress,
         device: &'dev mut Device<'buf, 'sub, AtCl, AtUrcCh>,
-        serial: &mut FrameConsumer<'_, 1000>,
+        serial: &mut RxMock<'_>,
         id: usize,
     ) -> TcpSocket<'buf, 'dev, 'sub, AtCl, AtUrcCh> {
         for _ in 0..MAX_SOCKETS {
@@ -391,25 +371,34 @@ mod tests {
             .await
             .unwrap()
         };
-        let receive = async {
+        let sent = async {
             // Expect StartConnection request
-            let request = with_timeout(Duration::from_millis(100), serial.read_async())
+            let sent = with_timeout(Duration::from_millis(100), serial.next_message_pure())
                 .await
-                .unwrap()
                 .unwrap();
-            assert_eq!(
-                format!("AT+CIPSTART={},\"TCP\",\"127.0.0.1\",\"8080\"\r", id).as_bytes(),
-                request.as_ref()
-            );
-            request.release();
 
             ingress.write(b"\r\nOK\r\n").await;
             ingress
                 .write(format!("\r\n{}, CONNECT OK\r\n", id).as_bytes())
                 .await;
+
+            sent
         };
 
-        tokio::join!(socket, receive).0
+        let (socket, sent) = tokio::join!(socket, sent);
+
+        assert_eq!(
+            format!("AT+CIPSTART={},\"TCP\",\"127.0.0.1\",\"8080\"\r", id).as_bytes(),
+            &sent
+        );
+
+        socket
+    }
+
+    #[tokio::test]
+    async fn can_connect() {
+        let (mut ingress, mut device, mut serial) = setup_atat!();
+        connect(&mut ingress, &mut device, &mut serial, 5).await;
     }
 
     #[tokio::test]
@@ -419,24 +408,26 @@ mod tests {
 
         let read = async {
             let mut buf = [0; 16];
-            assert_eq!(8, socket.read(&mut buf).await.unwrap());
+            socket.read(&mut buf).await.unwrap()
         };
-        let receive = async {
+        let sent = async {
             // Expect ReadData request
-            let request = with_timeout(Duration::from_millis(100), serial.read_async())
+            let sent = with_timeout(Duration::from_millis(100), serial.next_message_pure())
                 .await
-                .unwrap()
                 .unwrap();
-            assert_eq!(b"AT+CIPRXGET=2,5,16\r", request.as_ref());
-            request.release();
 
             ingress
                 .write(b"\r\n+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n")
                 .await;
             ingress.write(b"\r\nOK\r\n").await;
+
+            sent
         };
 
-        tokio::join!(read, receive);
+        let (read, sent) = tokio::join!(read, sent);
+
+        assert_eq!(8, read);
+        assert_eq!(b"AT+CIPRXGET=2,5,16\r", sent.as_slice());
     }
 
     #[tokio::test]
@@ -446,25 +437,27 @@ mod tests {
 
         let read = async {
             let mut buf = [0; 16];
-            assert_eq!(8, socket.read(&mut buf).await.unwrap());
+            socket.read(&mut buf).await.unwrap()
         };
-        let receive = async {
+        let sent = async {
             // Expect ReadData request
-            let request = with_timeout(Duration::from_millis(100), serial.read_async())
+            let sent = with_timeout(Duration::from_millis(100), serial.next_message_pure())
                 .await
-                .unwrap()
                 .unwrap();
-            assert_eq!(b"AT+CIPRXGET=2,5,16\r", request.as_ref());
-            request.release();
 
             ingress.write(b"\r\n+CIPRXGET: 1,5\r\n").await; // Transmitted by modem before it understands our read request
             ingress
                 .write(b"\r\n+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n")
                 .await;
             ingress.write(b"\r\nOK\r\n").await;
+
+            sent
         };
 
-        tokio::join!(read, receive);
+        let (read, sent) = tokio::join!(read, sent);
+
+        assert_eq!(8, read);
+        assert_eq!(b"AT+CIPRXGET=2,5,16\r", sent.as_slice());
     }
 
     #[tokio::test]
@@ -474,16 +467,13 @@ mod tests {
 
         let read = async {
             let mut buf = [0; 16];
-            assert_eq!(8, socket.read(&mut buf).await.unwrap());
+            socket.read(&mut buf).await.unwrap()
         };
-        let receive = async {
+        let sent = async {
             // Expect ReadData request
-            let request = with_timeout(Duration::from_millis(100), serial.read_async())
+            let sent0 = with_timeout(Duration::from_millis(100), serial.next_message_pure())
                 .await
-                .unwrap()
                 .unwrap();
-            assert_eq!(b"AT+CIPRXGET=2,5,16\r", request.as_ref());
-            request.release();
 
             ingress.write(b"\r\n+CIPRXGET: 2,5,0,0\r\n").await; // There is no data available
             ingress.write(b"\r\nOK\r\n").await;
@@ -491,19 +481,22 @@ mod tests {
             ingress.write(b"\r\n+CIPRXGET: 1,5\r\n").await; // Data becomes available
 
             // Expect ReadData request
-            let request = with_timeout(Duration::from_millis(100), serial.read_async())
+            let sent1 = with_timeout(Duration::from_millis(100), serial.next_message_pure())
                 .await
-                .unwrap()
                 .unwrap();
-            assert_eq!(b"AT+CIPRXGET=2,5,16\r", request.as_ref());
-            request.release();
 
             ingress
                 .write(b"\r\n+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n")
                 .await;
             ingress.write(b"\r\nOK\r\n").await;
+
+            (sent0, sent1)
         };
 
-        tokio::join!(read, receive);
+        let (read, sent) = tokio::join!(read, sent);
+
+        assert_eq!(8, read);
+        assert_eq!(b"AT+CIPRXGET=2,5,16\r", sent.0.as_slice());
+        assert_eq!(b"AT+CIPRXGET=2,5,16\r", sent.1.as_slice());
     }
 }

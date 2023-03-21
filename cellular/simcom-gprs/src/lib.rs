@@ -31,19 +31,11 @@ pub struct ProfileId(pub u8);
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ContextId(pub u8);
 
-pub type SimcomAtatBuffers<const INGRESS_BUF_SIZE: usize, const RES_CAPACITY: usize> =
-    atat::Buffers<Urc, INGRESS_BUF_SIZE, RES_CAPACITY, URC_CAPACITY, URC_SUBSCRIBERS>;
+pub type SimcomAtatBuffers<const INGRESS_BUF_SIZE: usize> =
+    atat::Buffers<Urc, INGRESS_BUF_SIZE, URC_CAPACITY, URC_SUBSCRIBERS>;
 
-pub type SimcomAtatIngress<'a, const INGRESS_BUF_SIZE: usize, const RES_CAPACITY: usize> =
-    atat::Ingress<
-        'a,
-        SimcomDigester,
-        Urc,
-        INGRESS_BUF_SIZE,
-        RES_CAPACITY,
-        URC_CAPACITY,
-        URC_SUBSCRIBERS,
-    >;
+pub type SimcomAtatIngress<'a, const INGRESS_BUF_SIZE: usize> =
+    atat::Ingress<'a, SimcomDigester, Urc, INGRESS_BUF_SIZE, URC_CAPACITY, URC_SUBSCRIBERS>;
 
 pub type SimcomAtatUrcChannel = atat::UrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>;
 
