@@ -22,6 +22,7 @@ impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Dns
         assert!(addr_type == AddrType::IPv4 || addr_type == AddrType::Either);
 
         // The modem can only handle one dns lookup at a time
+        // TODO: Maybe let the mutex protect the handle instead of having a Mutex<()>
         let _guard = self.dns_lock.lock().await;
 
         self.handle.drain_background_urcs();
