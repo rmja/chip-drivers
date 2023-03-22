@@ -1,12 +1,12 @@
 use atat::atat_derive::{AtatEnum, AtatResp};
 
 /// 6.2.44 Call Ready Query
-#[derive(Clone, AtatResp)]
+#[derive(AtatResp)]
 pub struct CallReadyResponse {
     pub ready: CallReady,
 }
 
-#[derive(Clone, PartialEq, AtatEnum)]
+#[derive(PartialEq, AtatEnum)]
 #[at_enum(u8)]
 pub enum CallReady {
     #[at_arg(value = 0)]

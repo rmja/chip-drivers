@@ -4,7 +4,7 @@ use atat::atat_derive::AtatCmd;
 pub use responses::*;
 
 /// 6.2.38 AT+CCALR Call Ready Query
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+CCALR?", CallReadyResponse, termination = "\r")]
 pub struct GetCallReady;
 

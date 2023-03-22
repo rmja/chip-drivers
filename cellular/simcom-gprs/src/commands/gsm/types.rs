@@ -1,6 +1,6 @@
 use atat::atat_derive::AtatEnum;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(PartialEq)]
 pub enum Facility {
     /// BAOC (Barr All Outgoing Calls)
     AO,
@@ -24,7 +24,7 @@ pub enum Facility {
     PP,
 }
 
-#[derive(Clone, PartialEq, AtatEnum)]
+#[derive(AtatEnum, PartialEq)]
 #[at_enum(u8)]
 pub enum FacilityMode {
     #[at_arg(value = 0)]
@@ -35,7 +35,7 @@ pub enum FacilityMode {
     QueryStatus,
 }
 
-#[derive(Clone, PartialEq, AtatEnum)]
+#[derive(AtatEnum, PartialEq)]
 #[at_enum(u8)]
 pub enum MobileEquipmentError {
     #[at_arg(value = 0)]
@@ -46,7 +46,7 @@ pub enum MobileEquipmentError {
     EnableVerbose,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum PinStatusCode {
     /// READY: MT is not pending for any password
@@ -65,7 +65,7 @@ pub enum PinStatusCode {
     SimPuk2,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, AtatEnum)]
+#[derive(AtatEnum, Debug, PartialEq)]
 pub enum NetworkRegistrationUrcConfig {
     /// Disable network registration unsolicited result code (default)
     Disabled = 0,
@@ -75,7 +75,7 @@ pub enum NetworkRegistrationUrcConfig {
     EnabledWithLocation = 2,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, AtatEnum)]
+#[derive(AtatEnum, Debug, PartialEq)]
 pub enum NetworkRegistrationStat {
     /// Not registered, the MT is not currently searching a new operator to register to
     NotRegistered = 0,

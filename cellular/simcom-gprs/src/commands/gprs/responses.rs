@@ -11,7 +11,7 @@ pub struct GPRSAttached {
 }
 
 /// 7.2.10 AT+CGREG Network Registration Status
-#[derive(Clone, AtatResp)]
+#[derive(AtatResp)]
 pub struct GPRSNetworkRegistrationStatus {
     #[at_arg(position = 0)]
     pub n: GPRSNetworkRegistrationUrcConfig,
@@ -23,7 +23,7 @@ pub struct GPRSNetworkRegistrationStatus {
     pub ci: Option<String<8>>,
 }
 
-#[derive(Debug, Clone, PartialEq, AtatEnum)]
+#[derive(AtatEnum, Debug, PartialEq)]
 pub enum GPRSNetworkRegistrationUrcConfig {
     /// Disable network registration unsolicited result code (default)
     Disabled = 0,
@@ -33,7 +33,7 @@ pub enum GPRSNetworkRegistrationUrcConfig {
     EnabledWithLocation = 2,
 }
 
-#[derive(Debug, Clone, PartialEq, AtatEnum)]
+#[derive(AtatEnum, Debug, PartialEq)]
 pub enum GPRSNetworkRegistrationStat {
     /// Not registered, the MT is not currently searching a new operator to register to
     NotRegistered = 0,

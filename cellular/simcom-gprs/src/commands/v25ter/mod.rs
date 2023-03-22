@@ -3,13 +3,13 @@ use atat::atat_derive::{AtatCmd, AtatEnum};
 use super::NoResponse;
 
 /// 2.2.7 ATE Set Command Echo Mode
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("E", NoResponse, value_sep = false, termination = "\r")]
 pub struct SetCommandEchoMode {
     pub mode: CommandEchoMode,
 }
 
-#[derive(Clone, PartialEq, AtatEnum)]
+#[derive(PartialEq, AtatEnum)]
 #[at_enum(u8)]
 pub enum CommandEchoMode {
     #[at_arg(value = 0)]
@@ -19,13 +19,13 @@ pub enum CommandEchoMode {
 }
 
 /// 2.2.25 ATV TA Response Format
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("V", NoResponse, value_sep = false, termination = "\r")]
 pub struct SetResponseFormat {
     pub format: ResponseFormat,
 }
 
-#[derive(Clone, PartialEq, AtatEnum)]
+#[derive(PartialEq, AtatEnum)]
 #[at_enum(u8)]
 pub enum ResponseFormat {
     #[at_arg(value = 0)]
@@ -35,17 +35,17 @@ pub enum ResponseFormat {
 }
 
 /// 2.2.27 ATZ Reset Default Configuration
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("Z", NoResponse, termination = "\r")]
 pub struct Reset;
 
 /// 2.2.30 AT&F Factory Defined Configuration
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("&F0", NoResponse, termination = "\r")]
 pub struct SetFactoryDefinedConfiguration;
 
 /// 2.2.40 AT+IFC Set TE-TA Local Data Flow Control
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+IFC", NoResponse, termination = "\r")]
 pub struct SetFlowControl {
     /// The method used by TE (us) at receive of data from TA (modem)
@@ -54,7 +54,7 @@ pub struct SetFlowControl {
     pub to_modem: Option<FlowControl>,
 }
 
-#[derive(Clone, PartialEq, AtatEnum)]
+#[derive(PartialEq, AtatEnum)]
 pub enum FlowControl {
     Disabled = 0,
     /// Software flow control (XON/XOFF)

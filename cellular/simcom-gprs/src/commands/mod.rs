@@ -7,11 +7,11 @@ pub mod tcpip;
 pub mod urc;
 pub mod v25ter;
 
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("", NoResponse, termination = "\r")]
 pub struct AT;
 
-#[derive(Debug, Clone, AtatResp)]
+#[derive(AtatResp)]
 pub struct NoResponse;
 
 #[cfg(test)]

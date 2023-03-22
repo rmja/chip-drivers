@@ -9,17 +9,17 @@ pub use responses::*;
 pub use types::*;
 
 /// 3.2.8 Request Manufacturer Identification
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+CGMI", ManufacturerIdResponse, termination = "\r")]
 pub struct GetManufacturerId;
 
 /// 3.2.9 Request Manufacturer Model
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+CGMM", ModelIdResponse, termination = "\r")]
 pub struct GetModelId;
 
 /// 3.2.17 AT+CLCK Facility Lock
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+CLCK", NoResponse, timeout_ms = 15_000, termination = "\r")]
 pub struct SetFacilityLock<'a> {
     #[at_arg(position = 0)]
@@ -31,18 +31,18 @@ pub struct SetFacilityLock<'a> {
 }
 
 /// 3.2.20 Report Mobile Equipment Error
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+CMEE", NoResponse, termination = "\r")]
 pub struct SetMobileEquipmentError {
     pub value: MobileEquipmentError,
 }
 
 /// 3.2.28 AT+CPIN Enter PIN
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+CPIN?", PinStatus, timeout_ms = 5_000, termination = "\r")]
 pub struct GetPinStatus;
 
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+CPIN", NoResponse, timeout_ms = 5_000, termination = "\r")]
 pub struct EnterPin<'a> {
     #[at_arg(len = 4)]
@@ -50,12 +50,12 @@ pub struct EnterPin<'a> {
 }
 
 // 3.2.32 AT+CREG Network Registration
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+CREG?", NetworkRegistrationStatus, termination = "\r")]
 pub struct GetNetworkRegistrationStatus;
 
 // 3.2.35 AT+CSQ Signal Quality Report
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+CSQ?", SignalQuality, termination = "\r")]
 pub struct GetSignalQuality;
 

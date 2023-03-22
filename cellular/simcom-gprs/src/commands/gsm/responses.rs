@@ -5,26 +5,26 @@ use heapless_bytes::Bytes;
 use super::{NetworkRegistrationStat, NetworkRegistrationUrcConfig, PinStatusCode};
 
 /// 3.2.8 Manufacturer Identification
-#[derive(Clone, AtatResp)]
+#[derive(AtatResp)]
 pub struct ManufacturerIdResponse {
     pub manufacturer: Bytes<16>,
 }
 
 /// 3.2.9 Manufacturer Model
-#[derive(Clone, AtatResp)]
+#[derive(AtatResp)]
 pub struct ModelIdResponse {
     pub model: Bytes<16>,
 }
 
 /// 3.2.28 AT+CPIN Enter PIN
-#[derive(Clone, AtatResp)]
+#[derive(AtatResp)]
 pub struct PinStatus {
     #[at_arg(position = 0)]
     pub code: PinStatusCode,
 }
 
 // 3.2.32 AT+CREG Network Registration
-#[derive(Clone, AtatResp)]
+#[derive(AtatResp)]
 pub struct NetworkRegistrationStatus {
     #[at_arg(position = 0)]
     pub n: NetworkRegistrationUrcConfig,
@@ -39,7 +39,7 @@ pub struct NetworkRegistrationStatus {
 }
 
 // 3.2.35 AT+CSQ Signal Quality Report
-#[derive(Debug, Clone, AtatResp)]
+#[derive(AtatResp)]
 pub struct SignalQuality {
     #[at_arg(position = 0)]
     rssi: u8,

@@ -1,13 +1,13 @@
 use atat::atat_derive::AtatEnum;
 use serde::Deserialize;
 
-#[derive(Debug, Clone, PartialEq, AtatEnum)]
+#[derive(Debug, AtatEnum, PartialEq)]
 pub enum MultiIpValue {
     SingleIpConnection = 0,
     MultiIpConnection = 1,
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[derive(Debug, Deserialize, PartialEq)]
 pub enum ClientState {
     #[serde(rename = "INITIAL")]
     Initial,

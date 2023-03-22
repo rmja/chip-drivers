@@ -10,7 +10,7 @@ use crate::ContextId;
 use super::NoResponse;
 
 /// 7.2.1 AT+CGATT Attach or Detach from GPRS Service
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd(
     "+CGATT?",
     GPRSAttached,
@@ -21,7 +21,7 @@ use super::NoResponse;
 pub struct GetGPRSAttached;
 
 /// 7.2.1 AT+CGATT Attach or Detach from GPRS Service
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd(
     "+CGATT",
     NoResponse,
@@ -34,7 +34,7 @@ pub struct SetGPRSAttached {
 }
 
 /// 7.2.2 AT+CGDCONT Define PDP Context
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+CGDCONT", NoResponse, termination = "\r")]
 pub struct SetPDPContextDefinition<'a> {
     #[at_arg(position = 0)]
@@ -46,7 +46,7 @@ pub struct SetPDPContextDefinition<'a> {
 }
 
 /// 7.2.10 AT+CGREG Network Registration Status
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+CGREG?", GPRSNetworkRegistrationStatus, termination = "\r")]
 pub struct GetGPRSNetworkRegistrationStatus;
 

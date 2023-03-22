@@ -8,14 +8,14 @@ pub use responses::*;
 pub use types::*;
 
 /// 8.2.1 AT+CIPMUX Start Up Multi-IP Connection
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+CIPMUX", NoResponse, termination = "\r")]
 pub struct StartMultiIpConnection {
     pub n: MultiIpValue,
 }
 
 /// 8.2.2 AT+CIPSTART Start Up TCP or UDP Connection
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+CIPSTART", NoResponse, timeout_ms = 75_000, termination = "\r")]
 pub struct StartConnection<'a> {
     pub id: usize,
@@ -28,31 +28,29 @@ pub struct StartConnection<'a> {
 }
 
 /// 8.2.3 AT+CIPSEND Send Data Through TCP or UDP Connection
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+CIPSEND", NoResponse, termination = "\r")]
 pub struct SendData {
     pub id: usize,
     pub len: Option<usize>,
 }
 
-#[derive(Clone)]
 pub struct WriteData<'a> {
     pub buf: &'a [u8],
 }
 
 /// 8.2.6 AT+CIPCLOSE Close TCP or UDP Connection.
-#[derive(Clone)]
 pub struct CloseConnection {
     pub id: usize,
 }
 
 /// 8.2.7 AT+CIPSHUT Deactivate GPRS PDP Context
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+CIPSHUT", NoResponse, timeout_ms = 65_000, termination = "\r")]
 pub struct DeactivateGprsPdpContext;
 
 /// 8.2.9 AT+CSTT Start Task and Set APN, USER NAME, PASSWORD
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+CSTT", NoResponse, termination = "\r")]
 pub struct StartTaskAndSetApn<'a> {
     #[at_arg(len = 16)]
@@ -64,7 +62,7 @@ pub struct StartTaskAndSetApn<'a> {
 }
 
 /// 8.2.10 AT+CIICR Bring Up Wireless Connection with GPRS or CSD
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+CIICR", NoResponse, timeout_ms = 85_000, termination = "\r")]
 pub struct BringUpWireless;
 
@@ -72,7 +70,7 @@ pub struct BringUpWireless;
 ///
 /// AT+CIFSR replies with the local IP without a terminating OK.
 /// We therefore append an AT command to ensure that OK is sent.
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+CIFSR\rAT", LocalIP, termination = "\r")]
 pub struct GetLocalIP;
 
@@ -80,14 +78,14 @@ pub struct GetLocalIP;
 ///
 /// AT+CIPSTATUS replies with an OK before the actual status table.
 /// The actual connection status must therefore be read using a subsequent `ReadConnectionStatus`
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+CIPSTATUS", ConnectionStatus, termination = "\r")]
 pub struct GetConnectionStatus {
     pub id: usize,
 }
 
 /// 8.2.14 AT+CDNSGIP Query the IP Address of Given Domain Name
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+CDNSGIP", NoResponse, termination = "\r")]
 pub struct ResolveHostIp<'a> {
     #[at_arg(len = 128)]
@@ -95,7 +93,7 @@ pub struct ResolveHostIp<'a> {
 }
 
 /// 8.2.26 AT+CIPRXGET Get Data from Network Manually
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+CIPRXGET=1", NoResponse, termination = "\r")]
 pub struct SetManualRxGetMode;
 
@@ -112,7 +110,7 @@ pub struct SetManualRxGetMode;
 ///
 /// This is the reason why we consider the response from AT+CIPRXGET as
 /// `NoResponse` and the +CIPRXGET part a Urc
-#[derive(Clone, AtatCmd)]
+#[derive(AtatCmd)]
 #[at_cmd("+CIPRXGET=2,", NoResponse, value_sep = false, termination = "\r")]
 pub struct ReadData {
     pub id: usize,
