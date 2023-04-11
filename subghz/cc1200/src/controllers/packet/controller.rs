@@ -55,13 +55,14 @@ use crate::{
     ConfigPatch, Driver, DriverError, Rssi, State, Strobe, RX_FIFO_SIZE, TX_FIFO_SIZE,
 };
 use alloc::vec::Vec;
-use embassy_time::{Delay, Instant};
-use embedded_hal_async::spi;
+use embassy_time::Instant;
+use embedded_hal_async::{delay::DelayUs, spi};
 
-pub struct PacketController<'a, Spi, SpiBus, ResetPin, IrqGpio, IrqPin>
+pub struct PacketController<'a, Spi, SpiBus, Delay, ResetPin, IrqGpio, IrqPin>
 where
     Spi: spi::SpiDevice<Bus = SpiBus>,
     SpiBus: embedded_hal_async::spi::SpiBus + 'static,
+    Delay: DelayUs,
     ResetPin: embedded_hal::digital::OutputPin,
     IrqGpio: Gpio,
     IrqPin: embedded_hal_async::digital::Wait,
@@ -83,11 +84,12 @@ pub struct RxToken {
     frame_length: Option<usize>,
 }
 
-impl<'a, Spi, SpiBus, ResetPin, IrqGpio, IrqPin>
-    PacketController<'a, Spi, SpiBus, ResetPin, IrqGpio, IrqPin>
+impl<'a, Spi, SpiBus, Delay, ResetPin, IrqGpio, IrqPin>
+    PacketController<'a, Spi, SpiBus, Delay, ResetPin, IrqGpio, IrqPin>
 where
     Spi: spi::SpiDevice<Bus = SpiBus>,
-    SpiBus: embedded_hal_async::spi::SpiBus,
+    SpiBus: embedded_hal_async::spi::SpiBus + 'static,
+    Delay: DelayUs,
     ResetPin: embedded_hal::digital::OutputPin,
     IrqGpio: Gpio,
     IrqPin: embedded_hal_async::digital::Wait,
