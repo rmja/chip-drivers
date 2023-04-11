@@ -287,7 +287,7 @@ where
 
     /// Start waiting for a packet to be detected
     /// This call completes when `min_frame_length` bytes have been received.
-    pub async fn receive(&mut self, min_frame_length: usize) -> Result<Self::RxToken, DriverError> {
+    pub async fn receive(&mut self, min_frame_length: usize) -> Result<RxToken, DriverError> {
         assert!(min_frame_length > 0);
         assert!(min_frame_length <= RX_FIFO_SIZE);
 
@@ -342,7 +342,7 @@ where
     /// the rx fifo does not overflow
     pub async fn read(
         &mut self,
-        token: &mut Self::RxToken,
+        token: &mut RxToken,
         buffer: &mut [u8],
     ) -> Result<usize, DriverError> {
         // Determine if it is time to transition to fixed packet length mode
@@ -390,7 +390,7 @@ where
     /// Set the length of the frame being received.
     pub async fn accept(
         &mut self,
-        token: &mut Self::RxToken,
+        token: &mut RxToken,
         frame_length: usize,
     ) -> Result<(), DriverError> {
         assert_eq!(
