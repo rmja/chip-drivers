@@ -9,10 +9,10 @@ use crate::commands::{
     NoResponse,
 };
 
-impl AtatCmd<33> for CloseConnection {
+impl AtatCmd<35> for CloseConnection {
     type Response = CloseOk;
 
-    fn as_bytes(&self) -> heapless::Vec<u8, 33> {
+    fn as_bytes(&self) -> heapless::Vec<u8, 35> {
         let inner = CloseConnectionInner { id: self.id };
         inner.as_bytes()
     }
