@@ -33,8 +33,23 @@ where
 }
 
 pub struct CalibrationValue<T> {
+    pub measured: T,
     pub desired: T,
-    pub actual: T,
+}
+
+impl<T> From<CalibrationValue<T>> for (T, T) {
+    fn from(value: CalibrationValue<T>) -> (T, T) {
+        (value.measured, value.desired)
+    }
+}
+
+impl<T> From<(T, T)> for CalibrationValue<T> {
+    fn from(value: (T, T)) -> CalibrationValue<T> {
+        Self {
+            measured: value.0,
+            desired: value.1,
+        }
+    }
 }
 
 impl<Spi, SpiBus, Delay, ResetPin> Driver<Spi, SpiBus, Delay, ResetPin>
@@ -505,7 +520,7 @@ where
         &mut self,
         value: Option<CalibrationValue<i8>>,
     ) -> Result<(), DriverError> {
-        self.rssi_offset = value.map(|x| x.desired - x.actual).map(|x| x as i16);
+        self.rssi_offset = value.map(|x| x.desired - x.measured).map(|x| x as i16);
         Ok(())
     }
 
@@ -514,7 +529,7 @@ where
     /// # Example
     ///
     /// The desired frequency is 868.950MHz but the measured is 868.850MHz.
-    /// Then call with `set_freq_cal(Some(CalibrationValue{ desired: 868950000, actual: 868850000 }))`.
+    /// Then call with `set_freq_cal(Some(CalibrationValue{ measured: 868850000, desired: 868950000 }))`.
     ///
     /// # Details
     ///
@@ -526,7 +541,7 @@ where
     ///
     /// ![f_RF](https://latex.codecogs.com/png.latex?\color{White}f_{RF}=\frac{f_{VCO}}{LO_{div}})
     ///
-    /// For the actual value `FREQOFF=0` and so we have:
+    /// For the measured value `FREQOFF=0` and so we have:
     ///
     /// ![delta](https://latex.codecogs.com/png.latex?\color{White}f_{RFdesired}-f_{RFactual}=\frac{FREQOFF}{2^{18}LO_{div}}f_{XOSC})
     ///
@@ -539,9 +554,9 @@ where
     ) -> Result<(), DriverError> {
         self.freq_off = value.map(|x| {
             let lo_div = lo_divider(x.desired) as i32;
+            let measured = x.measured as i32;
             let desired = x.desired as i32;
-            let actual = x.actual as i32;
-            let delta = actual - desired;
+            let delta = measured - desired;
             let freq_off = (delta * lo_div * 2i32.pow(18)) / 40_000_000;
             freq_off as i16
         });
