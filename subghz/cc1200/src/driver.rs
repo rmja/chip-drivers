@@ -70,10 +70,7 @@ where
         if let Some(reset_pin) = self.reset_pin.as_mut() {
             // Send reset chip sequence
             reset_pin.set_low().unwrap(); // Trigger chip reset pin.
-            self.delay
-                .delay_ms(2)
-                .await
-                .map_err(|_| DriverError::Delay)?;
+            self.delay.delay_ms(2).await.unwrap();
             reset_pin.set_high().unwrap(); // Release chip reset pin.
 
             // The chip reset sequence was sent - wait for chip to become available.

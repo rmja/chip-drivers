@@ -6,7 +6,6 @@ pub enum DriverError {
     InvalidPartNumber,
     InvalidRssi,
     Spi,
-    Delay,
 }
 
 impl<SpiError> From<SpiError> for DriverError
