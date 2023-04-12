@@ -122,8 +122,8 @@ pub struct ReadData {
 mod tests {
     use assert_hex::assert_eq_hex;
     use atat::{
-        AtatCmd, AtatIngress, AtatUrcChannel, DigestResult, Digester, Ingress, ResChannel,
-        ResMessage, UrcChannel,
+        AtatCmd, AtatIngress, AtatUrcChannel, DigestResult, Digester, Ingress, Response,
+        ResponseChannel, UrcChannel,
     };
 
     use crate::{commands::urc::Urc, SimcomDigester};
@@ -132,7 +132,7 @@ mod tests {
 
     macro_rules! setup_atat {
         () => {{
-            static RES_CHANNEL: ResChannel<100> = ResChannel::new();
+            static RES_CHANNEL: ResponseChannel<100> = ResponseChannel::new();
             static URC_CHANNEL: UrcChannel<Urc, 1, 1> = UrcChannel::new();
             let ingress = Ingress::<SimcomDigester, Urc, 100, 1, 1>::new(
                 SimcomDigester::new(),
@@ -227,7 +227,7 @@ mod tests {
         ingress.try_write(b"\r\n10.0.109.44\r\n").unwrap();
         ingress.try_write(b"\r\nOK\r\n").unwrap();
 
-        if let ResMessage::Response(message) = res_sub.try_next_message_pure().unwrap() {
+        if let Response::Ok(message) = res_sub.try_next_message_pure().unwrap() {
             let response = cmd.parse(Ok(&message)).unwrap();
             assert_eq!(b"10.0.109.44", response.ip.as_ref());
         } else {
@@ -245,7 +245,7 @@ mod tests {
             .try_write(b"\r\n+CIPSTATUS: 2,,\"\",\"\",\"\",\"INITIAL\"\r\n\r\nOK\r\n")
             .unwrap();
 
-        if let ResMessage::Response(message) = res_sub.try_next_message_pure().unwrap() {
+        if let Response::Ok(message) = res_sub.try_next_message_pure().unwrap() {
             let response = cmd.parse(Ok(&message)).unwrap();
             assert_eq!(2, response.id);
             assert_eq!("", response.mode);
@@ -267,7 +267,7 @@ mod tests {
             b"\r\n+CIPSTATUS: 2,0,\"TCP\",\"123.123.123.123\",\"80\",\"CONNECTED\"\r\n\r\nOK\r\n",
         ).unwrap();
 
-        if let ResMessage::Response(message) = res_sub.try_next_message_pure().unwrap() {
+        if let Response::Ok(message) = res_sub.try_next_message_pure().unwrap() {
             let response = cmd.parse(Ok(&message)).unwrap();
             assert_eq!(2, response.id);
             assert_eq!("TCP", response.mode);
@@ -292,7 +292,7 @@ mod tests {
             .try_write(b"\r\n+CDNSGIP: 1,\"utiliread.dk\",\"1.2.3.4\"\r\n")
             .unwrap();
 
-        if let ResMessage::Response(message) = res_sub.try_next_message_pure().unwrap() {
+        if let Response::Ok(message) = res_sub.try_next_message_pure().unwrap() {
             assert!(message.is_empty());
         } else {
             panic!("Invalid response");
@@ -325,7 +325,7 @@ mod tests {
             .unwrap();
         ingress.try_write(b"\r\nOK\r\n").unwrap();
 
-        if let ResMessage::Response(message) = res_sub.try_next_message_pure().unwrap() {
+        if let Response::Ok(message) = res_sub.try_next_message_pure().unwrap() {
             assert!(message.is_empty());
         } else {
             panic!("Invalid response");
