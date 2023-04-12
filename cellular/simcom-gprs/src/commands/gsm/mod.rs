@@ -27,7 +27,7 @@ pub struct SetFacilityLock<'a> {
     #[at_arg(position = 1)]
     pub mode: FacilityMode,
     #[at_arg(position = 2, len = 8)]
-    pub password: &'a str,
+    pub password: Option<&'a str>,
 }
 
 /// 3.2.20 Report Mobile Equipment Error
@@ -47,6 +47,27 @@ pub struct GetPinStatus;
 pub struct EnterPin<'a> {
     #[at_arg(len = 4)]
     pub pin: &'a str,
+}
+
+#[derive(AtatCmd)]
+#[at_cmd("+CPIN", NoResponse, timeout_ms = 5_000, termination = "\r")]
+pub struct ChangePin<'a> {
+    #[at_arg(len = 8)]
+    pub password: &'a str,
+    #[at_arg(len = 4)]
+    pub new_pin: &'a str,
+}
+
+// 3.2.29 AT+CPWD Change Password
+#[derive(AtatCmd)]
+#[at_cmd("+CPWD", NoResponse, timeout_ms = 15_000, termination = "\r")]
+pub struct ChangePassword<'a> {
+    #[at_arg(position = 0)]
+    pub facility: Facility,
+    #[at_arg(position = 1, len = 8)]
+    pub old_password: &'a str,
+    #[at_arg(position = 2, len = 8)]
+    pub new_password: &'a str,
 }
 
 // 3.2.32 AT+CREG Network Registration
@@ -101,9 +122,19 @@ mod tests {
         let cmd = SetFacilityLock {
             facility: Facility::SC,
             mode: FacilityMode::Unlock,
-            password: "1234",
+            password: Some("1234"),
         };
         assert_eq_hex!(b"AT+CLCK=\"SC\",0,\"1234\"\r", cmd.as_bytes());
+    }
+
+    #[test]
+    fn can_set_facility_lock_enable_pin() {
+        let cmd = SetFacilityLock {
+            facility: Facility::SC,
+            mode: FacilityMode::Lock,
+            password: None,
+        };
+        assert_eq_hex!(b"AT+CLCK=\"SC\",1\r", cmd.as_bytes());
     }
 
     #[test]
@@ -127,6 +158,25 @@ mod tests {
     fn can_enter_pin() {
         let cmd = EnterPin { pin: "1234" };
         assert_eq_hex!(b"AT+CPIN=\"1234\"\r", cmd.as_bytes());
+    }
+
+    #[test]
+    fn can_change_pin() {
+        let cmd = ChangePin {
+            password: "11223344",
+            new_pin: "1234",
+        };
+        assert_eq_hex!(b"AT+CPIN=\"11223344\",\"1234\"\r", cmd.as_bytes());
+    }
+
+    #[test]
+    fn can_change_password() {
+        let cmd = ChangePassword {
+            facility: Facility::SC,
+            old_password: "1234",
+            new_password: "4321",
+        };
+        assert_eq_hex!(b"AT+CPWD=\"SC\",\"1234\",\"4321\"\r", cmd.as_bytes());
     }
 
     #[test]
