@@ -42,7 +42,7 @@ impl<'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'dev, 's
     pub fn network(&'dev self) -> Network<'dev, 'sub, AtCl, AtUrcCh> {
         Network {
             handle: &self.handle,
-            urc_channel: &self.urc_channel,
+            urc_channel: self.urc_channel,
             gsm_status: gsm::NetworkRegistrationStat::NotRegistered,
             gprs_status: gprs::GPRSNetworkRegistrationStat::NotRegistered,
         }
