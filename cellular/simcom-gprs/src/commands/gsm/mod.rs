@@ -2,6 +2,7 @@ mod impls;
 ///! Commands according to 3GPP TS27.007
 mod responses;
 mod types;
+pub mod urcs;
 
 use super::NoResponse;
 use atat::atat_derive::AtatCmd;
@@ -39,7 +40,7 @@ pub struct SetMobileEquipmentError {
 
 /// 3.2.28 AT+CPIN Enter PIN
 #[derive(AtatCmd)]
-#[at_cmd("+CPIN?", PinStatus, timeout_ms = 5_000, termination = "\r")]
+#[at_cmd("+CPIN?", NoResponse, timeout_ms = 5_000, termination = "\r")]
 pub struct GetPinStatus;
 
 #[derive(AtatCmd)]
@@ -149,9 +150,6 @@ mod tests {
     fn can_get_pin_status() {
         let cmd = GetPinStatus;
         assert_eq_hex!(b"AT+CPIN?\r", cmd.as_bytes());
-
-        let response = cmd.parse(Ok(b"+CPIN: READY")).unwrap();
-        assert_eq!(PinStatusCode::Ready, response.code);
     }
 
     #[test]

@@ -197,6 +197,9 @@ impl<AtCl: AtatClient> Handle<'_, AtCl> {
 
     fn handle_urc(&self, urc: Urc) {
         match urc {
+            Urc::CallReady => {}
+            Urc::SmsReady => {}
+            Urc::PinStatus(_) => {}
             Urc::ConnectOk(_id) => {}
             Urc::ConnectFail(_id) => {}
             Urc::AlreadyConnect(id) => {

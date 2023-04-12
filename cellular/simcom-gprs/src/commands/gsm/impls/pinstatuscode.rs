@@ -115,11 +115,14 @@ impl<'de> Deserialize<'de> for PinStatusCode {
 mod tests {
     use atat::serde_at::from_str;
 
-    use crate::commands::gsm::{PinStatus, PinStatusCode};
+    use crate::commands::gsm::urcs::{PinStatus, PinStatusCode};
 
     #[test]
     fn can_deserialize() {
         let response: PinStatus = from_str(&"+CPIN: READY").unwrap();
         assert_eq!(PinStatusCode::Ready, response.code);
+
+        let response: PinStatus = from_str(&"+CPIN: SIM PIN").unwrap();
+        assert_eq!(PinStatusCode::SimPin, response.code);
     }
 }

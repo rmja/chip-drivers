@@ -2,7 +2,7 @@ use atat::atat_derive::AtatResp;
 use heapless::String;
 use heapless_bytes::Bytes;
 
-use super::{NetworkRegistrationStat, NetworkRegistrationUrcConfig, PinStatusCode};
+use super::{NetworkRegistrationStat, NetworkRegistrationUrcConfig};
 
 /// 3.2.8 Manufacturer Identification
 #[derive(AtatResp)]
@@ -14,13 +14,6 @@ pub struct ManufacturerIdResponse {
 #[derive(AtatResp)]
 pub struct ModelIdResponse {
     pub model: Bytes<16>,
-}
-
-/// 3.2.28 AT+CPIN Enter PIN
-#[derive(AtatResp)]
-pub struct PinStatus {
-    #[at_arg(position = 0)]
-    pub code: PinStatusCode,
 }
 
 // 3.2.32 AT+CREG Network Registration

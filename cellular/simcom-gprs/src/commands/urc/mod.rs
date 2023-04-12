@@ -12,9 +12,16 @@ use atat::{
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use heapless::String;
 
+use super::gsm;
+
+pub use gsm::urcs::*;
+
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum Urc {
+    CallReady,
+    SmsReady,
+    PinStatus(PinStatus),
     ConnectOk(usize),
     ConnectFail(usize),
     AlreadyConnect(usize),
@@ -27,6 +34,12 @@ pub enum Urc {
 
 #[derive(Debug, Clone, AtatUrc)]
 enum UrcInner {
+    #[at_urc("Call Ready")]
+    CallReady,
+    #[at_urc("SMS Ready")]
+    SmsReady,
+    #[at_urc("+CPIN")]
+    PinStatus(PinStatus),
     #[at_urc("+CDNSGIP")]
     IpLookup(HostIp),
 }
@@ -57,6 +70,9 @@ pub struct Data(Arc<Mutex<CriticalSectionRawMutex, Option<Vec<u8>>>>);
 impl From<UrcInner> for Urc {
     fn from(value: UrcInner) -> Self {
         match value {
+            UrcInner::CallReady => Urc::CallReady,
+            UrcInner::SmsReady => Urc::SmsReady,
+            UrcInner::PinStatus(x) => Urc::PinStatus(x),
             UrcInner::IpLookup(x) => Urc::IpLookup(x),
         }
     }
@@ -85,6 +101,9 @@ impl atat::Parser for Urc {
             streaming::parse_data_available,
             streaming::parse_read_data,
             streaming::parse_receive,
+            urc_helper("Call Ready"),
+            urc_helper("SMS Ready"),
+            urc_helper("+CPIN"),
             urc_helper("+CDNSGIP"),
         ))(buf)?;
         Ok(r)
@@ -100,6 +119,47 @@ mod tests {
     use crate::SimcomDigester;
 
     use super::*;
+
+    #[test]
+    fn can_parse_call_ready() {
+        let mut digester = SimcomDigester::new();
+
+        assert_eq!(
+            (DigestResult::Urc(b"Call Ready"), 14),
+            digester.digest(b"\r\nCall Ready\r\n")
+        );
+        let urc = Urc::parse(b"Call Ready").unwrap();
+        assert_matches!(urc, Urc::CallReady);
+    }
+
+    #[test]
+    fn can_parse_sms_ready() {
+        let mut digester = SimcomDigester::new();
+
+        assert_eq!(
+            (DigestResult::Urc(b"SMS Ready"), 14),
+            digester.digest(b"\r\nSMS Ready\r\n")
+        );
+        let urc = Urc::parse(b"SMS Ready").unwrap();
+        assert_matches!(urc, Urc::SmsReady);
+    }
+
+    #[test]
+    fn can_parse_pin_status() {
+        let mut digester = SimcomDigester::new();
+
+        assert_eq!(
+            (DigestResult::Urc(b"+CPIN: READY"), 16),
+            digester.digest(b"\r\n+CPIN: READY\r\n")
+        );
+        let urc = Urc::parse(b"+CPIN: READY").unwrap();
+        assert_matches!(
+            urc,
+            Urc::PinStatus(PinStatus {
+                code: PinStatusCode::Ready
+            })
+        );
+    }
 
     #[test]
     fn can_parse_connect_ok() {

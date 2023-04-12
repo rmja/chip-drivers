@@ -46,7 +46,7 @@ pub enum MobileEquipmentError {
     EnableVerbose,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum PinStatusCode {
     /// READY: MT is not pending for any password
