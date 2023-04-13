@@ -25,7 +25,7 @@ pub mod pri {
     bitfield! {
         /// GPIO3 IO Pin Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Iocfg3(u8);
 
         /// Analog transfer enable
@@ -75,7 +75,7 @@ pub mod pri {
     bitfield! {
         /// GPIO2 IO Pin Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Iocfg2(u8);
 
         /// Analog transfer enable. Refer to IOCFG3
@@ -111,7 +111,7 @@ pub mod pri {
     bitfield! {
         /// GPIO1 IO Pin Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Iocfg1(u8);
 
         /// Analog transfer enable. Refer to IOCFG3
@@ -147,7 +147,7 @@ pub mod pri {
     bitfield! {
         /// GPIO0 IO Pin Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Iocfg0(u8);
 
         /// Analog transfer enable. Refer to IOCFG3
@@ -183,7 +183,7 @@ pub mod pri {
     bitfield! {
         /// Sync Word Configuration [31:24]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Sync3(u8);
 
         /// Sync word [31:24]
@@ -213,7 +213,7 @@ pub mod pri {
     bitfield! {
         /// Sync Word Configuration [23:16]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Sync2(u8);
 
         /// Sync word [23:16]
@@ -243,7 +243,7 @@ pub mod pri {
     bitfield! {
         /// Sync Word Configuration [15:8]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Sync1(u8);
 
         /// Sync word [15:8]
@@ -273,7 +273,7 @@ pub mod pri {
     bitfield! {
         /// Sync Word Configuration [7:0]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Sync0(u8);
 
         /// Sync Word [7:0]
@@ -303,7 +303,7 @@ pub mod pri {
     bitfield! {
         /// Sync Word Detection Configuration Reg. 1
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct SyncCfg1(u8);
 
         /// Sync word configuration. When SYNC_MODE = 000b, all samples (noise or data) received after RX mode is entered will either be put in the RX FIFO or output on a GPIO configured as SERIAL_RX. Note that when 4'ary modulation is used the sync word uses 2'ary modulation (the symbol rate is kept the same)
@@ -366,7 +366,7 @@ pub mod pri {
     bitfield! {
         /// Sync Word Detection Configuration Reg. 0
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct SyncCfg0(u8);
 
         pub sync_cfg0_not_used, _: 7, 6;
@@ -454,7 +454,7 @@ pub mod pri {
     bitfield! {
         /// Frequency Deviation Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct DeviationM(u8);
 
         /// Frequency deviation (mantissa part)<BR/>
@@ -486,7 +486,7 @@ pub mod pri {
     bitfield! {
         /// Modulation Format and Frequency Deviation Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct ModcfgDevE(u8);
 
         /// Modem mode configuration
@@ -552,7 +552,7 @@ pub mod pri {
     bitfield! {
         /// Digital DC Removal Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct DcfiltCfg(u8);
 
         pub dcfilt_cfg_not_used, _: 7;
@@ -634,7 +634,7 @@ pub mod pri {
     bitfield! {
         /// Preamble Length Configuration Reg. 1
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct PreambleCfg1(u8);
 
         pub preamble_cfg1_not_used, _: 7, 6;
@@ -734,7 +734,7 @@ pub mod pri {
     bitfield! {
         /// Preamble Detection Configuration Reg. 0
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct PreambleCfg0(u8);
 
         /// Preamble detection enable
@@ -807,7 +807,7 @@ pub mod pri {
     bitfield! {
         /// Digital Image Channel Compensation Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Iqic(u8);
 
         /// IQ image compensation enable. When this bit is set the following must be true:<BR/>
@@ -925,7 +925,7 @@ pub mod pri {
     bitfield! {
         /// Channel Filter Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct ChanBw(u8);
 
         /// ADC_CIC_DECFACT is a table index which programs the first decimation filter and program the RX filter bandwidth. ADC_CIC_DECFACT table index:
@@ -980,7 +980,7 @@ pub mod pri {
     bitfield! {
         /// General Modem Parameter Configuration Reg. 1
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Mdmcfg1(u8);
 
         /// When CARRIER_SENSE_GATE is 1, the demodulator will not start to look for a sync word before CARRIER_SENSE is asserted
@@ -1092,7 +1092,7 @@ pub mod pri {
     bitfield! {
         /// General Modem Parameter Configuration Reg. 0
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Mdmcfg0(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -1187,7 +1187,7 @@ pub mod pri {
     bitfield! {
         /// Symbol Rate Configuration Exponent and Mantissa [19:16]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct SymbolRate2(u8);
 
         /// Symbol rate (exponent part)<BR/>
@@ -1222,7 +1222,7 @@ pub mod pri {
     bitfield! {
         /// Symbol Rate Configuration Mantissa [15:8]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct SymbolRate1(u8);
 
         /// Symbol rate (mantissa part [15:8]). See SYMBOL_RATE2
@@ -1252,7 +1252,7 @@ pub mod pri {
     bitfield! {
         /// Symbol Rate Configuration Mantissa [7:0]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct SymbolRate0(u8);
 
         /// Symbol rate (mantissa part [7:0]). See SYMBOL_RATE2
@@ -1282,7 +1282,7 @@ pub mod pri {
     bitfield! {
         /// AGC Reference Level Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AgcRef(u8);
 
         /// AGC reference level. The AGC reference level must be higher than the minimum SNR to the demodulator. The AGC reduces the analog front end gain when the magnitude output from channel filter > AGC reference level. An optimum AGC reference level is given by several conditions, but a rule of thumb is to use the formula:<BR/>
@@ -1315,7 +1315,7 @@ pub mod pri {
     bitfield! {
         /// Carrier Sense Threshold Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AgcCsThr(u8);
 
         /// AGC carrier sense threshold. Two's complement number with 1 dB resolution
@@ -1345,7 +1345,7 @@ pub mod pri {
     bitfield! {
         /// RSSI Offset Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AgcGainAdjust(u8);
 
         /// AGC gain adjustment. This register is used to adjust RSSI[11:0] to the actual carrier input signal level to compensate for interpolation gains (two's complement with 1 dB resolution)
@@ -1375,7 +1375,7 @@ pub mod pri {
     bitfield! {
         /// Automatic Gain Control Configuration Reg. 3
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AgcCfg3(u8);
 
         /// AGC behavior after sync word detection
@@ -1441,7 +1441,7 @@ pub mod pri {
     bitfield! {
         /// Automatic Gain Control Configuration Reg. 2
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AgcCfg2(u8);
 
         ///
@@ -1508,7 +1508,7 @@ pub mod pri {
     bitfield! {
         /// Automatic Gain Control Configuration Reg. 1
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AgcCfg1(u8);
 
         pub agc_cfg1_not_used, _: 7;
@@ -1610,7 +1610,7 @@ pub mod pri {
     bitfield! {
         /// Automatic Gain Control Configuration Reg. 0
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AgcCfg0(u8);
 
         /// AGC hysteresis level. The difference between the desired signal level and the actual signal level must be larger than AGC hysteresis level before the AGC changes the front end gain
@@ -1732,7 +1732,7 @@ pub mod pri {
     bitfield! {
         /// FIFO Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FifoCfg(u8);
 
         /// Automatically flushes the last packet received in the RX FIFO if a CRC error occurred. If this bit has been turned off and should be turned on again, an SFRX strobe must first be issued
@@ -1765,7 +1765,7 @@ pub mod pri {
     bitfield! {
         /// Device Address Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct DevAddr(u8);
 
         /// Address used for packet filtering in RX
@@ -1795,7 +1795,7 @@ pub mod pri {
     bitfield! {
         /// Frequency Synthesizer Calibration and Settling Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct SettlingCfg(u8);
 
         pub settling_cfg_not_used, _: 7, 5;
@@ -1871,7 +1871,7 @@ pub mod pri {
     bitfield! {
         /// Frequency Synthesizer Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsCfg(u8);
 
         pub fs_cfg_not_used, _: 7, 5;
@@ -1959,7 +1959,7 @@ pub mod pri {
     bitfield! {
         /// eWOR Configuration Reg. 1
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct WorCfg1(u8);
 
         /// eWOR timer resolution. Controls the t_Event0 and RX timeout resolution<BR/>
@@ -2032,7 +2032,7 @@ pub mod pri {
     bitfield! {
         /// eWOR Configuration Reg. 0
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct WorCfg0(u8);
 
         /// RX duty cycle mode configuration. eWOR mode and RXDCM cannot be enabled at the same time. Both modes can be used in RX Sniff Mode implementation
@@ -2127,7 +2127,7 @@ pub mod pri {
     bitfield! {
         /// Event 0 Configuration MSB
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct WorEvent0Msb(u8);
 
         /// Event 0 timeout (MSB)<BR/>
@@ -2158,7 +2158,7 @@ pub mod pri {
     bitfield! {
         /// Event 0 Configuration LSB
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct WorEvent0Lsb(u8);
 
         /// Event 0 timeout (LSB). See WOR_EVENT0_MSB
@@ -2188,7 +2188,7 @@ pub mod pri {
     bitfield! {
         /// RX Duty Cycle Mode Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct RxdcmTime(u8);
 
         /// Configures the time spent in RXDCM state</br>
@@ -2222,7 +2222,7 @@ pub mod pri {
     bitfield! {
         /// Packet Configuration Reg. 2
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct PktCfg2(u8);
 
         pub pkt_cfg2_not_used, _: 7;
@@ -2326,7 +2326,7 @@ pub mod pri {
     bitfield! {
         /// Packet Configuration Reg. 1
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct PktCfg1(u8);
 
         /// Forward error correction enable
@@ -2440,7 +2440,7 @@ pub mod pri {
     bitfield! {
         /// Packet Configuration Reg. 0
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct PktCfg0(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -2518,7 +2518,7 @@ pub mod pri {
     bitfield! {
         /// RFEND Configuration Reg. 1
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct RfendCfg1(u8);
 
         pub rfend_cfg1_not_used, _: 7, 6;
@@ -2587,7 +2587,7 @@ pub mod pri {
     bitfield! {
         /// RFEND Configuration Reg. 0
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct RfendCfg0(u8);
 
         pub rfend_cfg0_not_used, _: 7;
@@ -2691,7 +2691,7 @@ pub mod pri {
     bitfield! {
         /// Power Amplifier Configuration Reg. 1
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct PaCfg1(u8);
 
         pub pa_cfg2_not_used, _: 7;
@@ -2735,7 +2735,7 @@ pub mod pri {
     bitfield! {
         /// Power Amplifier Configuration Reg. 0
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct PaCfg0(u8);
 
         /// First intermediate power level. The first intermediate power level can be programmed within the power level range 0 - 7/16 in steps of 1/16
@@ -2780,7 +2780,7 @@ pub mod pri {
     bitfield! {
         /// ASK Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AskCfg(u8);
 
         /// Controls the bandwidth of the data filter in ASK/OOK mode. The -3 dB cut-off frequency (fCut-Off) is given below:</br>
@@ -2843,7 +2843,7 @@ pub mod pri {
     bitfield! {
         /// Packet Length Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct PktLen(u8);
 
         /// In fixed length mode this field indicates the packet length, and a value of 0 indicates the length to be 256 bytes. In variable length packet mode, this value indicates the maximum allowed length packets
@@ -2876,7 +2876,7 @@ pub mod ext {
     bitfield! {
         /// IF Mix Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct IfMixCfg(u8);
 
         pub if_mix_cfg_not_used, _: 7, 5;
@@ -2927,7 +2927,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Offset Correction Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FreqoffCfg(u8);
 
         pub freqoff_cfg_not_used, _: 7, 6;
@@ -3018,7 +3018,7 @@ pub mod ext {
     bitfield! {
         /// Timing Offset Correction Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct TocCfg(u8);
 
         /// Timing offset correction limit. TOC_LIMIT specifies maximum symbol rate offset the receiver is able to handle. TOC_LIMIT != 00b requires 2 - 4 bytes preamble for symbol rate offset compensation
@@ -3088,7 +3088,7 @@ pub mod ext {
     bitfield! {
         /// MARC Spare
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct MarcSpare(u8);
 
         pub marc_spare_not_used, _: 7, 4;
@@ -3129,7 +3129,7 @@ pub mod ext {
     bitfield! {
         /// External Clock Frequency Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct EcgCfg(u8);
 
         pub ecg_cfg_not_used, _: 7, 5;
@@ -3198,7 +3198,7 @@ pub mod ext {
     bitfield! {
         /// General Modem Parameter Configuration Reg. 2
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Mdmcfg2(u8);
 
         /// Sets the resolution of an ASK bit transition (# of points). The following rule must be satisfied:<BR/>
@@ -3287,7 +3287,7 @@ pub mod ext {
     bitfield! {
         /// External Control Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct ExtCtrl(u8);
 
         pub ext_ctrl_not_used, _: 7, 3;
@@ -3346,7 +3346,7 @@ pub mod ext {
     bitfield! {
         /// RC Oscillator Calibration Fine
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct RccalFine(u8);
 
         pub rccal_fine_not_used, _: 7;
@@ -3378,7 +3378,7 @@ pub mod ext {
     bitfield! {
         /// RC Oscillator Calibration Coarse
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct RccalCoarse(u8);
 
         pub rccal_coarse_not_used, _: 7;
@@ -3410,7 +3410,7 @@ pub mod ext {
     bitfield! {
         /// RC Oscillator Calibration Clock Offset
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct RccalOffset(u8);
 
         pub rccal_offset_not_used, _: 7, 5;
@@ -3442,7 +3442,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Offset MSB
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Freqoff1(u8);
 
         /// Frequency offset [15:8]. Updated by user or SAFC strobe. The value is in two's complement format
@@ -3472,7 +3472,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Offset LSB
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Freqoff0(u8);
 
         /// Frequency offset [7:0]. Updated by user or SAFC strobe. The value is in two's complement format
@@ -3502,7 +3502,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Configuration [23:16]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Freq2(u8);
 
         /// Frequency [23:16]<BR/>
@@ -3533,7 +3533,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Configuration [15:8]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Freq1(u8);
 
         /// Frequency [15:8]. See FREQ2
@@ -3563,7 +3563,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Configuration [7:0]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Freq0(u8);
 
         /// Frequency [7:0]. See FREQ2
@@ -3593,7 +3593,7 @@ pub mod ext {
     bitfield! {
         /// Analog to Digital Converter Configuration Reg. 2
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct IfAdc2(u8);
 
         pub if_adc2_not_used, _: 7, 4;
@@ -3625,7 +3625,7 @@ pub mod ext {
     bitfield! {
         /// Analog to Digital Converter Configuration Reg. 1
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct IfAdc1(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -3664,7 +3664,7 @@ pub mod ext {
     bitfield! {
         /// Analog to Digital Converter Configuration Reg. 0
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct IfAdc0(u8);
 
         pub if_adc0_not_used, _: 7, 6;
@@ -3702,7 +3702,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Synthesizer Digital Reg. 1
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsDig1(u8);
 
         pub fs_dig1_not_used, _: 7, 6;
@@ -3746,7 +3746,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Synthesizer Digital Reg. 0
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsDig0(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -3826,7 +3826,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Synthesizer Calibration Reg. 3
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsCal3(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -3872,7 +3872,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Synthesizer Calibration Reg. 2
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsCal2(u8);
 
         pub fs_cal2_not_used, _: 7, 6;
@@ -3904,7 +3904,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Synthesizer Calibration Reg. 1
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsCal1(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -3943,7 +3943,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Synthesizer Calibration Reg. 0
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsCal0(u8);
 
         pub fs_cal0_not_used, _: 7, 4;
@@ -4000,7 +4000,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Synthesizer Charge Pump Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsChp(u8);
 
         pub fs_chp_not_used, _: 7, 6;
@@ -4032,7 +4032,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Synthesizer Divide by 2
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsDivtwo(u8);
 
         pub fs_divtwo_not_used, _: 7, 2;
@@ -4064,7 +4064,7 @@ pub mod ext {
     bitfield! {
         /// FS Digital Synthesizer Module Configuration Reg. 1
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsDsm1(u8);
 
         pub fs_dsm1_not_used, _: 7, 3;
@@ -4099,7 +4099,7 @@ pub mod ext {
     bitfield! {
         /// FS Digital Synthesizer Module Configuration Reg. 0
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsDsm0(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -4135,7 +4135,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Synthesizer Divider Chain Configuration Reg. 1
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsDvc1(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -4174,7 +4174,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Synthesizer Divider Chain Configuration Reg. 0
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsDvc0(u8);
 
         pub fs_dvc0_not_used, _: 7, 5;
@@ -4209,7 +4209,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Synthesizer Local Bias Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsLbi(u8);
 
         pub fs_lbi_not_used, _: 7, 0;
@@ -4238,7 +4238,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Synthesizer Phase Frequency Detector Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsPfd(u8);
 
         pub fsd_pfd_not_used, _: 7;
@@ -4276,7 +4276,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Synthesizer Prescaler Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsPre(u8);
 
         pub fs_pre_not_used, _: 7;
@@ -4314,7 +4314,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Synthesizer Divider Regulator Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsRegDivCml(u8);
 
         pub fs_reg_div_cml_not_used, _: 7, 5;
@@ -4349,7 +4349,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Synthesizer Spare
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsSpare(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -4379,7 +4379,7 @@ pub mod ext {
     bitfield! {
         /// FS Voltage Controlled Oscillator Configuration Reg. 4
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsVco4(u8);
 
         pub fs_vco4_not_used, _: 7, 5;
@@ -4411,7 +4411,7 @@ pub mod ext {
     bitfield! {
         /// FS Voltage Controlled Oscillator Configuration Reg. 3
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsVco3(u8);
 
         pub fs_vco3_not_used, _: 7, 1;
@@ -4443,7 +4443,7 @@ pub mod ext {
     bitfield! {
         /// FS Voltage Controlled Oscillator Configuration Reg. 2
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsVco2(u8);
 
         pub fs_vco2_not_used, _: 7;
@@ -4475,7 +4475,7 @@ pub mod ext {
     bitfield! {
         /// FS Voltage Controlled Oscillator Configuration Reg. 1
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsVco1(u8);
 
         /// VCO VCDAC configuration. Used in open-loop CAL mode.  Note that avdd is the internal VCO regulated voltage
@@ -4515,7 +4515,7 @@ pub mod ext {
     bitfield! {
         /// FS Voltage Controlled Oscillator Configuration Reg. 0
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsVco0(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -4551,7 +4551,7 @@ pub mod ext {
     bitfield! {
         /// Global Bias Configuration Reg. 6
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Gbias6(u8);
 
         pub gbias6_not_used, _: 7, 6;
@@ -4583,7 +4583,7 @@ pub mod ext {
     bitfield! {
         /// Global Bias Configuration Reg. 5
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Gbias5(u8);
 
         pub gbias5_not_used, _: 7, 4;
@@ -4615,7 +4615,7 @@ pub mod ext {
     bitfield! {
         /// Global Bias Configuration Reg. 4
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Gbias4(u8);
 
         pub gbias4_not_used, _: 7, 6;
@@ -4647,7 +4647,7 @@ pub mod ext {
     bitfield! {
         /// Global Bias Configuration Reg. 3
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Gbias3(u8);
 
         pub gbias3_not_used, _: 7, 6;
@@ -4679,7 +4679,7 @@ pub mod ext {
     bitfield! {
         /// Global Bias Configuration Reg. 2
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Gbias2(u8);
 
         pub gbias2_not_used, _: 7;
@@ -4714,7 +4714,7 @@ pub mod ext {
     bitfield! {
         /// Global Bias Configuration Reg. 1
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Gbias1(u8);
 
         pub gbias1_not_used, _: 7, 5;
@@ -4746,7 +4746,7 @@ pub mod ext {
     bitfield! {
         /// Global Bias Configuration Reg. 0
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Gbias0(u8);
 
         pub gbias0_not_used, _: 7, 2;
@@ -4781,7 +4781,7 @@ pub mod ext {
     bitfield! {
         /// Intermediate Frequency Amplifier Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Ifamp(u8);
 
         pub ifamp_not_used, _: 7, 4;
@@ -4838,7 +4838,7 @@ pub mod ext {
     bitfield! {
         /// Low Noise Amplifier Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Lna(u8);
 
         pub lna_not_used, _: 7, 2;
@@ -4870,7 +4870,7 @@ pub mod ext {
     bitfield! {
         /// RX Mixer Configuration
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Rxmix(u8);
 
         pub rxmix_not_used, _: 7, 2;
@@ -4902,7 +4902,7 @@ pub mod ext {
     bitfield! {
         /// Crystal Oscillator Configuration Reg. 5
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Xosc5(u8);
 
         pub xosc5_not_used, _: 7, 4;
@@ -4934,7 +4934,7 @@ pub mod ext {
     bitfield! {
         /// Crystal Oscillator Configuration Reg. 4
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Xosc4(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -4964,7 +4964,7 @@ pub mod ext {
     bitfield! {
         /// Crystal Oscillator Configuration Reg. 3
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Xosc3(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -4997,7 +4997,7 @@ pub mod ext {
     bitfield! {
         /// Crystal Oscillator Configuration Reg. 2
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Xosc2(u8);
 
         pub xosc2_not_used, _: 7, 4;
@@ -5041,7 +5041,7 @@ pub mod ext {
     bitfield! {
         /// Crystal Oscillator Configuration Reg. 1
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Xosc1(u8);
 
         pub xosc1_not_used, _: 7, 3;
@@ -5086,7 +5086,7 @@ pub mod ext {
     bitfield! {
         /// Crystal Oscillator Configuration Reg. 0
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Xosc0(u8);
 
         pub xosc0_not_used, _: 7, 2;
@@ -5121,7 +5121,7 @@ pub mod ext {
     bitfield! {
         /// Analog Spare
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AnalogSpare(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -5151,7 +5151,7 @@ pub mod ext {
     bitfield! {
         /// Power Amplifier Configuration Reg. 3
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct PaCfg3(u8);
 
         pub pa_cfg3_not_used, _: 7, 3;
@@ -5183,7 +5183,7 @@ pub mod ext {
     bitfield! {
         /// eWOR Timer Counter Value MSB
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct WorTime1(u8);
 
         /// eWOR timer counter value [15:8]
@@ -5213,7 +5213,7 @@ pub mod ext {
     bitfield! {
         /// eWOR Timer Counter Value LSB
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct WorTime0(u8);
 
         /// eWOR timer counter value [7:0]
@@ -5243,7 +5243,7 @@ pub mod ext {
     bitfield! {
         /// eWOR Timer Capture Value MSB
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct WorCapture1(u8);
 
         /// eWOR timer capture value [15:8]. Capture timer value on sync detect to simplify timer re-synchronization
@@ -5273,7 +5273,7 @@ pub mod ext {
     bitfield! {
         /// eWOR Timer Capture Value LSB
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct WorCapture0(u8);
 
         /// eWOR timer capture Value [7:0]. Capture timer value on sync detect to simplify timer re-synchronization
@@ -5303,7 +5303,7 @@ pub mod ext {
     bitfield! {
         /// MARC Built-In Self-Test
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Bist(u8);
 
         pub bist_not_used, _: 7, 4;
@@ -5344,7 +5344,7 @@ pub mod ext {
     bitfield! {
         /// DC Filter Offset I MSB
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct DcfiltoffsetI1(u8);
 
         /// DC compensation, real value [15:8]
@@ -5374,7 +5374,7 @@ pub mod ext {
     bitfield! {
         /// DC Filter Offset I LSB
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct DcfiltoffsetI0(u8);
 
         /// DC compensation, real value [7:0]
@@ -5404,7 +5404,7 @@ pub mod ext {
     bitfield! {
         /// DC Filter Offset Q MSB
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct DcfiltoffsetQ1(u8);
 
         /// DC compensation, imaginary value [15:8]
@@ -5434,7 +5434,7 @@ pub mod ext {
     bitfield! {
         /// DC Filter Offset Q LSB
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct DcfiltoffsetQ0(u8);
 
         /// DC compensation, imaginary value [7:0]
@@ -5464,7 +5464,7 @@ pub mod ext {
     bitfield! {
         /// IQ Imbalance Value I MSB
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct IqieI1(u8);
 
         /// IQ imbalance value, real part [15:8]
@@ -5494,7 +5494,7 @@ pub mod ext {
     bitfield! {
         /// IQ Imbalance Value I LSB
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct IqieI0(u8);
 
         /// IQ imbalance value, real part [7:0]
@@ -5524,7 +5524,7 @@ pub mod ext {
     bitfield! {
         /// IQ Imbalance Value Q MSB
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct IqieQ1(u8);
 
         /// IQ imbalance value, imaginary part [15:8]
@@ -5554,7 +5554,7 @@ pub mod ext {
     bitfield! {
         /// IQ Imbalance Value Q LSB
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct IqieQ0(u8);
 
         /// IQ imbalance value, imaginary part [7:0]
@@ -5584,7 +5584,7 @@ pub mod ext {
     bitfield! {
         /// Received Signal Strength Indicator Reg. 1
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Rssi1(u8);
 
         /// Received signal strength indicator. 8 MSB of RSSI[11:0]. RSSI[11:0] is a two's complement number with 0.0625 dB resolution hence ranging from -128 to 127 dBm. A value of -128 dBm indicates that the RSSI is invalid. To get a correct RSSI value a calibrated RSSI offset value should be subtracted from the value given by RSSI[11:0]. This RSSI offset value can either be subtracted from RSSI[11:0] manually or the offset can be written to AGC_GAIN_ADJUST.GAIN_ADJUSTMENT meaning that RSSI[11:0] will give a correct value directly
@@ -5614,7 +5614,7 @@ pub mod ext {
     bitfield! {
         /// Received Signal Strength Indicator Reg.0
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Rssi0(u8);
 
         pub rssi0_not_used, _: 7;
@@ -5676,7 +5676,7 @@ pub mod ext {
     bitfield! {
         /// MARC State
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Marcstate(u8);
 
         pub marcstate_not_used, _: 7;
@@ -5728,7 +5728,7 @@ pub mod ext {
     bitfield! {
         /// Link Quality Indicator Value
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct LqiVal(u8);
 
         /// CRC OK. Asserted in RX when PKT_CFG1.CRC_CFG = 1 or 10b and a good packet is received. This signal is always on if the radio is in TX or if the radio is in RX and PKT_CFG1.CRC_CFG = 0. The signal is de-asserted when RX mode is entered and PKT_CFG1.CRC_CFG != 0
@@ -5768,7 +5768,7 @@ pub mod ext {
     bitfield! {
         /// Preamble and Sync Word Error
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct PqtSyncErr(u8);
 
         /// Preamble qualifier value. The actual preamble qualifier value can be greater than 15 but since PQT_ERROR is only 4 bits wide PQT_ERROR = MIN[actual PQT qualifier value] modulo 16. This means that if PQT _ERROR = 0001b the actual preamble qualifier value is either 1 or 17. When a sync word is detected (SYNC_EVENT is asserted) the PQT_ERROR register field is not updated again before RX mode is re-entered. As long as the radio is in RX searching for a sync word the register field will be updated continuously
@@ -5801,7 +5801,7 @@ pub mod ext {
     bitfield! {
         /// Demodulator Status
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct DemStatus(u8);
 
         /// RSSI step found during packet reception (after the assertion of SYNC_EVENT). The RSSI step is 10 or 16 dB and is configured through AGC_CFG1.RSSI_STEP_THR
@@ -5871,7 +5871,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Offset Estimate MSB
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FreqoffEst1(u8);
 
         /// Frequency offset estimate [15:8] MSB<BR/>
@@ -5902,7 +5902,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Offset Estimate LSB
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FreqoffEst0(u8);
 
         /// See FREQOFF_EST1
@@ -5932,7 +5932,7 @@ pub mod ext {
     bitfield! {
         /// Automatic Gain Control Reg. 3
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AgcGain3(u8);
 
         pub agc_gain3_not_used, _: 7;
@@ -5964,7 +5964,7 @@ pub mod ext {
     bitfield! {
         /// Automatic Gain Control Reg. 2
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AgcGain2(u8);
 
         /// Override AGC gain control
@@ -6007,7 +6007,7 @@ pub mod ext {
     bitfield! {
         /// Automatic Gain Control Reg. 1
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AgcGain1(u8);
 
         pub agc_gain1_not_used, _: 7, 5;
@@ -6042,7 +6042,7 @@ pub mod ext {
     bitfield! {
         /// Automatic Gain Control Reg. 0
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AgcGain0(u8);
 
         pub agc_gain0_not_used, _: 7;
@@ -6077,7 +6077,7 @@ pub mod ext {
     bitfield! {
         /// Custom Frequency Modulation RX Data
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct CfmRxDataOut(u8);
 
         /// 8-bit signed soft-decision symbol data, either from normal receiver or transparent receiver. Can be read using burst mode to do custom demodulation<BR/>
@@ -6109,7 +6109,7 @@ pub mod ext {
     bitfield! {
         /// Custom Frequency Modulation TX Data
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct CfmTxDataIn(u8);
 
         /// 8-bit signed soft TX data input register for custom SW controlled modulation. Can be accessed using burst mode to get arbitrary modulation<BR/>
@@ -6140,7 +6140,7 @@ pub mod ext {
     bitfield! {
         /// ASK Soft Decision Output
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AskSoftRxData(u8);
 
         pub ask_soft_not_used, _: 7, 6;
@@ -6174,7 +6174,7 @@ pub mod ext {
     bitfield! {
         /// Random Number Generator Value
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Rndgen(u8);
 
         /// Random number generator enable
@@ -6214,7 +6214,7 @@ pub mod ext {
     bitfield! {
         /// Signal Magnitude after CORDIC [16]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Magn2(u8);
 
         pub magn_not_used, _: 7, 1;
@@ -6246,7 +6246,7 @@ pub mod ext {
     bitfield! {
         /// Signal Magnitude after CORDIC [15:8]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Magn1(u8);
 
         /// Instantaneous signal magnitude after CORDIC, 17-bit [15:8]
@@ -6276,7 +6276,7 @@ pub mod ext {
     bitfield! {
         /// Signal Magnitude after CORDIC [7:0]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Magn0(u8);
 
         /// Instantaneous signal magnitude after CORDIC, 17-bit [7:0]
@@ -6306,7 +6306,7 @@ pub mod ext {
     bitfield! {
         /// Signal Angular after CORDIC [9:8]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Ang1(u8);
 
         pub ang1_not_used, _: 7, 2;
@@ -6338,7 +6338,7 @@ pub mod ext {
     bitfield! {
         /// Signal Angular after CORDIC [7:0]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Ang0(u8);
 
         /// Instantaneous signal angular after CORDIC, 10-bit [7:0]
@@ -6368,7 +6368,7 @@ pub mod ext {
     bitfield! {
         /// Channel Filter Data Real Part [16]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct ChfiltI2(u8);
 
         pub chfilt_i2_not_used, _: 7, 2;
@@ -6409,7 +6409,7 @@ pub mod ext {
     bitfield! {
         /// Channel Filter Data Real Part [15:8]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct ChfiltI1(u8);
 
         /// Channel filter data, real part, 17-bit [15:8]
@@ -6439,7 +6439,7 @@ pub mod ext {
     bitfield! {
         /// Channel Filter Data Real Part [7:0]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct ChfiltI0(u8);
 
         /// Channel filter data, real part, 17-bit [7:0]
@@ -6469,7 +6469,7 @@ pub mod ext {
     bitfield! {
         /// Channel Filter Data Imaginary Part [16]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct ChfiltQ2(u8);
 
         pub chfilt_q2_not_used, _: 7, 1;
@@ -6501,7 +6501,7 @@ pub mod ext {
     bitfield! {
         /// Channel Filter Data Imaginary Part [15:8]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct ChfiltQ1(u8);
 
         /// Channel filter data, imaginary part, 17-bit [15:8]
@@ -6531,7 +6531,7 @@ pub mod ext {
     bitfield! {
         /// Channel Filter Data Imaginary Part [7:0]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct ChfiltQ0(u8);
 
         /// Channel filter data, imaginary part, 17-bit [7:0]
@@ -6561,7 +6561,7 @@ pub mod ext {
     bitfield! {
         /// General Purpose Input/Output Status
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct GpioStatus(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -6594,7 +6594,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Synthesizer Calibration Control
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FscalCtrl(u8);
 
         pub fscal_ctrl_not_used, _: 7;
@@ -6648,7 +6648,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Synthesizer Phase Adjust
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct PhaseAdjust(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -6678,7 +6678,7 @@ pub mod ext {
     bitfield! {
         /// Part Number
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Partnumber(u8);
 
         /// Chip ID
@@ -6715,7 +6715,7 @@ pub mod ext {
     bitfield! {
         /// Part Revision
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Partversion(u8);
 
         /// Chip revision
@@ -6745,7 +6745,7 @@ pub mod ext {
     bitfield! {
         /// Serial Status
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct SerialStatus(u8);
 
         pub serial_status_not_used, _: 7, 6;
@@ -6799,7 +6799,7 @@ pub mod ext {
     bitfield! {
         /// Modem Status Reg. 1
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct ModemStatus1(u8);
 
         /// Asserted simultaneously as SYNC_EVENT. De-asserted when an SRX strobe has been issued
@@ -6850,7 +6850,7 @@ pub mod ext {
     bitfield! {
         /// Modem Status Reg. 0
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct ModemStatus0(u8);
 
         pub modem_status0_not_used, _: 7;
@@ -6900,7 +6900,7 @@ pub mod ext {
     bitfield! {
         /// MARC Status Reg. 1
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct MarcStatus1(u8);
 
         /// This register should be read to find what caused the MCU_WAKEUP signal to be asserted
@@ -6949,7 +6949,7 @@ pub mod ext {
     bitfield! {
         /// MARC Status Reg. 0
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct MarcStatus0(u8);
 
         pub marc_status0_not_used, _: 7, 4;
@@ -6997,7 +6997,7 @@ pub mod ext {
     bitfield! {
         /// Power Amplifier Intermediate Frequency Amplifier Test
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct PaIfampTest(u8);
 
         pub pa_ifamp_test_not_used, _: 7, 5;
@@ -7041,7 +7041,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Synthesizer Test
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FsrfTest(u8);
 
         pub fsrf_test_not_used, _: 7;
@@ -7082,7 +7082,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Synthesizer Prescaler Test
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct PreTest(u8);
 
         pub pre_test_not_used, _: 7, 5;
@@ -7117,7 +7117,7 @@ pub mod ext {
     bitfield! {
         /// Frequency Synthesizer Prescaler Override
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct PreOvr(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -7150,7 +7150,7 @@ pub mod ext {
     bitfield! {
         /// Analog to Digital Converter Test
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AdcTest(u8);
 
         pub adc_test_not_used, _: 7, 6;
@@ -7185,7 +7185,7 @@ pub mod ext {
     bitfield! {
         /// Digital Divider Chain Test
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct DvcTest(u8);
 
         pub dvc_test_not_used, _: 7, 5;
@@ -7217,7 +7217,7 @@ pub mod ext {
     bitfield! {
         /// Analog Test
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Atest(u8);
 
         pub atest_not_used, _: 7;
@@ -7252,7 +7252,7 @@ pub mod ext {
     bitfield! {
         /// Analog Test LVDS
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AtestLvds(u8);
 
         pub atest_lvds_not_used, _: 7, 6;
@@ -7287,7 +7287,7 @@ pub mod ext {
     bitfield! {
         /// Analog Test Mode
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AtestMode(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -7320,7 +7320,7 @@ pub mod ext {
     bitfield! {
         /// Crystal Oscillator Test Reg. 1
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct XoscTest1(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -7359,7 +7359,7 @@ pub mod ext {
     bitfield! {
         /// Crystal Oscillator Test Reg. 0
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct XoscTest0(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -7389,7 +7389,7 @@ pub mod ext {
     bitfield! {
         /// AES
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Aes(u8);
 
         pub aes_not_used, _: 7, 2;
@@ -7431,7 +7431,7 @@ pub mod ext {
     bitfield! {
         /// MODEM Test
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct MdmTest(u8);
 
         pub mdm_test_not_used, _: 7, 4;
@@ -7463,7 +7463,7 @@ pub mod ext {
     bitfield! {
         /// RX FIFO Pointer First Entry
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Rxfirst(u8);
 
         /// Pointer to the first entry in the RX FIFO
@@ -7493,7 +7493,7 @@ pub mod ext {
     bitfield! {
         /// TX FIFO Pointer First Entry
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Txfirst(u8);
 
         /// Pointer to the first entry in the TX FIFO
@@ -7523,7 +7523,7 @@ pub mod ext {
     bitfield! {
         /// RX FIFO Pointer Last Entry
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Rxlast(u8);
 
         /// Pointer to the last entry in the RX FIFO
@@ -7553,7 +7553,7 @@ pub mod ext {
     bitfield! {
         /// TX FIFO Pointer Last Entry
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct Txlast(u8);
 
         /// Pointer to the last entry in the TX FIFO
@@ -7583,7 +7583,7 @@ pub mod ext {
     bitfield! {
         /// TX FIFO Status
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct NumTxbytes(u8);
 
         /// Number of bytes in the TX FIFO
@@ -7613,7 +7613,7 @@ pub mod ext {
     bitfield! {
         /// RX FIFO Status
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct NumRxbytes(u8);
 
         /// Number of bytes in the RX FIFO
@@ -7643,7 +7643,7 @@ pub mod ext {
     bitfield! {
         /// TX FIFO Status
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FifoNumTxbytes(u8);
 
         pub fifo_num_txbytes_not_used, _: 7, 4;
@@ -7675,7 +7675,7 @@ pub mod ext {
     bitfield! {
         /// RX FIFO Status
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct FifoNumRxbytes(u8);
 
         pub fifo_num_rxbytes_not_used, _: 7, 4;
@@ -7707,7 +7707,7 @@ pub mod ext {
     bitfield! {
         /// RX FIFO Status
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct RxfifoPreBuf(u8);
 
         /// Contains the first byte received in the RX FIFO when the RX FIFO is empty (i.e. RXFIRST = RXLAST)
@@ -7737,7 +7737,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Key [127:120]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesKey15(u8);
 
         /// 16 bytes AES key, [127:120]
@@ -7767,7 +7767,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Key [119:112]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesKey14(u8);
 
         /// 16 bytes AES key, [119:112]
@@ -7797,7 +7797,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Key [111:104]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesKey13(u8);
 
         /// 16 bytes AES key, [111:104]
@@ -7827,7 +7827,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Key [103:96]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesKey12(u8);
 
         /// 16 bytes AES key, [103:96]
@@ -7857,7 +7857,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Key [95:88]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesKey11(u8);
 
         /// 16 bytes AES key, [95:88]
@@ -7887,7 +7887,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Key [87:80]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesKey10(u8);
 
         /// 16 bytes AES key, [87:80]
@@ -7917,7 +7917,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Key [79:72]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesKey9(u8);
 
         /// 16 bytes AES key, [79:72]
@@ -7947,7 +7947,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Key [71:64]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesKey8(u8);
 
         /// 16 bytes AES key, [71:64]
@@ -7977,7 +7977,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Key [63:56]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesKey7(u8);
 
         /// 16 bytes AES key, [63:56]
@@ -8007,7 +8007,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Key [55:48]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesKey6(u8);
 
         /// 16 bytes AES key, [55:48]
@@ -8037,7 +8037,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Key [47:40]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesKey5(u8);
 
         /// 16 bytes AES key, [47:40]
@@ -8067,7 +8067,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Key [39:32]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesKey4(u8);
 
         /// 16 bytes AES key, [39:32]
@@ -8097,7 +8097,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Key [31:24]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesKey3(u8);
 
         /// 16 bytes AES key, [31:24]
@@ -8127,7 +8127,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Key [23:16]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesKey2(u8);
 
         /// 16 bytes AES key, [23:16]
@@ -8157,7 +8157,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Key [15:8]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesKey1(u8);
 
         /// 16 bytes AES key, [15:8]
@@ -8187,7 +8187,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Key [7:0]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesKey0(u8);
 
         /// 16 bytes AES key, [7:0]
@@ -8217,7 +8217,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Buffer [127:120]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesBuffer15(u8);
 
         /// AES data buffer [127:120]. The content serves as input to the AES encryption module, and the content will be overwritten with the encrypted data when the AES encryption is completed
@@ -8247,7 +8247,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Buffer [119:112]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesBuffer14(u8);
 
         /// AES data buffer [119:112]. See AES_BUFFER15 for details
@@ -8277,7 +8277,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Buffer [111:104]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesBuffer13(u8);
 
         /// AES data buffer [111:104]. See AES_BUFFER15 for details
@@ -8307,7 +8307,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Buffer [103:93]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesBuffer12(u8);
 
         /// AES data buffer [103:93]. See AES_BUFFER15 for details
@@ -8337,7 +8337,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Buffer [95:88]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesBuffer11(u8);
 
         /// AES data buffer [95:88]. See AES_BUFFER15 for details
@@ -8367,7 +8367,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Buffer [87:80]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesBuffer10(u8);
 
         /// AES data buffer [87:80]. See AES_BUFFER15 for details
@@ -8397,7 +8397,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Buffer [79:72]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesBuffer9(u8);
 
         /// AES data buffer [79:72]. See AES_BUFFER15 for details
@@ -8427,7 +8427,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Buffer [71:64]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesBuffer8(u8);
 
         /// AES data buffer [71:64]. See AES_BUFFER15 for details
@@ -8457,7 +8457,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Buffer [63:56]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesBuffer7(u8);
 
         /// AES data buffer [63:56]. See AES_BUFFER15 for details
@@ -8487,7 +8487,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Buffer [55:48]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesBuffer6(u8);
 
         /// AES data buffer [55:48]. See AES_BUFFER15 for details
@@ -8517,7 +8517,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Buffer [47:40]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesBuffer5(u8);
 
         /// AES data buffer [47:40]. See AES_BUFFER15 for details
@@ -8547,7 +8547,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Buffer [39:32]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesBuffer4(u8);
 
         /// AES data buffer [39:32]. See AES_BUFFER15 for details
@@ -8577,7 +8577,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Buffer [31:24]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesBuffer3(u8);
 
         /// AES data buffer [131:24]. See AES_BUFFER15 for details
@@ -8607,7 +8607,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Buffer [23:16]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesBuffer2(u8);
 
         /// AES data buffer [23:16]. See AES_BUFFER15 for details
@@ -8637,7 +8637,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Buffer [15:8]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesBuffer1(u8);
 
         /// AES data buffer [15:8]. See AES_BUFFER15 for details
@@ -8667,7 +8667,7 @@ pub mod ext {
     bitfield! {
         /// Advanced Encryption Standard Buffer [7:0]
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct AesBuffer0(u8);
 
         /// AES data buffer [7:0]. See AES_BUFFER15 for details

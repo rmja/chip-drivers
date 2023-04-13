@@ -146,7 +146,7 @@ void WriteRegister(StringBuilder writer, Register register)
     bitfield! {
         /// {{registerDescription}}
         ///
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, PartialEq)]
         pub struct {{structName}}(u8);
     """);
     foreach (var bitfield in register.Bitfield)
