@@ -9,9 +9,15 @@ pub struct ConfigPatch<'a> {
 impl<'a> ConfigPatch<'a> {
     /// Get a register value, or None if the register is not part of the configuration.
     pub const fn get<R: ~const Register>(&self) -> Option<R> {
-        let index = (R::ADDRESS.0 - self.first_address.0) as usize;
-        let value = self.values.get(index).copied();
-        if let Some(value) = value {
+        let index =
+            if self.first_address.0 < IfMixCfg::ADDRESS.0 && R::ADDRESS.0 >= IfMixCfg::ADDRESS.0 {
+                (0x2F - self.first_address.0 + R::ADDRESS.0 - IfMixCfg::ADDRESS.0) as usize
+            } else {
+                (R::ADDRESS.0 - self.first_address.0) as usize
+            };
+
+        let value = self.values.get(index);
+        if let Some(&value) = value {
             Some(R::from(value))
         } else {
             None
@@ -46,8 +52,26 @@ impl<'a> ConfigPatch<'a> {
 mod tests {
     use crate::{
         configs::wmbus_modecmto,
-        regs::{ext::IfMixCfg, pri::Iocfg3, Register},
+        regs::{
+            ext::{FreqoffCfg, IfMixCfg},
+            pri::{Iocfg2, Iocfg3},
+            Register,
+        },
     };
+
+    #[test]
+    fn can_get() {
+        let config = wmbus_modecmto::<0>();
+        let iocfg2 = config.get::<Iocfg2>().unwrap();
+        let freqoff_cfg = config.get::<FreqoffCfg>().unwrap();
+
+        let (pri, ext) = config.split();
+        let pri = pri.unwrap();
+        let ext = ext.unwrap();
+
+        assert_eq!(iocfg2, pri.get::<Iocfg2>().unwrap());
+        assert_eq!(freqoff_cfg, ext.get::<FreqoffCfg>().unwrap());
+    }
 
     #[test]
     fn can_split() {
