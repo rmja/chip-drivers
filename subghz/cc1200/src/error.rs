@@ -1,8 +1,6 @@
 #[derive(Debug)]
 pub enum DriverError {
     Timeout,
-    RxFifoOverflow,
-    TxFifoUnderflow,
     InvalidPartNumber,
     InvalidRssi,
     Spi,

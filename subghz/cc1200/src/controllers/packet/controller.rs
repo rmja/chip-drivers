@@ -52,28 +52,38 @@ use crate::{
         },
         Iocfg, Register,
     },
-    ConfigPatch, Driver, DriverError, Rssi, State, Strobe, RX_FIFO_SIZE, TX_FIFO_SIZE,
+    ConfigPatch, Driver, Rssi, State, Strobe, RX_FIFO_SIZE, TX_FIFO_SIZE,
 };
-use alloc::vec::Vec;
 use embassy_time::Instant;
-use embedded_hal_async::{delay::DelayUs, spi};
+use embedded_hal_async::{delay::DelayUs, spi as async_spi};
+use heapless::Vec;
 
-pub struct PacketController<'a, Spi, SpiBus, Delay, ResetPin, IrqGpio, IrqPin>
-where
-    Spi: spi::SpiDevice<Bus = SpiBus>,
-    SpiBus: embedded_hal_async::spi::SpiBus + 'static,
+use super::ControllerError;
+
+pub struct PacketController<
+    'a,
+    Spi,
+    SpiBus,
+    Delay,
+    ResetPin,
+    IrqGpio,
+    IrqPin,
+    const WRITE_QUEUE_CAPACITY: usize,
+> where
+    Spi: async_spi::SpiDevice<Bus = SpiBus>,
+    SpiBus: async_spi::SpiBus + 'static,
     Delay: DelayUs,
     ResetPin: embedded_hal::digital::OutputPin,
     IrqGpio: Gpio,
     IrqPin: embedded_hal_async::digital::Wait,
 {
-    driver: &'a mut Driver<Spi, SpiBus, Delay, ResetPin>,
+    driver: &'a mut Driver<Spi, Delay, ResetPin>,
     config: ConfigPatch<'a>,
     pktcfg0: PktCfg0,
     irq_iocfg: IrqGpio::Iocfg,
     irq_gpio: PhantomData<IrqGpio>,
     irq_pin: &'a mut IrqPin,
-    pending_write_queue: Vec<u8>,
+    pending_write_queue: Vec<u8, WRITE_QUEUE_CAPACITY>,
     written_to_txfifo: usize,
     is_idle: bool,
 }
@@ -84,21 +94,19 @@ pub struct RxToken {
     frame_length: Option<usize>,
 }
 
-impl<'a, Spi, SpiBus, Delay, ResetPin, IrqGpio, IrqPin>
-    PacketController<'a, Spi, SpiBus, Delay, ResetPin, IrqGpio, IrqPin>
+impl<'a, Spi, SpiBus, Delay, ResetPin, IrqGpio, IrqPin, const WRITE_QUEUE_CAPACITY: usize>
+    PacketController<'a, Spi, SpiBus, Delay, ResetPin, IrqGpio, IrqPin, WRITE_QUEUE_CAPACITY>
 where
-    Spi: spi::SpiDevice<Bus = SpiBus>,
-    SpiBus: embedded_hal_async::spi::SpiBus + 'static,
+    Spi: async_spi::SpiDevice<Bus = SpiBus>,
+    SpiBus: async_spi::SpiBus + 'static,
     Delay: DelayUs,
     ResetPin: embedded_hal::digital::OutputPin,
     IrqGpio: Gpio,
     IrqPin: embedded_hal_async::digital::Wait,
 {
-    type RxToken = RxToken;
-
     /// Create a new packet controller
     pub fn new(
-        driver: &'a mut Driver<Spi, SpiBus, Delay, ResetPin>,
+        driver: &'a mut Driver<Spi, Delay, ResetPin>,
         irq_pin: &'a mut IrqPin,
         config: ConfigPatch<'a>,
     ) -> Self {
@@ -116,7 +124,7 @@ where
     }
 
     /// Initialize the chip by sending a configuration and entering idle state
-    pub async fn init(&mut self) -> Result<(), DriverError> {
+    pub async fn init(&mut self) -> Result<(), ControllerError> {
         self.driver.write_patch(self.config).await?;
 
         // FIFO must be enabled
@@ -140,19 +148,20 @@ where
     }
 
     /// Set the frequency in Hz
-    pub async fn set_frequency(&mut self, frequency: u32) -> Result<(), DriverError> {
+    pub async fn set_frequency(&mut self, frequency: u32) -> Result<(), ControllerError> {
         let lo_div = lo_divider(frequency) as u32;
         let freq: [u8; 4] = (frequency * lo_div).to_be_bytes();
         let patch = ConfigPatch {
             first_address: Freq2::ADDRESS,
             values: &freq[1..],
         };
-        self.driver.write_patch(patch).await
+        self.driver.write_patch(patch).await?;
+        Ok(())
     }
 
     /// Write bytes to the chip tx fifo
     /// Bytes that cannot fit in the tx fifo are buffered and written during transmission
-    pub async fn write(&mut self, buffer: &[u8]) -> Result<(), DriverError> {
+    pub async fn write(&mut self, buffer: &[u8]) -> Result<(), ControllerError> {
         let write_now_length = usize::min(buffer.len(), TX_FIFO_SIZE - self.written_to_txfifo);
         let (write_now, write_later) = buffer.split_at(write_now_length);
 
@@ -162,14 +171,16 @@ where
         }
 
         if !write_later.is_empty() {
-            self.pending_write_queue.extend_from_slice(write_later);
+            self.pending_write_queue
+                .extend_from_slice(write_later)
+                .map_err(|_| ControllerError::WriteCapacity)?;
         }
 
         Ok(())
     }
 
     /// Start transmission of previously written bytes
-    pub async fn transmit(&mut self) -> Result<(), DriverError> {
+    pub async fn transmit(&mut self) -> Result<(), ControllerError> {
         assert_ne!(
             0, self.written_to_txfifo,
             "write() was not called prior to starting transmission"
@@ -224,7 +235,7 @@ where
             self.driver
                 .write_fifo(&self.pending_write_queue[..length])
                 .await?;
-            self.pending_write_queue.drain(0..length);
+            self.pending_write_queue.remove(length);
 
             if self.driver.last_status().unwrap().state() == State::TX_FIFO_ERROR {
                 // It seems that we came too late with the FIFO refill.
@@ -234,7 +245,7 @@ where
                 self.pending_write_queue.clear();
                 self.written_to_txfifo = 0;
 
-                return Err(DriverError::TxFifoUnderflow);
+                return Err(ControllerError::TxFifoUnderflow);
             }
         }
 
@@ -266,7 +277,7 @@ where
     }
 
     /// Start the receiver on the chip
-    pub async fn listen(&mut self) -> Result<(), DriverError> {
+    pub async fn listen(&mut self) -> Result<(), ControllerError> {
         assert!(self.is_idle);
 
         // Flush RX buffer before we start the receiver
@@ -283,13 +294,14 @@ where
     }
 
     /// Read the current rssi level
-    pub async fn get_rssi(&mut self) -> Result<Rssi, DriverError> {
-        self.driver.read_rssi().await
+    pub async fn get_rssi(&mut self) -> Result<Rssi, ControllerError> {
+        let rssi = self.driver.read_rssi().await?;
+        Ok(rssi)
     }
 
     /// Start waiting for a packet to be detected
     /// This call completes when `min_frame_length` bytes have been received.
-    pub async fn receive(&mut self, min_frame_length: usize) -> Result<RxToken, DriverError> {
+    pub async fn receive(&mut self, min_frame_length: usize) -> Result<RxToken, ControllerError> {
         assert!(min_frame_length > 0);
         assert!(min_frame_length <= RX_FIFO_SIZE);
 
@@ -346,7 +358,7 @@ where
         &mut self,
         token: &mut RxToken,
         buffer: &mut [u8],
-    ) -> Result<usize, DriverError> {
+    ) -> Result<usize, ControllerError> {
         // Determine if it is time to transition to fixed packet length mode
         if self.pktcfg0.length_config() == LengthConfigValue::InfinitePacketLengthMode && let Some(frame_length) = token.frame_length && token.read_from_rxfifo + RX_FIFO_SIZE >= frame_length {
                 // We are now sufficently close to the end of the packet.
@@ -373,7 +385,7 @@ where
         let received = self.driver.read_fifo(buffer).await?;
 
         if self.driver.last_status().unwrap().state() == State::RX_FIFO_ERROR {
-            return Err(DriverError::RxFifoOverflow);
+            return Err(ControllerError::RxFifoOverflow);
         }
 
         if received > 0 && token.read_from_rxfifo == 0 {
@@ -394,7 +406,7 @@ where
         &mut self,
         token: &mut RxToken,
         frame_length: usize,
-    ) -> Result<(), DriverError> {
+    ) -> Result<(), ControllerError> {
         assert_eq!(
             LengthConfigValue::InfinitePacketLengthMode,
             self.pktcfg0.length_config()
@@ -431,7 +443,7 @@ where
     }
 
     /// Stop receiving by setting chip to idle.
-    pub async fn idle(&mut self) -> Result<(), DriverError> {
+    pub async fn idle(&mut self) -> Result<(), ControllerError> {
         self.driver.strobe_until_idle(Strobe::SIDLE).await?;
 
         self.is_idle = true;

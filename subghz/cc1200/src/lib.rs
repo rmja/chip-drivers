@@ -8,7 +8,6 @@
 #![feature(async_fn_in_trait)]
 #![feature(const_slice_split_at_not_mut)]
 
-extern crate alloc;
 extern crate bitfield;
 
 #[macro_use]

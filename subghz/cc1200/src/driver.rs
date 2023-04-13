@@ -9,7 +9,7 @@ use crate::{
     ConfigPatch, DriverError, PartNumber, Rssi, RX_FIFO_SIZE, TX_FIFO_SIZE,
 };
 use embedded_hal::digital::OutputPin;
-use embedded_hal_async::{delay, spi, spi_transaction};
+use embedded_hal_async::{delay, spi as async_spi, spi_transaction as async_spi_transaction};
 use futures::{
     future::{self, Either},
     pin_mut,
@@ -17,14 +17,12 @@ use futures::{
 
 const DEFAULT_RSSI_OFFSET: i16 = -99; // The default offset defined in the users guide
 
-pub struct Driver<SpiDevice, SpiBus, Delay, ResetPin>
+pub struct Driver<Spi, Delay, ResetPin>
 where
-    SpiDevice: spi::SpiDevice<Bus = SpiBus>,
-    SpiBus: spi::SpiBus,
     Delay: delay::DelayUs,
     ResetPin: OutputPin,
 {
-    spi: SpiDevice,
+    spi: Spi,
     delay: Delay,
     reset_pin: Option<ResetPin>,
     last_status: Option<StatusByte>,
@@ -52,10 +50,10 @@ impl<T> From<(T, T)> for CalibrationValue<T> {
     }
 }
 
-impl<Spi, SpiBus, Delay, ResetPin> Driver<Spi, SpiBus, Delay, ResetPin>
+impl<Spi, SpiBus, Delay, ResetPin> Driver<Spi, Delay, ResetPin>
 where
-    Spi: spi::SpiDevice<Bus = SpiBus>,
-    SpiBus: spi::SpiBus,
+    Spi: async_spi::SpiDevice<Bus = SpiBus>,
+    SpiBus: async_spi::SpiBus,
     Delay: delay::DelayUs,
     ResetPin: OutputPin,
 {
@@ -91,7 +89,7 @@ where
             // The chip reset sequence was sent - wait for chip to become available.
 
             let delay = &mut self.delay;
-            let status = spi_transaction!(&mut self.spi, move |bus| async move {
+            let status = async_spi_transaction!(&mut self.spi, move |bus| async move {
                 // Wait 1ms until the chip has had a chance to set the SO pin high.
                 // We must unwrap as the transaction can only return `SpiBus::Error`.
                 delay.delay_ms(1).await.unwrap();
@@ -107,7 +105,7 @@ where
             }
         } else {
             let delay = &mut self.delay;
-            let status = spi_transaction!(&mut self.spi, move |bus| async move {
+            let status = async_spi_transaction!(&mut self.spi, move |bus| async move {
                 bus.write(&[Opcode::Strobe(Strobe::SRES).as_u8()]).await?;
 
                 // The chip reset sequence was sent - wait for chip to become available.
@@ -173,7 +171,7 @@ where
         let mut opcode_rx_buffer = [0; OPCODE_MAX];
         let opcode_rx = &mut opcode_rx_buffer[..opcode_tx.len()];
 
-        let status = spi_transaction!(&mut self.spi, |bus| async {
+        let status = async_spi_transaction!(&mut self.spi, |bus| async {
             bus.transfer(opcode_rx, opcode_tx).await?;
             let status = StatusByte(opcode_rx[0]);
             bus.read(buffer).await?;
@@ -211,7 +209,7 @@ where
         let opcode_len = Opcode::write(first, values.len() > 1).assign(&mut opcode_tx_buffer);
         let opcode_tx = &opcode_tx_buffer[..opcode_len];
 
-        spi_transaction!(&mut self.spi, |bus| async {
+        async_spi_transaction!(&mut self.spi, |bus| async {
             bus.write(opcode_tx).await?;
             bus.write(values).await?;
             Ok(())
@@ -271,7 +269,7 @@ where
         opcode_tx[3] = Opcode::ReadFifoBurst.as_u8();
         let mut opcode_rx = [0; 4];
 
-        let (status, length) = spi_transaction!(&mut self.spi, |bus| async {
+        let (status, length) = async_spi_transaction!(&mut self.spi, |bus| async {
             bus.transfer(&mut opcode_rx, &opcode_tx).await?;
             let status = StatusByte(opcode_rx[0]);
             let available = opcode_rx[2] as usize;
@@ -293,7 +291,7 @@ where
         const OPCODE_TX: [u8; 1] = [Opcode::ReadFifoBurst.as_u8()];
         let mut opcode_rx = [0];
 
-        let status = spi_transaction!(&mut self.spi, |bus| async {
+        let status = async_spi_transaction!(&mut self.spi, |bus| async {
             bus.transfer(&mut opcode_rx, &OPCODE_TX).await?;
             let status = StatusByte(opcode_rx[0]);
             bus.read(buffer).await?;
@@ -316,7 +314,7 @@ where
         opcode_tx[3] = Opcode::ReadFifoBurst.as_u8();
         let mut opcode_rx = [0; 4];
 
-        let status = spi_transaction!(&mut self.spi, |bus| async {
+        let status = async_spi_transaction!(&mut self.spi, |bus| async {
             bus.transfer(&mut opcode_rx, &opcode_tx).await?;
             let status = StatusByte(opcode_rx[0]);
             let mut available = opcode_rx[2] as usize;
@@ -344,7 +342,7 @@ where
         const OPCODE_TX: [u8; 1] = [Opcode::ReadFifoBurst.as_u8()];
         let mut opcode_rx = [0];
 
-        let status = spi_transaction!(&mut self.spi, |bus| async {
+        let status = async_spi_transaction!(&mut self.spi, |bus| async {
             bus.transfer(&mut opcode_rx, &OPCODE_TX).await?;
             let status = StatusByte(opcode_rx[0]);
 
@@ -380,7 +378,7 @@ where
 
         let mut rx = [0; 3 + 1];
 
-        let status = spi_transaction!(&mut self.spi, |bus| async {
+        let status = async_spi_transaction!(&mut self.spi, |bus| async {
             bus.transfer(&mut rx, &tx).await?;
             let status = StatusByte(rx[0]);
             bus.read(buffer).await?;
@@ -400,7 +398,7 @@ where
         const OPCODE_TX: [u8; 1] = [Opcode::WriteFifoBurst.as_u8()];
         let mut opcode_rx = [0];
 
-        let status = spi_transaction!(&mut self.spi, |bus| async {
+        let status = async_spi_transaction!(&mut self.spi, |bus| async {
             bus.transfer(&mut opcode_rx, &OPCODE_TX).await?;
             let status = StatusByte(opcode_rx[0]);
             bus.write(buffer).await?;
@@ -428,7 +426,7 @@ where
         let opcode_tx = [Opcode::Strobe(strobe).as_u8()];
         let mut opcode_rx = [0];
 
-        let status = spi_transaction!(&mut self.spi, |bus| async {
+        let status = async_spi_transaction!(&mut self.spi, |bus| async {
             bus.transfer(&mut opcode_rx, &opcode_tx).await?;
             Ok(StatusByte(opcode_rx[0]))
         })
@@ -452,7 +450,7 @@ where
         let opcode_tx = [Opcode::Strobe(strobe).as_u8()];
         let mut opcode_rx = [0];
 
-        let status = spi_transaction!(&mut self.spi, |bus| async {
+        let status = async_spi_transaction!(&mut self.spi, |bus| async {
             let mut status;
             loop {
                 bus.transfer(&mut opcode_rx, &opcode_tx).await?;
