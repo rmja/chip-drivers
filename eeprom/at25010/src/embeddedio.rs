@@ -1,5 +1,5 @@
 use embedded_hal_async::{delay, spi};
-use embedded_io::{self, asynch, Error, ErrorKind, Io, SeekFrom};
+use embedded_io::{asynch, Error, ErrorKind, Io, SeekFrom};
 
 use crate::{driver::StatefulDriver, DriverError};
 
@@ -9,19 +9,17 @@ impl Error for DriverError {
     }
 }
 
-impl<Spi, SpiBus, Delay> Io for StatefulDriver<Spi, SpiBus, Delay>
+impl<Spi, Delay> Io for StatefulDriver<Spi, Delay>
 where
-    Spi: spi::SpiDevice<Bus = SpiBus>,
-    SpiBus: spi::SpiBus,
+    Spi: spi::SpiDevice,
     Delay: delay::DelayUs,
 {
     type Error = DriverError;
 }
 
-impl<Spi, SpiBus, Delay> asynch::Seek for StatefulDriver<Spi, SpiBus, Delay>
+impl<Spi, Delay> asynch::Seek for StatefulDriver<Spi, Delay>
 where
-    Spi: spi::SpiDevice<Bus = SpiBus>,
-    SpiBus: spi::SpiBus,
+    Spi: spi::SpiDevice,
     Delay: delay::DelayUs,
 {
     async fn seek(&mut self, pos: SeekFrom) -> Result<u64, Self::Error> {
@@ -42,10 +40,9 @@ where
     }
 }
 
-impl<Spi, SpiBus, Delay> asynch::Read for StatefulDriver<Spi, SpiBus, Delay>
+impl<Spi, Delay> asynch::Read for StatefulDriver<Spi, Delay>
 where
-    Spi: spi::SpiDevice<Bus = SpiBus>,
-    SpiBus: spi::SpiBus,
+    Spi: spi::SpiDevice,
     Delay: delay::DelayUs,
 {
     async fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
@@ -59,10 +56,9 @@ where
     }
 }
 
-impl<Spi, SpiBus, Delay> asynch::Write for StatefulDriver<Spi, SpiBus, Delay>
+impl<Spi, Delay> asynch::Write for StatefulDriver<Spi, Delay>
 where
-    Spi: spi::SpiDevice<Bus = SpiBus>,
-    SpiBus: spi::SpiBus,
+    Spi: spi::SpiDevice,
     Delay: delay::DelayUs,
 {
     async fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {

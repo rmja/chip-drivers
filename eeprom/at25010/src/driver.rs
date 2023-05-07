@@ -1,6 +1,6 @@
 use crate::{opcode::Opcode, DriverError, PartNumber};
 use bitfield::bitfield;
-use embedded_hal_async::{delay, spi, spi_transaction};
+use embedded_hal_async::{delay, spi};
 
 const PAGE_SIZE: usize = 8;
 
@@ -20,10 +20,9 @@ bitfield! {
 const INITIAL_TIMEOUT_MS: u32 = 3; // Wait at least 3 ms
 const RETRY_INTERVAL_US: u32 = 100;
 
-pub struct Driver<SpiDevice, SpiBus, Delay>
+pub struct Driver<SpiDevice, Delay>
 where
-    SpiDevice: spi::SpiDevice<Bus = SpiBus>,
-    SpiBus: spi::SpiBus,
+    SpiDevice: spi::SpiDevice,
     Delay: delay::DelayUs,
 {
     spi: SpiDevice,
@@ -31,20 +30,18 @@ where
     part_number: PartNumber,
 }
 
-pub struct StatefulDriver<SpiDevice, SpiBus, Delay>
+pub struct StatefulDriver<SpiDevice, Delay>
 where
-    SpiDevice: spi::SpiDevice<Bus = SpiBus>,
-    SpiBus: spi::SpiBus,
+    SpiDevice: spi::SpiDevice,
     Delay: delay::DelayUs,
 {
-    pub driver: Driver<SpiDevice, SpiBus, Delay>,
+    pub driver: Driver<SpiDevice, Delay>,
     pub position: u16,
 }
 
-impl<SpiDevice, SpiBus, Delay> Driver<SpiDevice, SpiBus, Delay>
+impl<SpiDevice, Delay> Driver<SpiDevice, Delay>
 where
-    SpiDevice: spi::SpiDevice<Bus = SpiBus>,
-    SpiBus: spi::SpiBus,
+    SpiDevice: spi::SpiDevice,
     Delay: delay::DelayUs,
 {
     pub const fn new(spi: SpiDevice, delay: Delay, part_number: PartNumber) -> Self {
@@ -55,7 +52,7 @@ where
         }
     }
 
-    pub const fn to_stateful(self) -> StatefulDriver<SpiDevice, SpiBus, Delay> {
+    pub const fn to_stateful(self) -> StatefulDriver<SpiDevice, Delay> {
         StatefulDriver {
             driver: self,
             position: 0,
@@ -80,13 +77,12 @@ where
             return Err(DriverError::Capacity);
         }
 
-        spi_transaction!(&mut self.spi, |bus| async {
-            let opcode = [Opcode::READ(origin).as_u8(), (origin & 0xFF) as u8];
-            bus.write(&opcode).await?;
-            bus.read(buffer).await?;
-            Ok(())
-        })
-        .await?;
+        self.spi
+            .transaction(&mut [
+                spi::Operation::Write(&[Opcode::READ(origin).as_u8(), (origin & 0xFF) as u8]),
+                spi::Operation::Read(buffer),
+            ])
+            .await?;
 
         Ok(())
     }
@@ -106,10 +102,7 @@ where
         self.enable_write().await?;
 
         // Wait until we can send a new spi command.
-        self.delay
-            .delay_us(t_cs_us)
-            .await
-            .map_err(|_| DriverError::Delay)?;
+        self.delay.delay_us(t_cs_us).await;
 
         // See if write was enabled (it may have been disabled by the WP pin).
         let sr = self.read_status_register().await?;
@@ -126,10 +119,7 @@ where
         assert!(incomplete_first_page.len() < 8);
         if !incomplete_first_page.is_empty() {
             // Wait until we can send a new spi command.
-            self.delay
-                .delay_us(t_cs_us)
-                .await
-                .map_err(|_| DriverError::Delay)?;
+            self.delay.delay_us(t_cs_us).await;
 
             self.write_page(address, incomplete_first_page).await?;
             address += incomplete_first_page.len() as u16;
@@ -145,10 +135,7 @@ where
             }
 
             // Wait until we can send a new spi command.
-            self.delay
-                .delay_us(t_cs_us)
-                .await
-                .map_err(|_| DriverError::Delay)?;
+            self.delay.delay_us(t_cs_us).await;
 
             self.write_page(address, page).await?;
             address += page.len() as u16;
@@ -169,17 +156,11 @@ where
         }
 
         // Wait for idle.
-        self.delay
-            .delay_ms(INITIAL_TIMEOUT_MS)
-            .await
-            .map_err(|_| DriverError::Delay)?;
+        self.delay.delay_ms(INITIAL_TIMEOUT_MS).await;
         let sr = self.read_status_register().await?;
         if sr.bsy() {
             loop {
-                self.delay
-                    .delay_us(RETRY_INTERVAL_US)
-                    .await
-                    .map_err(|_| DriverError::Delay)?;
+                self.delay.delay_us(RETRY_INTERVAL_US).await;
 
                 let sr = self.read_status_register().await?;
                 if !sr.bsy() {
@@ -209,13 +190,12 @@ where
         assert!(len > 0);
         assert!(len <= PAGE_SIZE - (address as usize % PAGE_SIZE));
 
-        spi_transaction!(&mut self.spi, |bus| async {
-            bus.write(&[Opcode::WRITE(address).as_u8(), (address & 0xFF) as u8])
-                .await?;
-            bus.write(buffer).await?;
-            Ok(())
-        })
-        .await?;
+        self.spi
+            .transaction(&mut [
+                spi::Operation::Write(&[Opcode::WRITE(address).as_u8(), (address & 0xFF) as u8]),
+                spi::Operation::Write(buffer),
+            ])
+            .await?;
 
         Ok(())
     }
@@ -246,16 +226,12 @@ mod tests {
         // Given
         let mut seq = Sequence::new();
         let mut spi = MockSpiDevice::new();
-        let mut expected_transactions = 0;
 
         expect_read_status_register(&mut spi, &mut seq, StatusRegister(0x00));
-        expected_transactions += 1;
 
         expect_write_wren(&mut spi, &mut seq);
-        expected_transactions += 1;
 
         expect_read_status_register(&mut spi, &mut seq, StatusRegister(0x02));
-        expected_transactions += 1;
 
         expect_write_page(
             &mut spi,
@@ -264,16 +240,13 @@ mod tests {
             &[0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80],
         );
         expect_read_status_register(&mut spi, &mut seq, StatusRegister(0x00));
-        expected_transactions += 2;
 
         expect_write_wren(&mut spi, &mut seq);
         expect_write_page(&mut spi, &mut seq, 0x10, &[0x90]);
-        // expect_read_status_register(&mut spi, &mut seq, StatusRegister(0x00));
-        expected_transactions += 2;
 
         let mut delay = MockDelay::new();
-        delay.expect_delay_us().withf(|_| true).return_const(Ok(()));
-        delay.expect_delay_ms().withf(|_| true).return_const(Ok(()));
+        delay.expect_delay_us().withf(|_| true).return_const(());
+        delay.expect_delay_ms().withf(|_| true).return_const(());
 
         // When
         let mut driver = Driver::new(spi, delay, PartNumber::At25010b);
@@ -287,7 +260,6 @@ mod tests {
             .unwrap();
 
         // Then
-        assert_eq!(expected_transactions, driver.spi.transactions());
     }
 
     #[tokio::test]
@@ -295,18 +267,14 @@ mod tests {
         // Given
         let mut seq = Sequence::new();
         let mut spi = MockSpiDevice::new();
-        let mut expected_transactions = 0;
 
         expect_read_status_register(&mut spi, &mut seq, StatusRegister(0x00));
-        expected_transactions += 1;
 
         expect_write_wren(&mut spi, &mut seq);
         expect_read_status_register(&mut spi, &mut seq, StatusRegister(0x02));
-        expected_transactions += 2;
 
         expect_write_page(&mut spi, &mut seq, 0x0F, &[0x10]);
         expect_read_status_register(&mut spi, &mut seq, StatusRegister(0x00));
-        expected_transactions += 2;
 
         expect_write_wren(&mut spi, &mut seq);
         expect_write_page(
@@ -315,12 +283,10 @@ mod tests {
             0x10,
             &[0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90],
         );
-        // expect_read_status_register(&mut spi, &mut seq, StatusRegister(0x00));
-        expected_transactions += 2;
 
         let mut delay = MockDelay::new();
-        delay.expect_delay_us().withf(|_| true).return_const(Ok(()));
-        delay.expect_delay_ms().withf(|_| true).return_const(Ok(()));
+        delay.expect_delay_us().withf(|_| true).return_const(());
+        delay.expect_delay_ms().withf(|_| true).return_const(());
 
         // When
         let mut driver = Driver::new(spi, delay, PartNumber::At25010b);
@@ -334,49 +300,54 @@ mod tests {
             .unwrap();
 
         // Then
-        assert_eq!(expected_transactions, driver.spi.transactions());
     }
 
-    fn expect_write_wren(spi: &mut MockSpiDevice, seq: &mut Sequence) {
-        spi.bus
-            .expect_write()
-            .withf(|tx| tx == &[Opcode::WREN.as_u8()])
+    fn expect_write_wren(spi: &mut MockSpiDevice<u8>, seq: &mut Sequence) {
+        spi.expect_write_transaction()
+            .withf(|tx| tx[0] == &[Opcode::WREN.as_u8()])
             .times(1)
             .in_sequence(seq)
             .return_const(Ok(()));
     }
 
     fn expect_read_status_register(
-        spi: &mut MockSpiDevice,
+        spi: &mut MockSpiDevice<u8>,
         seq: &mut Sequence,
         returning: StatusRegister,
     ) {
-        spi.bus
-            .expect_transfer()
-            .withf(|_, tx| tx == &[Opcode::RDSR.as_u8(), 0x00])
+        spi.expect_transaction()
+            .withf(|ops| {
+                if let spi::Operation::Transfer(_rx, tx) = &ops[0] {
+                    tx == &[Opcode::RDSR.as_u8(), 0x00]
+                } else {
+                    false
+                }
+            })
             .times(1)
             .in_sequence(seq)
-            .returning(move |rx, _tx| {
-                rx[1] = returning.0;
+            .returning(move |ops| {
+                if let spi::Operation::Transfer(rx, _tx) = &mut ops[0] {
+                    rx[1] = returning.0;
+                }
                 Ok(())
             });
     }
 
     fn expect_write_page(
-        spi: &mut MockSpiDevice,
+        spi: &mut MockSpiDevice<u8>,
         seq: &mut Sequence,
         address: u16,
         expected: &'static [u8],
     ) {
-        spi.bus
-            .expect_write()
-            .withf(move |tx| tx == &[Opcode::WRITE(address).as_u8(), (address & 0xFF) as u8])
-            .times(1)
-            .in_sequence(seq)
-            .return_const(Ok(()));
-        spi.bus
-            .expect_write()
-            .withf(move |tx| tx == expected)
+        spi.expect_transaction()
+            .withf(move |tx| {
+                tx[0]
+                    == spi::Operation::Write(&[
+                        Opcode::WRITE(address).as_u8(),
+                        (address & 0xFF) as u8,
+                    ])
+                    && tx[1] == spi::Operation::Write(expected)
+            })
             .times(1)
             .in_sequence(seq)
             .return_const(Ok(()));
