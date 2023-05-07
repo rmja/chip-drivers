@@ -5,14 +5,16 @@ edition = "2021"
 description = "CC1200 low power and high performance wireless transceiver driver"
 
 [features]
-packet-ctrl = ["embassy-time", "heapless"]
+packet-controller = ["embassy-time", "heapless"]
+continous-controller = ["embassy-time", "futures-async-stream"]
 
 [dependencies]
 bitfield = "0.14"
 embassy-time = { version = "0.1", optional = true }
-embedded-hal = "1.0.0-alpha.9"
-embedded-hal-async = "0.2.0-alpha.0"
+embedded-hal = "1.0.0-alpha.10"
+embedded-hal-async = "0.2.0-alpha.1"
 futures = { version = "0.3", default-features = false }
+futures-async-stream = { version = "0.2", optional = true }
 heapless = { version = "0.7", optional = true }
 num-derive = "0.3"
 num-traits = { version = "0.2", default-features = false }

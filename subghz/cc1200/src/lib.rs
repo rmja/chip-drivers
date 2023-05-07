@@ -7,6 +7,7 @@
 #![feature(let_chains)]
 #![feature(async_fn_in_trait)]
 #![feature(const_slice_split_at_not_mut)]
+#![cfg_attr(feature = "continous-controller", feature(generators))]
 
 extern crate bitfield;
 

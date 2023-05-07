@@ -7,7 +7,7 @@ use bitfield::bitfield;
 use core::mem::transmute;
 
 #[const_trait]
-pub trait Register: ~const From<u8> + ~const Default + Clone + Copy {
+pub trait Register: Clone + Copy + Default + From<u8> {
     const ADDRESS: RegisterAddress;
 
     fn is_extended() -> bool {
@@ -60,13 +60,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for Iocfg3 {
+    impl From<u8> for Iocfg3 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Iocfg3 {
+    impl Default for Iocfg3 {
         fn default() -> Self {
             Self(0x06)
         }
@@ -96,13 +96,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for Iocfg2 {
+    impl From<u8> for Iocfg2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Iocfg2 {
+    impl Default for Iocfg2 {
         fn default() -> Self {
             Self(0x07)
         }
@@ -132,13 +132,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for Iocfg1 {
+    impl From<u8> for Iocfg1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Iocfg1 {
+    impl Default for Iocfg1 {
         fn default() -> Self {
             Self(0x30)
         }
@@ -168,13 +168,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for Iocfg0 {
+    impl From<u8> for Iocfg0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Iocfg0 {
+    impl Default for Iocfg0 {
         fn default() -> Self {
             Self(0x3c)
         }
@@ -198,13 +198,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for Sync3 {
+    impl From<u8> for Sync3 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Sync3 {
+    impl Default for Sync3 {
         fn default() -> Self {
             Self(0x93)
         }
@@ -228,13 +228,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for Sync2 {
+    impl From<u8> for Sync2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Sync2 {
+    impl Default for Sync2 {
         fn default() -> Self {
             Self(0x0b)
         }
@@ -258,13 +258,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for Sync1 {
+    impl From<u8> for Sync1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Sync1 {
+    impl Default for Sync1 {
         fn default() -> Self {
             Self(0x51)
         }
@@ -288,13 +288,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for Sync0 {
+    impl From<u8> for Sync0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Sync0 {
+    impl Default for Sync0 {
         fn default() -> Self {
             Self(0xde)
         }
@@ -351,13 +351,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for SyncCfg1 {
+    impl From<u8> for SyncCfg1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for SyncCfg1 {
+    impl Default for SyncCfg1 {
         fn default() -> Self {
             Self(0xaa)
         }
@@ -439,13 +439,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for SyncCfg0 {
+    impl From<u8> for SyncCfg0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for SyncCfg0 {
+    impl Default for SyncCfg0 {
         fn default() -> Self {
             Self(0x03)
         }
@@ -471,13 +471,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for DeviationM {
+    impl From<u8> for DeviationM {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for DeviationM {
+    impl Default for DeviationM {
         fn default() -> Self {
             Self(0x06)
         }
@@ -537,13 +537,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for ModcfgDevE {
+    impl From<u8> for ModcfgDevE {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for ModcfgDevE {
+    impl Default for ModcfgDevE {
         fn default() -> Self {
             Self(0x03)
         }
@@ -619,13 +619,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for DcfiltCfg {
+    impl From<u8> for DcfiltCfg {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for DcfiltCfg {
+    impl Default for DcfiltCfg {
         fn default() -> Self {
             Self(0x4c)
         }
@@ -719,13 +719,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for PreambleCfg1 {
+    impl From<u8> for PreambleCfg1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for PreambleCfg1 {
+    impl Default for PreambleCfg1 {
         fn default() -> Self {
             Self(0x14)
         }
@@ -792,13 +792,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for PreambleCfg0 {
+    impl From<u8> for PreambleCfg0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for PreambleCfg0 {
+    impl Default for PreambleCfg0 {
         fn default() -> Self {
             Self(0xda)
         }
@@ -910,13 +910,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for Iqic {
+    impl From<u8> for Iqic {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Iqic {
+    impl Default for Iqic {
         fn default() -> Self {
             Self(0xc4)
         }
@@ -965,13 +965,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for ChanBw {
+    impl From<u8> for ChanBw {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for ChanBw {
+    impl Default for ChanBw {
         fn default() -> Self {
             Self(0x94)
         }
@@ -1077,13 +1077,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for Mdmcfg1 {
+    impl From<u8> for Mdmcfg1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Mdmcfg1 {
+    impl Default for Mdmcfg1 {
         fn default() -> Self {
             Self(0x46)
         }
@@ -1172,13 +1172,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for Mdmcfg0 {
+    impl From<u8> for Mdmcfg0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Mdmcfg0 {
+    impl Default for Mdmcfg0 {
         fn default() -> Self {
             Self(0x0d)
         }
@@ -1207,13 +1207,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for SymbolRate2 {
+    impl From<u8> for SymbolRate2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for SymbolRate2 {
+    impl Default for SymbolRate2 {
         fn default() -> Self {
             Self(0x43)
         }
@@ -1237,13 +1237,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for SymbolRate1 {
+    impl From<u8> for SymbolRate1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for SymbolRate1 {
+    impl Default for SymbolRate1 {
         fn default() -> Self {
             Self(0xa9)
         }
@@ -1267,13 +1267,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for SymbolRate0 {
+    impl From<u8> for SymbolRate0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for SymbolRate0 {
+    impl Default for SymbolRate0 {
         fn default() -> Self {
             Self(0x2a)
         }
@@ -1300,13 +1300,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for AgcRef {
+    impl From<u8> for AgcRef {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AgcRef {
+    impl Default for AgcRef {
         fn default() -> Self {
             Self(0x36)
         }
@@ -1330,13 +1330,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for AgcCsThr {
+    impl From<u8> for AgcCsThr {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AgcCsThr {
+    impl Default for AgcCsThr {
         fn default() -> Self {
             Self(0x00)
         }
@@ -1360,13 +1360,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for AgcGainAdjust {
+    impl From<u8> for AgcGainAdjust {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AgcGainAdjust {
+    impl Default for AgcGainAdjust {
         fn default() -> Self {
             Self(0x00)
         }
@@ -1426,13 +1426,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for AgcCfg3 {
+    impl From<u8> for AgcCfg3 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AgcCfg3 {
+    impl Default for AgcCfg3 {
         fn default() -> Self {
             Self(0xb1)
         }
@@ -1493,13 +1493,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for AgcCfg2 {
+    impl From<u8> for AgcCfg2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AgcCfg2 {
+    impl Default for AgcCfg2 {
         fn default() -> Self {
             Self(0x20)
         }
@@ -1595,13 +1595,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for AgcCfg1 {
+    impl From<u8> for AgcCfg1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AgcCfg1 {
+    impl Default for AgcCfg1 {
         fn default() -> Self {
             Self(0x52)
         }
@@ -1717,13 +1717,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for AgcCfg0 {
+    impl From<u8> for AgcCfg0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AgcCfg0 {
+    impl Default for AgcCfg0 {
         fn default() -> Self {
             Self(0xc3)
         }
@@ -1750,13 +1750,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for FifoCfg {
+    impl From<u8> for FifoCfg {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FifoCfg {
+    impl Default for FifoCfg {
         fn default() -> Self {
             Self(0x80)
         }
@@ -1780,13 +1780,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for DevAddr {
+    impl From<u8> for DevAddr {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for DevAddr {
+    impl Default for DevAddr {
         fn default() -> Self {
             Self(0x00)
         }
@@ -1856,13 +1856,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for SettlingCfg {
+    impl From<u8> for SettlingCfg {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for SettlingCfg {
+    impl Default for SettlingCfg {
         fn default() -> Self {
             Self(0x0b)
         }
@@ -1944,13 +1944,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for FsCfg {
+    impl From<u8> for FsCfg {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsCfg {
+    impl Default for FsCfg {
         fn default() -> Self {
             Self(0x02)
         }
@@ -2017,13 +2017,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for WorCfg1 {
+    impl From<u8> for WorCfg1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for WorCfg1 {
+    impl Default for WorCfg1 {
         fn default() -> Self {
             Self(0x08)
         }
@@ -2112,13 +2112,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for WorCfg0 {
+    impl From<u8> for WorCfg0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for WorCfg0 {
+    impl Default for WorCfg0 {
         fn default() -> Self {
             Self(0x21)
         }
@@ -2143,13 +2143,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for WorEvent0Msb {
+    impl From<u8> for WorEvent0Msb {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for WorEvent0Msb {
+    impl Default for WorEvent0Msb {
         fn default() -> Self {
             Self(0x00)
         }
@@ -2173,13 +2173,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for WorEvent0Lsb {
+    impl From<u8> for WorEvent0Lsb {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for WorEvent0Lsb {
+    impl Default for WorEvent0Lsb {
         fn default() -> Self {
             Self(0x00)
         }
@@ -2207,13 +2207,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for RxdcmTime {
+    impl From<u8> for RxdcmTime {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for RxdcmTime {
+    impl Default for RxdcmTime {
         fn default() -> Self {
             Self(0x00)
         }
@@ -2311,13 +2311,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for PktCfg2 {
+    impl From<u8> for PktCfg2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for PktCfg2 {
+    impl Default for PktCfg2 {
         fn default() -> Self {
             Self(0x04)
         }
@@ -2425,13 +2425,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for PktCfg1 {
+    impl From<u8> for PktCfg1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for PktCfg1 {
+    impl Default for PktCfg1 {
         fn default() -> Self {
             Self(0x03)
         }
@@ -2503,13 +2503,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for PktCfg0 {
+    impl From<u8> for PktCfg0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for PktCfg0 {
+    impl Default for PktCfg0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -2572,13 +2572,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for RfendCfg1 {
+    impl From<u8> for RfendCfg1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for RfendCfg1 {
+    impl Default for RfendCfg1 {
         fn default() -> Self {
             Self(0x0f)
         }
@@ -2676,13 +2676,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for RfendCfg0 {
+    impl From<u8> for RfendCfg0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for RfendCfg0 {
+    impl Default for RfendCfg0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -2720,13 +2720,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for PaCfg1 {
+    impl From<u8> for PaCfg1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for PaCfg1 {
+    impl Default for PaCfg1 {
         fn default() -> Self {
             Self(0x7f)
         }
@@ -2765,13 +2765,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for PaCfg0 {
+    impl From<u8> for PaCfg0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for PaCfg0 {
+    impl Default for PaCfg0 {
         fn default() -> Self {
             Self(0x56)
         }
@@ -2828,13 +2828,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for AskCfg {
+    impl From<u8> for AskCfg {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AskCfg {
+    impl Default for AskCfg {
         fn default() -> Self {
             Self(0x0f)
         }
@@ -2858,13 +2858,13 @@ pub mod pri {
         }
     }
 
-    impl const From<u8> for PktLen {
+    impl From<u8> for PktLen {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for PktLen {
+    impl Default for PktLen {
         fn default() -> Self {
             Self(0x03)
         }
@@ -2912,13 +2912,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for IfMixCfg {
+    impl From<u8> for IfMixCfg {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for IfMixCfg {
+    impl Default for IfMixCfg {
         fn default() -> Self {
             Self(0x00)
         }
@@ -3003,13 +3003,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FreqoffCfg {
+    impl From<u8> for FreqoffCfg {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FreqoffCfg {
+    impl Default for FreqoffCfg {
         fn default() -> Self {
             Self(0x20)
         }
@@ -3073,13 +3073,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for TocCfg {
+    impl From<u8> for TocCfg {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for TocCfg {
+    impl Default for TocCfg {
         fn default() -> Self {
             Self(0x0b)
         }
@@ -3114,13 +3114,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for MarcSpare {
+    impl From<u8> for MarcSpare {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for MarcSpare {
+    impl Default for MarcSpare {
         fn default() -> Self {
             Self(0x00)
         }
@@ -3183,13 +3183,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for EcgCfg {
+    impl From<u8> for EcgCfg {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for EcgCfg {
+    impl Default for EcgCfg {
         fn default() -> Self {
             Self(0x00)
         }
@@ -3272,13 +3272,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Mdmcfg2 {
+    impl From<u8> for Mdmcfg2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Mdmcfg2 {
+    impl Default for Mdmcfg2 {
         fn default() -> Self {
             Self(0x08)
         }
@@ -3331,13 +3331,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for ExtCtrl {
+    impl From<u8> for ExtCtrl {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for ExtCtrl {
+    impl Default for ExtCtrl {
         fn default() -> Self {
             Self(0x01)
         }
@@ -3363,13 +3363,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for RccalFine {
+    impl From<u8> for RccalFine {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for RccalFine {
+    impl Default for RccalFine {
         fn default() -> Self {
             Self(0x00)
         }
@@ -3395,13 +3395,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for RccalCoarse {
+    impl From<u8> for RccalCoarse {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for RccalCoarse {
+    impl Default for RccalCoarse {
         fn default() -> Self {
             Self(0x00)
         }
@@ -3427,13 +3427,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for RccalOffset {
+    impl From<u8> for RccalOffset {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for RccalOffset {
+    impl Default for RccalOffset {
         fn default() -> Self {
             Self(0x00)
         }
@@ -3457,13 +3457,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Freqoff1 {
+    impl From<u8> for Freqoff1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Freqoff1 {
+    impl Default for Freqoff1 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -3487,13 +3487,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Freqoff0 {
+    impl From<u8> for Freqoff0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Freqoff0 {
+    impl Default for Freqoff0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -3518,13 +3518,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Freq2 {
+    impl From<u8> for Freq2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Freq2 {
+    impl Default for Freq2 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -3548,13 +3548,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Freq1 {
+    impl From<u8> for Freq1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Freq1 {
+    impl Default for Freq1 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -3578,13 +3578,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Freq0 {
+    impl From<u8> for Freq0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Freq0 {
+    impl Default for Freq0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -3610,13 +3610,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for IfAdc2 {
+    impl From<u8> for IfAdc2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for IfAdc2 {
+    impl Default for IfAdc2 {
         fn default() -> Self {
             Self(0x02)
         }
@@ -3649,13 +3649,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for IfAdc1 {
+    impl From<u8> for IfAdc1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for IfAdc1 {
+    impl Default for IfAdc1 {
         fn default() -> Self {
             Self(0x5a)
         }
@@ -3687,13 +3687,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for IfAdc0 {
+    impl From<u8> for IfAdc0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for IfAdc0 {
+    impl Default for IfAdc0 {
         fn default() -> Self {
             Self(0x1a)
         }
@@ -3731,13 +3731,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsDig1 {
+    impl From<u8> for FsDig1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsDig1 {
+    impl Default for FsDig1 {
         fn default() -> Self {
             Self(0x08)
         }
@@ -3811,13 +3811,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsDig0 {
+    impl From<u8> for FsDig0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsDig0 {
+    impl Default for FsDig0 {
         fn default() -> Self {
             Self(0x5a)
         }
@@ -3857,13 +3857,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsCal3 {
+    impl From<u8> for FsCal3 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsCal3 {
+    impl Default for FsCal3 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -3889,13 +3889,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsCal2 {
+    impl From<u8> for FsCal2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsCal2 {
+    impl Default for FsCal2 {
         fn default() -> Self {
             Self(0x20)
         }
@@ -3928,13 +3928,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsCal1 {
+    impl From<u8> for FsCal1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsCal1 {
+    impl Default for FsCal1 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -3985,13 +3985,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsCal0 {
+    impl From<u8> for FsCal0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsCal0 {
+    impl Default for FsCal0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -4017,13 +4017,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsChp {
+    impl From<u8> for FsChp {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsChp {
+    impl Default for FsChp {
         fn default() -> Self {
             Self(0x28)
         }
@@ -4049,13 +4049,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsDivtwo {
+    impl From<u8> for FsDivtwo {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsDivtwo {
+    impl Default for FsDivtwo {
         fn default() -> Self {
             Self(0x01)
         }
@@ -4084,13 +4084,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsDsm1 {
+    impl From<u8> for FsDsm1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsDsm1 {
+    impl Default for FsDsm1 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -4120,13 +4120,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsDsm0 {
+    impl From<u8> for FsDsm0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsDsm0 {
+    impl Default for FsDsm0 {
         fn default() -> Self {
             Self(0x03)
         }
@@ -4159,13 +4159,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsDvc1 {
+    impl From<u8> for FsDvc1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsDvc1 {
+    impl Default for FsDvc1 {
         fn default() -> Self {
             Self(0xff)
         }
@@ -4194,13 +4194,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsDvc0 {
+    impl From<u8> for FsDvc0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsDvc0 {
+    impl Default for FsDvc0 {
         fn default() -> Self {
             Self(0x1f)
         }
@@ -4223,13 +4223,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsLbi {
+    impl From<u8> for FsLbi {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsLbi {
+    impl Default for FsLbi {
         fn default() -> Self {
             Self(0x00)
         }
@@ -4261,13 +4261,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsPfd {
+    impl From<u8> for FsPfd {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsPfd {
+    impl Default for FsPfd {
         fn default() -> Self {
             Self(0x51)
         }
@@ -4299,13 +4299,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsPre {
+    impl From<u8> for FsPre {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsPre {
+    impl Default for FsPre {
         fn default() -> Self {
             Self(0x2c)
         }
@@ -4334,13 +4334,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsRegDivCml {
+    impl From<u8> for FsRegDivCml {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsRegDivCml {
+    impl Default for FsRegDivCml {
         fn default() -> Self {
             Self(0x11)
         }
@@ -4364,13 +4364,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsSpare {
+    impl From<u8> for FsSpare {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsSpare {
+    impl Default for FsSpare {
         fn default() -> Self {
             Self(0x00)
         }
@@ -4396,13 +4396,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsVco4 {
+    impl From<u8> for FsVco4 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsVco4 {
+    impl Default for FsVco4 {
         fn default() -> Self {
             Self(0x14)
         }
@@ -4428,13 +4428,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsVco3 {
+    impl From<u8> for FsVco3 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsVco3 {
+    impl Default for FsVco3 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -4460,13 +4460,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsVco2 {
+    impl From<u8> for FsVco2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsVco2 {
+    impl Default for FsVco2 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -4500,13 +4500,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsVco1 {
+    impl From<u8> for FsVco1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsVco1 {
+    impl Default for FsVco1 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -4536,13 +4536,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsVco0 {
+    impl From<u8> for FsVco0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsVco0 {
+    impl Default for FsVco0 {
         fn default() -> Self {
             Self(0x81)
         }
@@ -4568,13 +4568,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Gbias6 {
+    impl From<u8> for Gbias6 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Gbias6 {
+    impl Default for Gbias6 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -4600,13 +4600,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Gbias5 {
+    impl From<u8> for Gbias5 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Gbias5 {
+    impl Default for Gbias5 {
         fn default() -> Self {
             Self(0x02)
         }
@@ -4632,13 +4632,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Gbias4 {
+    impl From<u8> for Gbias4 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Gbias4 {
+    impl Default for Gbias4 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -4664,13 +4664,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Gbias3 {
+    impl From<u8> for Gbias3 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Gbias3 {
+    impl Default for Gbias3 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -4699,13 +4699,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Gbias2 {
+    impl From<u8> for Gbias2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Gbias2 {
+    impl Default for Gbias2 {
         fn default() -> Self {
             Self(0x10)
         }
@@ -4731,13 +4731,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Gbias1 {
+    impl From<u8> for Gbias1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Gbias1 {
+    impl Default for Gbias1 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -4766,13 +4766,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Gbias0 {
+    impl From<u8> for Gbias0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Gbias0 {
+    impl Default for Gbias0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -4823,13 +4823,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Ifamp {
+    impl From<u8> for Ifamp {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Ifamp {
+    impl Default for Ifamp {
         fn default() -> Self {
             Self(0x01)
         }
@@ -4855,13 +4855,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Lna {
+    impl From<u8> for Lna {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Lna {
+    impl Default for Lna {
         fn default() -> Self {
             Self(0x01)
         }
@@ -4887,13 +4887,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Rxmix {
+    impl From<u8> for Rxmix {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Rxmix {
+    impl Default for Rxmix {
         fn default() -> Self {
             Self(0x01)
         }
@@ -4919,13 +4919,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Xosc5 {
+    impl From<u8> for Xosc5 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Xosc5 {
+    impl Default for Xosc5 {
         fn default() -> Self {
             Self(0x0c)
         }
@@ -4949,13 +4949,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Xosc4 {
+    impl From<u8> for Xosc4 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Xosc4 {
+    impl Default for Xosc4 {
         fn default() -> Self {
             Self(0xa0)
         }
@@ -4982,13 +4982,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Xosc3 {
+    impl From<u8> for Xosc3 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Xosc3 {
+    impl Default for Xosc3 {
         fn default() -> Self {
             Self(0x03)
         }
@@ -5026,13 +5026,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Xosc2 {
+    impl From<u8> for Xosc2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Xosc2 {
+    impl Default for Xosc2 {
         fn default() -> Self {
             Self(0x04)
         }
@@ -5071,13 +5071,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Xosc1 {
+    impl From<u8> for Xosc1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Xosc1 {
+    impl Default for Xosc1 {
         fn default() -> Self {
             Self(0x01)
         }
@@ -5106,13 +5106,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Xosc0 {
+    impl From<u8> for Xosc0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Xosc0 {
+    impl Default for Xosc0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -5136,13 +5136,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AnalogSpare {
+    impl From<u8> for AnalogSpare {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AnalogSpare {
+    impl Default for AnalogSpare {
         fn default() -> Self {
             Self(0x00)
         }
@@ -5168,13 +5168,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for PaCfg3 {
+    impl From<u8> for PaCfg3 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for PaCfg3 {
+    impl Default for PaCfg3 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -5198,13 +5198,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for WorTime1 {
+    impl From<u8> for WorTime1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for WorTime1 {
+    impl Default for WorTime1 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -5228,13 +5228,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for WorTime0 {
+    impl From<u8> for WorTime0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for WorTime0 {
+    impl Default for WorTime0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -5258,13 +5258,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for WorCapture1 {
+    impl From<u8> for WorCapture1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for WorCapture1 {
+    impl Default for WorCapture1 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -5288,13 +5288,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for WorCapture0 {
+    impl From<u8> for WorCapture0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for WorCapture0 {
+    impl Default for WorCapture0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -5329,13 +5329,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Bist {
+    impl From<u8> for Bist {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Bist {
+    impl Default for Bist {
         fn default() -> Self {
             Self(0x00)
         }
@@ -5359,13 +5359,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for DcfiltoffsetI1 {
+    impl From<u8> for DcfiltoffsetI1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for DcfiltoffsetI1 {
+    impl Default for DcfiltoffsetI1 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -5389,13 +5389,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for DcfiltoffsetI0 {
+    impl From<u8> for DcfiltoffsetI0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for DcfiltoffsetI0 {
+    impl Default for DcfiltoffsetI0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -5419,13 +5419,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for DcfiltoffsetQ1 {
+    impl From<u8> for DcfiltoffsetQ1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for DcfiltoffsetQ1 {
+    impl Default for DcfiltoffsetQ1 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -5449,13 +5449,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for DcfiltoffsetQ0 {
+    impl From<u8> for DcfiltoffsetQ0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for DcfiltoffsetQ0 {
+    impl Default for DcfiltoffsetQ0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -5479,13 +5479,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for IqieI1 {
+    impl From<u8> for IqieI1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for IqieI1 {
+    impl Default for IqieI1 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -5509,13 +5509,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for IqieI0 {
+    impl From<u8> for IqieI0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for IqieI0 {
+    impl Default for IqieI0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -5539,13 +5539,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for IqieQ1 {
+    impl From<u8> for IqieQ1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for IqieQ1 {
+    impl Default for IqieQ1 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -5569,13 +5569,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for IqieQ0 {
+    impl From<u8> for IqieQ0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for IqieQ0 {
+    impl Default for IqieQ0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -5599,13 +5599,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Rssi1 {
+    impl From<u8> for Rssi1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Rssi1 {
+    impl Default for Rssi1 {
         fn default() -> Self {
             Self(0x80)
         }
@@ -5661,13 +5661,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Rssi0 {
+    impl From<u8> for Rssi0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Rssi0 {
+    impl Default for Rssi0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -5713,13 +5713,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Marcstate {
+    impl From<u8> for Marcstate {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Marcstate {
+    impl Default for Marcstate {
         fn default() -> Self {
             Self(0x41)
         }
@@ -5753,13 +5753,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for LqiVal {
+    impl From<u8> for LqiVal {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for LqiVal {
+    impl Default for LqiVal {
         fn default() -> Self {
             Self(0x00)
         }
@@ -5786,13 +5786,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for PqtSyncErr {
+    impl From<u8> for PqtSyncErr {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for PqtSyncErr {
+    impl Default for PqtSyncErr {
         fn default() -> Self {
             Self(0xff)
         }
@@ -5856,13 +5856,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for DemStatus {
+    impl From<u8> for DemStatus {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for DemStatus {
+    impl Default for DemStatus {
         fn default() -> Self {
             Self(0x00)
         }
@@ -5887,13 +5887,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FreqoffEst1 {
+    impl From<u8> for FreqoffEst1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FreqoffEst1 {
+    impl Default for FreqoffEst1 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -5917,13 +5917,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FreqoffEst0 {
+    impl From<u8> for FreqoffEst0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FreqoffEst0 {
+    impl Default for FreqoffEst0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -5949,13 +5949,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AgcGain3 {
+    impl From<u8> for AgcGain3 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AgcGain3 {
+    impl Default for AgcGain3 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -5992,13 +5992,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AgcGain2 {
+    impl From<u8> for AgcGain2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AgcGain2 {
+    impl Default for AgcGain2 {
         fn default() -> Self {
             Self(0xd1)
         }
@@ -6027,13 +6027,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AgcGain1 {
+    impl From<u8> for AgcGain1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AgcGain1 {
+    impl Default for AgcGain1 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -6062,13 +6062,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AgcGain0 {
+    impl From<u8> for AgcGain0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AgcGain0 {
+    impl Default for AgcGain0 {
         fn default() -> Self {
             Self(0x3f)
         }
@@ -6094,13 +6094,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for CfmRxDataOut {
+    impl From<u8> for CfmRxDataOut {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for CfmRxDataOut {
+    impl Default for CfmRxDataOut {
         fn default() -> Self {
             Self(0x00)
         }
@@ -6125,13 +6125,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for CfmTxDataIn {
+    impl From<u8> for CfmTxDataIn {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for CfmTxDataIn {
+    impl Default for CfmTxDataIn {
         fn default() -> Self {
             Self(0x00)
         }
@@ -6159,13 +6159,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AskSoftRxData {
+    impl From<u8> for AskSoftRxData {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AskSoftRxData {
+    impl Default for AskSoftRxData {
         fn default() -> Self {
             Self(0x30)
         }
@@ -6199,13 +6199,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Rndgen {
+    impl From<u8> for Rndgen {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Rndgen {
+    impl Default for Rndgen {
         fn default() -> Self {
             Self(0x7f)
         }
@@ -6231,13 +6231,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Magn2 {
+    impl From<u8> for Magn2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Magn2 {
+    impl Default for Magn2 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -6261,13 +6261,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Magn1 {
+    impl From<u8> for Magn1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Magn1 {
+    impl Default for Magn1 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -6291,13 +6291,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Magn0 {
+    impl From<u8> for Magn0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Magn0 {
+    impl Default for Magn0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -6323,13 +6323,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Ang1 {
+    impl From<u8> for Ang1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Ang1 {
+    impl Default for Ang1 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -6353,13 +6353,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Ang0 {
+    impl From<u8> for Ang0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Ang0 {
+    impl Default for Ang0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -6394,13 +6394,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for ChfiltI2 {
+    impl From<u8> for ChfiltI2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for ChfiltI2 {
+    impl Default for ChfiltI2 {
         fn default() -> Self {
             Self(0x02)
         }
@@ -6424,13 +6424,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for ChfiltI1 {
+    impl From<u8> for ChfiltI1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for ChfiltI1 {
+    impl Default for ChfiltI1 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -6454,13 +6454,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for ChfiltI0 {
+    impl From<u8> for ChfiltI0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for ChfiltI0 {
+    impl Default for ChfiltI0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -6486,13 +6486,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for ChfiltQ2 {
+    impl From<u8> for ChfiltQ2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for ChfiltQ2 {
+    impl Default for ChfiltQ2 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -6516,13 +6516,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for ChfiltQ1 {
+    impl From<u8> for ChfiltQ1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for ChfiltQ1 {
+    impl Default for ChfiltQ1 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -6546,13 +6546,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for ChfiltQ0 {
+    impl From<u8> for ChfiltQ0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for ChfiltQ0 {
+    impl Default for ChfiltQ0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -6579,13 +6579,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for GpioStatus {
+    impl From<u8> for GpioStatus {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for GpioStatus {
+    impl Default for GpioStatus {
         fn default() -> Self {
             Self(0x00)
         }
@@ -6633,13 +6633,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FscalCtrl {
+    impl From<u8> for FscalCtrl {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FscalCtrl {
+    impl Default for FscalCtrl {
         fn default() -> Self {
             Self(0x01)
         }
@@ -6663,13 +6663,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for PhaseAdjust {
+    impl From<u8> for PhaseAdjust {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for PhaseAdjust {
+    impl Default for PhaseAdjust {
         fn default() -> Self {
             Self(0x00)
         }
@@ -6700,13 +6700,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Partnumber {
+    impl From<u8> for Partnumber {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Partnumber {
+    impl Default for Partnumber {
         fn default() -> Self {
             Self(0x00)
         }
@@ -6730,13 +6730,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Partversion {
+    impl From<u8> for Partversion {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Partversion {
+    impl Default for Partversion {
         fn default() -> Self {
             Self(0x00)
         }
@@ -6784,13 +6784,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for SerialStatus {
+    impl From<u8> for SerialStatus {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for SerialStatus {
+    impl Default for SerialStatus {
         fn default() -> Self {
             Self(0x00)
         }
@@ -6835,13 +6835,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for ModemStatus1 {
+    impl From<u8> for ModemStatus1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for ModemStatus1 {
+    impl Default for ModemStatus1 {
         fn default() -> Self {
             Self(0x01)
         }
@@ -6885,13 +6885,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for ModemStatus0 {
+    impl From<u8> for ModemStatus0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for ModemStatus0 {
+    impl Default for ModemStatus0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -6934,13 +6934,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for MarcStatus1 {
+    impl From<u8> for MarcStatus1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for MarcStatus1 {
+    impl Default for MarcStatus1 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -6982,13 +6982,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for MarcStatus0 {
+    impl From<u8> for MarcStatus0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for MarcStatus0 {
+    impl Default for MarcStatus0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7026,13 +7026,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for PaIfampTest {
+    impl From<u8> for PaIfampTest {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for PaIfampTest {
+    impl Default for PaIfampTest {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7067,13 +7067,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FsrfTest {
+    impl From<u8> for FsrfTest {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FsrfTest {
+    impl Default for FsrfTest {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7102,13 +7102,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for PreTest {
+    impl From<u8> for PreTest {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for PreTest {
+    impl Default for PreTest {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7135,13 +7135,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for PreOvr {
+    impl From<u8> for PreOvr {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for PreOvr {
+    impl Default for PreOvr {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7170,13 +7170,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AdcTest {
+    impl From<u8> for AdcTest {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AdcTest {
+    impl Default for AdcTest {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7202,13 +7202,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for DvcTest {
+    impl From<u8> for DvcTest {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for DvcTest {
+    impl Default for DvcTest {
         fn default() -> Self {
             Self(0x0b)
         }
@@ -7237,13 +7237,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Atest {
+    impl From<u8> for Atest {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Atest {
+    impl Default for Atest {
         fn default() -> Self {
             Self(0x40)
         }
@@ -7272,13 +7272,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AtestLvds {
+    impl From<u8> for AtestLvds {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AtestLvds {
+    impl Default for AtestLvds {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7305,13 +7305,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AtestMode {
+    impl From<u8> for AtestMode {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AtestMode {
+    impl Default for AtestMode {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7344,13 +7344,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for XoscTest1 {
+    impl From<u8> for XoscTest1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for XoscTest1 {
+    impl Default for XoscTest1 {
         fn default() -> Self {
             Self(0x3c)
         }
@@ -7374,13 +7374,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for XoscTest0 {
+    impl From<u8> for XoscTest0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for XoscTest0 {
+    impl Default for XoscTest0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7416,13 +7416,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Aes {
+    impl From<u8> for Aes {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Aes {
+    impl Default for Aes {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7448,13 +7448,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for MdmTest {
+    impl From<u8> for MdmTest {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for MdmTest {
+    impl Default for MdmTest {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7478,13 +7478,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Rxfirst {
+    impl From<u8> for Rxfirst {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Rxfirst {
+    impl Default for Rxfirst {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7508,13 +7508,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Txfirst {
+    impl From<u8> for Txfirst {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Txfirst {
+    impl Default for Txfirst {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7538,13 +7538,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Rxlast {
+    impl From<u8> for Rxlast {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Rxlast {
+    impl Default for Rxlast {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7568,13 +7568,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for Txlast {
+    impl From<u8> for Txlast {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for Txlast {
+    impl Default for Txlast {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7598,13 +7598,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for NumTxbytes {
+    impl From<u8> for NumTxbytes {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for NumTxbytes {
+    impl Default for NumTxbytes {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7628,13 +7628,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for NumRxbytes {
+    impl From<u8> for NumRxbytes {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for NumRxbytes {
+    impl Default for NumRxbytes {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7660,13 +7660,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FifoNumTxbytes {
+    impl From<u8> for FifoNumTxbytes {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FifoNumTxbytes {
+    impl Default for FifoNumTxbytes {
         fn default() -> Self {
             Self(0x0f)
         }
@@ -7692,13 +7692,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for FifoNumRxbytes {
+    impl From<u8> for FifoNumRxbytes {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for FifoNumRxbytes {
+    impl Default for FifoNumRxbytes {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7722,13 +7722,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for RxfifoPreBuf {
+    impl From<u8> for RxfifoPreBuf {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for RxfifoPreBuf {
+    impl Default for RxfifoPreBuf {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7752,13 +7752,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesKey15 {
+    impl From<u8> for AesKey15 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesKey15 {
+    impl Default for AesKey15 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7782,13 +7782,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesKey14 {
+    impl From<u8> for AesKey14 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesKey14 {
+    impl Default for AesKey14 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7812,13 +7812,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesKey13 {
+    impl From<u8> for AesKey13 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesKey13 {
+    impl Default for AesKey13 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7842,13 +7842,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesKey12 {
+    impl From<u8> for AesKey12 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesKey12 {
+    impl Default for AesKey12 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7872,13 +7872,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesKey11 {
+    impl From<u8> for AesKey11 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesKey11 {
+    impl Default for AesKey11 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7902,13 +7902,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesKey10 {
+    impl From<u8> for AesKey10 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesKey10 {
+    impl Default for AesKey10 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7932,13 +7932,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesKey9 {
+    impl From<u8> for AesKey9 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesKey9 {
+    impl Default for AesKey9 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7962,13 +7962,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesKey8 {
+    impl From<u8> for AesKey8 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesKey8 {
+    impl Default for AesKey8 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -7992,13 +7992,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesKey7 {
+    impl From<u8> for AesKey7 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesKey7 {
+    impl Default for AesKey7 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8022,13 +8022,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesKey6 {
+    impl From<u8> for AesKey6 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesKey6 {
+    impl Default for AesKey6 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8052,13 +8052,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesKey5 {
+    impl From<u8> for AesKey5 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesKey5 {
+    impl Default for AesKey5 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8082,13 +8082,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesKey4 {
+    impl From<u8> for AesKey4 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesKey4 {
+    impl Default for AesKey4 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8112,13 +8112,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesKey3 {
+    impl From<u8> for AesKey3 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesKey3 {
+    impl Default for AesKey3 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8142,13 +8142,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesKey2 {
+    impl From<u8> for AesKey2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesKey2 {
+    impl Default for AesKey2 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8172,13 +8172,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesKey1 {
+    impl From<u8> for AesKey1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesKey1 {
+    impl Default for AesKey1 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8202,13 +8202,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesKey0 {
+    impl From<u8> for AesKey0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesKey0 {
+    impl Default for AesKey0 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8232,13 +8232,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesBuffer15 {
+    impl From<u8> for AesBuffer15 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesBuffer15 {
+    impl Default for AesBuffer15 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8262,13 +8262,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesBuffer14 {
+    impl From<u8> for AesBuffer14 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesBuffer14 {
+    impl Default for AesBuffer14 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8292,13 +8292,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesBuffer13 {
+    impl From<u8> for AesBuffer13 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesBuffer13 {
+    impl Default for AesBuffer13 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8322,13 +8322,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesBuffer12 {
+    impl From<u8> for AesBuffer12 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesBuffer12 {
+    impl Default for AesBuffer12 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8352,13 +8352,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesBuffer11 {
+    impl From<u8> for AesBuffer11 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesBuffer11 {
+    impl Default for AesBuffer11 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8382,13 +8382,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesBuffer10 {
+    impl From<u8> for AesBuffer10 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesBuffer10 {
+    impl Default for AesBuffer10 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8412,13 +8412,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesBuffer9 {
+    impl From<u8> for AesBuffer9 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesBuffer9 {
+    impl Default for AesBuffer9 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8442,13 +8442,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesBuffer8 {
+    impl From<u8> for AesBuffer8 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesBuffer8 {
+    impl Default for AesBuffer8 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8472,13 +8472,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesBuffer7 {
+    impl From<u8> for AesBuffer7 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesBuffer7 {
+    impl Default for AesBuffer7 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8502,13 +8502,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesBuffer6 {
+    impl From<u8> for AesBuffer6 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesBuffer6 {
+    impl Default for AesBuffer6 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8532,13 +8532,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesBuffer5 {
+    impl From<u8> for AesBuffer5 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesBuffer5 {
+    impl Default for AesBuffer5 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8562,13 +8562,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesBuffer4 {
+    impl From<u8> for AesBuffer4 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesBuffer4 {
+    impl Default for AesBuffer4 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8592,13 +8592,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesBuffer3 {
+    impl From<u8> for AesBuffer3 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesBuffer3 {
+    impl Default for AesBuffer3 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8622,13 +8622,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesBuffer2 {
+    impl From<u8> for AesBuffer2 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesBuffer2 {
+    impl Default for AesBuffer2 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8652,13 +8652,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesBuffer1 {
+    impl From<u8> for AesBuffer1 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesBuffer1 {
+    impl Default for AesBuffer1 {
         fn default() -> Self {
             Self(0x00)
         }
@@ -8682,13 +8682,13 @@ pub mod ext {
         }
     }
 
-    impl const From<u8> for AesBuffer0 {
+    impl From<u8> for AesBuffer0 {
         fn from(value: u8) -> Self {
             Self(value)
         }
     }
 
-    impl const Default for AesBuffer0 {
+    impl Default for AesBuffer0 {
         fn default() -> Self {
             Self(0x00)
         }

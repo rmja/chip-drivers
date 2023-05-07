@@ -81,7 +81,7 @@ Console.WriteLine($$"""
     use core::mem::transmute;
 
     #[const_trait]
-    pub trait Register: ~const From<u8> + ~const Default + Clone + Copy {
+    pub trait Register: Clone + Copy + Default + From<u8> {
         const ADDRESS: RegisterAddress;
 
         fn is_extended() -> bool {
@@ -278,7 +278,7 @@ void WriteRegister(StringBuilder writer, Register register)
         """);
 
     writer.AppendLine($$"""
-        impl const From<u8> for {{structName}} {
+        impl From<u8> for {{structName}} {
             fn from(value: u8) -> Self {
                 Self(value)
             }
@@ -290,7 +290,7 @@ void WriteRegister(StringBuilder writer, Register register)
     var defaultNumber = int.Parse(register.RegReset.Replace("0x", ""), NumberStyles.HexNumber);
     var defaultString = "0x" + Convert.ToString(defaultNumber, 16).PadLeft(2, '0');
     writer.AppendLine($$"""
-        impl const Default for {{structName}} {
+        impl Default for {{structName}} {
             fn default() -> Self {
                 Self({{defaultString}})
             }

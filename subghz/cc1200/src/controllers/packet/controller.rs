@@ -55,7 +55,7 @@ use crate::{
     ConfigPatch, Driver, Rssi, State, Strobe, RX_FIFO_SIZE, TX_FIFO_SIZE,
 };
 use embassy_time::Instant;
-use embedded_hal_async::{delay::DelayUs, spi as async_spi};
+use embedded_hal_async::{delay::DelayUs, spi};
 use heapless::Vec;
 
 use super::ControllerError;
@@ -63,15 +63,13 @@ use super::ControllerError;
 pub struct PacketController<
     'a,
     Spi,
-    SpiBus,
     Delay,
     ResetPin,
     IrqGpio,
     IrqPin,
     const WRITE_QUEUE_CAPACITY: usize,
 > where
-    Spi: async_spi::SpiDevice<Bus = SpiBus>,
-    SpiBus: async_spi::SpiBus + 'static,
+    Spi: spi::SpiDevice,
     Delay: DelayUs,
     ResetPin: embedded_hal::digital::OutputPin,
     IrqGpio: Gpio,
@@ -94,11 +92,10 @@ pub struct RxToken {
     frame_length: Option<usize>,
 }
 
-impl<'a, Spi, SpiBus, Delay, ResetPin, IrqGpio, IrqPin, const WRITE_QUEUE_CAPACITY: usize>
-    PacketController<'a, Spi, SpiBus, Delay, ResetPin, IrqGpio, IrqPin, WRITE_QUEUE_CAPACITY>
+impl<'a, Spi, Delay, ResetPin, IrqGpio, IrqPin, const WRITE_QUEUE_CAPACITY: usize>
+    PacketController<'a, Spi, Delay, ResetPin, IrqGpio, IrqPin, WRITE_QUEUE_CAPACITY>
 where
-    Spi: async_spi::SpiDevice<Bus = SpiBus>,
-    SpiBus: async_spi::SpiBus + 'static,
+    Spi: spi::SpiDevice,
     Delay: DelayUs,
     ResetPin: embedded_hal::digital::OutputPin,
     IrqGpio: Gpio,
@@ -318,7 +315,7 @@ where
 
         // Make sure that the RX fifo is empty
         // We cannot send a FLUSH RX FIFO strobe as that cannot be sent while in RX.
-        self.driver.empty_fifo().await?;
+        self.driver.drain_fifo().await?;
 
         // Configure the fifo threshold to be min_frame_length
         let mut fifo_cfg = self.config.get::<FifoCfg>().unwrap();
@@ -442,12 +439,10 @@ where
         Ok(())
     }
 
-    /// Stop receiving by setting chip to idle.
+    /// Transition chip to idle state
     pub async fn idle(&mut self) -> Result<(), ControllerError> {
         self.driver.strobe_until_idle(Strobe::SIDLE).await?;
-
         self.is_idle = true;
-
         Ok(())
     }
 }

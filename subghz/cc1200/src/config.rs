@@ -8,7 +8,7 @@ pub struct ConfigPatch<'a> {
 
 impl<'a> ConfigPatch<'a> {
     /// Get a register value, or None if the register is not part of the configuration.
-    pub const fn get<R: ~const Register>(&self) -> Option<R> {
+    pub fn get<R: ~const Register>(&self) -> Option<R> {
         let index =
             if self.first_address.0 < IfMixCfg::ADDRESS.0 && R::ADDRESS.0 >= IfMixCfg::ADDRESS.0 {
                 (0x2F - self.first_address.0 + R::ADDRESS.0 - IfMixCfg::ADDRESS.0) as usize

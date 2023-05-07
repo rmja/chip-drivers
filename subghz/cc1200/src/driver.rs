@@ -8,8 +8,8 @@ use crate::{
     statusbyte::{State, StatusByte},
     ConfigPatch, DriverError, PartNumber, Rssi, RX_FIFO_SIZE, TX_FIFO_SIZE,
 };
-use embedded_hal::digital::OutputPin;
-use embedded_hal_async::{delay, spi as async_spi, spi_transaction as async_spi_transaction};
+use embedded_hal::{digital::OutputPin, spi::Operation};
+use embedded_hal_async::{delay, spi};
 use futures::{
     future::{self, Either},
     pin_mut,
@@ -50,10 +50,9 @@ impl<T> From<(T, T)> for CalibrationValue<T> {
     }
 }
 
-impl<Spi, SpiBus, Delay, ResetPin> Driver<Spi, Delay, ResetPin>
+impl<Spi, Delay, ResetPin> Driver<Spi, Delay, ResetPin>
 where
-    Spi: async_spi::SpiDevice<Bus = SpiBus>,
-    SpiBus: async_spi::SpiBus,
+    Spi: spi::SpiDevice,
     Delay: delay::DelayUs,
     ResetPin: OutputPin,
 {
@@ -83,19 +82,12 @@ where
         if let Some(reset_pin) = self.reset_pin.as_mut() {
             // Send reset chip sequence
             reset_pin.set_low().unwrap(); // Trigger chip reset pin.
-            self.delay.delay_ms(2).await.unwrap();
+            self.delay.delay_ms(2).await;
             reset_pin.set_high().unwrap(); // Release chip reset pin.
 
             // The chip reset sequence was sent - wait for chip to become available.
 
-            let delay = &mut self.delay;
-            let status = async_spi_transaction!(&mut self.spi, move |bus| async move {
-                // Wait 1ms until the chip has had a chance to set the SO pin high.
-                // We must unwrap as the transaction can only return `SpiBus::Error`.
-                delay.delay_ms(1).await.unwrap();
-                Self::wait_for_xtal(bus, delay).await
-            })
-            .await?;
+            let status = Self::wait_for_xtal(&mut self.spi, &mut self.delay).await?;
             self.last_status = status;
 
             if let Some(status) = status && status.chip_rdy() {
@@ -104,16 +96,10 @@ where
                 Err(DriverError::Timeout)
             }
         } else {
-            let delay = &mut self.delay;
-            let status = async_spi_transaction!(&mut self.spi, move |bus| async move {
-                bus.write(&[Opcode::Strobe(Strobe::SRES).as_u8()]).await?;
-
-                // The chip reset sequence was sent - wait for chip to become available.
-                // This must happen in the same spi transaction
-
-                Self::wait_for_xtal(bus, delay).await
-            })
-            .await?;
+            self.spi
+                .write(&[Opcode::Strobe(Strobe::SRES).as_u8()])
+                .await?;
+            let status = Self::wait_for_xtal(&mut self.spi, &mut self.delay).await?;
             self.last_status = status;
 
             if let Some(status) = status && status.chip_rdy() {
@@ -171,13 +157,14 @@ where
         let mut opcode_rx_buffer = [0; OPCODE_MAX];
         let opcode_rx = &mut opcode_rx_buffer[..opcode_tx.len()];
 
-        let status = async_spi_transaction!(&mut self.spi, |bus| async {
-            bus.transfer(opcode_rx, opcode_tx).await?;
-            let status = StatusByte(opcode_rx[0]);
-            bus.read(buffer).await?;
-            Ok(status)
-        })
-        .await?;
+        self.spi
+            .transaction(&mut [
+                Operation::Transfer(opcode_rx, &opcode_tx),
+                Operation::Read(buffer),
+            ])
+            .await?;
+
+        let status = StatusByte(opcode_rx[0]);
         self.last_status = Some(status);
 
         Ok(())
@@ -194,7 +181,6 @@ where
         self.spi.write(tx).await?;
 
         self.last_status = None;
-
         Ok(())
     }
 
@@ -209,14 +195,11 @@ where
         let opcode_len = Opcode::write(first, values.len() > 1).assign(&mut opcode_tx_buffer);
         let opcode_tx = &opcode_tx_buffer[..opcode_len];
 
-        async_spi_transaction!(&mut self.spi, |bus| async {
-            bus.write(opcode_tx).await?;
-            bus.write(values).await?;
-            Ok(())
-        })
-        .await?;
-        self.last_status = None;
+        self.spi
+            .transaction(&mut [Operation::Write(opcode_tx), Operation::Write(values)])
+            .await?;
 
+        self.last_status = None;
         Ok(())
     }
 
@@ -247,147 +230,83 @@ where
     /// Read the current RSSI level.
     /// This action _does_ update `last_status`.
     pub async fn read_rssi(&mut self) -> Result<Rssi, DriverError> {
-        let mut tx = [0; 3];
-        assert_eq!(2, Opcode::ReadSingle(ext::Rssi1::ADDRESS).assign(&mut tx));
-
-        let mut rx = [0; 3];
-
-        self.spi.transfer(&mut rx, &tx).await?;
-        self.last_status = Some(StatusByte(rx[0]));
-
-        self.map_rssi(rx[2])
+        let rssi = self.read_reg::<ext::Rssi1>().await?.rssi_11_4();
+        self.map_rssi(rssi)
     }
 
     /// Read from the RX fifo by first reading the length and then read what is available.
     /// This action _does_ update `last_status`.
     pub async fn read_fifo(&mut self, buffer: &mut [u8]) -> Result<usize, DriverError> {
-        let mut opcode_tx: [u8; 4] = [0; 4];
-        assert_eq!(
-            2,
-            Opcode::ReadSingle(ext::NumRxbytes::ADDRESS).assign(&mut opcode_tx)
-        );
-        opcode_tx[3] = Opcode::ReadFifoBurst.as_u8();
-        let mut opcode_rx = [0; 4];
-
-        let (status, length) = async_spi_transaction!(&mut self.spi, |bus| async {
-            bus.transfer(&mut opcode_rx, &opcode_tx).await?;
-            let status = StatusByte(opcode_rx[0]);
-            let available = opcode_rx[2] as usize;
-            let length = usize::min(available, buffer.len());
-            bus.read(&mut buffer[..length]).await?;
-            Ok((status, length))
-        })
-        .await?;
-        self.last_status = Some(status);
-
-        Ok(length)
+        let available = self.read_reg::<ext::NumRxbytes>().await?.rxbytes() as usize;
+        let len = core::cmp::min(core::cmp::min(available, buffer.len()), RX_FIFO_SIZE);
+        unsafe { self.read_fifo_raw(&mut buffer[..len]).await? }
+        Ok(len)
     }
 
-    /// Read from the RX fifo by explicitly reading a pre-known amount corresponding to the size of the buffer.
+    /// Read from the RX fifo by explicitly reading a pre-known amount corresponding to a known number of items in the buffer.
     /// This action _does_ update `last_status`.
-    pub async fn read_fifo_raw(&mut self, buffer: &mut [u8]) -> Result<(), DriverError> {
+    pub async unsafe fn read_fifo_raw(&mut self, buffer: &mut [u8]) -> Result<(), DriverError> {
         assert!(buffer.len() <= RX_FIFO_SIZE);
 
         const OPCODE_TX: [u8; 1] = [Opcode::ReadFifoBurst.as_u8()];
         let mut opcode_rx = [0];
 
-        let status = async_spi_transaction!(&mut self.spi, |bus| async {
-            bus.transfer(&mut opcode_rx, &OPCODE_TX).await?;
-            let status = StatusByte(opcode_rx[0]);
-            bus.read(buffer).await?;
-            Ok(status)
-        })
-        .await?;
-        self.last_status = Some(status);
+        self.spi
+            .transaction(&mut [
+                Operation::Transfer(&mut opcode_rx, &OPCODE_TX),
+                Operation::Read(buffer),
+            ])
+            .await?;
 
+        let status = StatusByte(opcode_rx[0]);
+        self.last_status = Some(status);
         Ok(())
+    }
+
+    /// Read from the RX fifo by explicitly reading a pre-known amount corresponding to a known number of items in the buffer.
+    /// This action _does_ update `last_status`.
+    pub async unsafe fn read_rssi_and_fifo_raw(
+        &mut self,
+        buffer: &mut [u8],
+    ) -> Result<Rssi, DriverError> {
+        let len = buffer.len();
+        assert!(len <= RX_FIFO_SIZE);
+
+        let mut tx_buf: [u8; 4 + RX_FIFO_SIZE] = [0; 4 + RX_FIFO_SIZE];
+        let mut rx_buf = [0; 4 + RX_FIFO_SIZE];
+
+        assert_eq!(
+            2,
+            Opcode::ReadSingle(ext::Rssi1::ADDRESS).assign(&mut tx_buf)
+        );
+        tx_buf[3] = Opcode::ReadFifoBurst.as_u8();
+
+        let tx = &tx_buf[..4 + len];
+        let rx = &mut rx_buf[..4 + len];
+
+        self.spi.transfer(rx, tx).await?;
+
+        let status = StatusByte(rx[3]);
+        self.last_status = Some(status);
+        buffer.copy_from_slice(&rx[4..]);
+        self.map_rssi(rx[2])
     }
 
     /// Empty the RX fifo.
     /// This action _does_ update `last_status`.
-    pub async fn empty_fifo(&mut self) -> Result<(), DriverError> {
-        let mut opcode_tx: [u8; 4] = [0; 4];
-        assert_eq!(
-            2,
-            Opcode::ReadSingle(ext::NumRxbytes::ADDRESS).assign(&mut opcode_tx)
-        );
-        opcode_tx[3] = Opcode::ReadFifoBurst.as_u8();
-        let mut opcode_rx = [0; 4];
-
-        let status = async_spi_transaction!(&mut self.spi, |bus| async {
-            bus.transfer(&mut opcode_rx, &opcode_tx).await?;
-            let status = StatusByte(opcode_rx[0]);
-            let mut available = opcode_rx[2] as usize;
-            let zeros = &[0; 16];
-            while available > zeros.len() {
-                bus.write(zeros).await?;
-                available -= zeros.len();
+    pub async fn drain_fifo(&mut self) -> Result<(), DriverError> {
+        let mut available = self.read_reg::<ext::NumRxbytes>().await?.rxbytes() as usize;
+        if available > 0 {
+            let mut opcode = [0; 1 + 16];
+            opcode[0] = Opcode::ReadFifoBurst.as_u8();
+            while available > opcode.len() {
+                self.spi.write(&opcode).await?;
+                available -= opcode.len();
             }
 
-            bus.write(&zeros[..available]).await?;
-
-            Ok(status)
-        })
-        .await?;
-        self.last_status = Some(status);
-
+            self.spi.write(&opcode[..1 + available]).await?;
+        }
         Ok(())
-    }
-
-    /// Skip bytes in the RX fifo.
-    /// This action _does_ update `last_status`.
-    pub async fn skip_fifo(&mut self, length: usize) -> Result<(), DriverError> {
-        assert!(length <= RX_FIFO_SIZE);
-
-        const OPCODE_TX: [u8; 1] = [Opcode::ReadFifoBurst.as_u8()];
-        let mut opcode_rx = [0];
-
-        let status = async_spi_transaction!(&mut self.spi, |bus| async {
-            bus.transfer(&mut opcode_rx, &OPCODE_TX).await?;
-            let status = StatusByte(opcode_rx[0]);
-
-            let zeros = &[0; 16];
-            let mut length = length;
-            while length > zeros.len() {
-                bus.write(zeros).await?;
-                length -= zeros.len();
-            }
-
-            bus.write(&zeros[..length]).await?;
-
-            Ok(status)
-        })
-        .await?;
-        self.last_status = Some(status);
-
-        Ok(())
-    }
-
-    /// Read the RSSI and RX fifo in one transaction.
-    /// This action _does_ update `last_status`.
-    pub async fn read_rssi_and_fifo(&mut self, buffer: &mut [u8]) -> Result<Rssi, DriverError> {
-        assert!(buffer.len() <= RX_FIFO_SIZE);
-
-        let mut tx = [0; 3 + 1];
-        assert_eq!(
-            2,
-            Opcode::ReadSingle(ext::Rssi1::ADDRESS).assign(&mut tx[0..2])
-        );
-        // RSSI is returned intx[2]
-        assert_eq!(1, Opcode::ReadFifoBurst.assign(&mut tx[3..4]));
-
-        let mut rx = [0; 3 + 1];
-
-        let status = async_spi_transaction!(&mut self.spi, |bus| async {
-            bus.transfer(&mut rx, &tx).await?;
-            let status = StatusByte(rx[0]);
-            bus.read(buffer).await?;
-            Ok(status)
-        })
-        .await?;
-        self.last_status = Some(status);
-
-        self.map_rssi(rx[2])
     }
 
     /// Write to the TX fifo.
@@ -398,13 +317,14 @@ where
         const OPCODE_TX: [u8; 1] = [Opcode::WriteFifoBurst.as_u8()];
         let mut opcode_rx = [0];
 
-        let status = async_spi_transaction!(&mut self.spi, |bus| async {
-            bus.transfer(&mut opcode_rx, &OPCODE_TX).await?;
-            let status = StatusByte(opcode_rx[0]);
-            bus.write(buffer).await?;
-            Ok(status)
-        })
-        .await?;
+        self.spi
+            .transaction(&mut [
+                Operation::Transfer(&mut opcode_rx, &OPCODE_TX),
+                Operation::Write(buffer),
+            ])
+            .await?;
+
+        let status = StatusByte(opcode_rx[0]);
         self.last_status = Some(status);
         Ok(())
     }
@@ -426,11 +346,9 @@ where
         let opcode_tx = [Opcode::Strobe(strobe).as_u8()];
         let mut opcode_rx = [0];
 
-        let status = async_spi_transaction!(&mut self.spi, |bus| async {
-            bus.transfer(&mut opcode_rx, &opcode_tx).await?;
-            Ok(StatusByte(opcode_rx[0]))
-        })
-        .await?;
+        self.spi.transfer(&mut opcode_rx, &opcode_tx).await?;
+
+        let status = StatusByte(opcode_rx[0]);
         self.last_status = Some(status);
         Ok(())
     }
@@ -450,21 +368,14 @@ where
         let opcode_tx = [Opcode::Strobe(strobe).as_u8()];
         let mut opcode_rx = [0];
 
-        let status = async_spi_transaction!(&mut self.spi, |bus| async {
-            let mut status;
-            loop {
-                bus.transfer(&mut opcode_rx, &opcode_tx).await?;
-                status = StatusByte(opcode_rx[0]);
-
-                if pred(status) {
-                    break;
-                }
+        loop {
+            self.spi.transfer(&mut opcode_rx, &opcode_tx).await?;
+            let status = StatusByte(opcode_rx[0]);
+            if pred(status) {
+                self.last_status = Some(status);
+                return Ok(());
             }
-            Ok(status)
-        })
-        .await?;
-        self.last_status = Some(status);
-        Ok(())
+        }
     }
 
     /// Strobe a command to the chip, and continue to do so until the chip enters the IDLE state.
@@ -476,9 +387,9 @@ where
 
     /// Wait for the xtal to stabilize.
     async fn wait_for_xtal(
-        spi: &mut SpiBus,
+        spi: &mut Spi,
         delay: &mut Delay,
-    ) -> Result<Option<StatusByte>, SpiBus::Error> {
+    ) -> Result<Option<StatusByte>, Spi::Error> {
         let ready_future = Self::miso_wait_low(spi);
         let timeout_future = delay.delay_ms(2_000);
         pin_mut!(ready_future);
@@ -490,22 +401,19 @@ where
                 // The xtal is stabilized
                 Ok(Some(status?))
             }
-            Either::Right((timeout, _)) => {
-                // Ensure that the timeout result was ok
-                timeout.unwrap();
-
+            Either::Right(_) => {
                 // We have timeout - the xtal did not stabilize in time
                 Ok(None)
             }
         }
     }
 
-    async fn miso_wait_low(bus: &mut SpiBus) -> Result<StatusByte, SpiBus::Error> {
+    async fn miso_wait_low(spi: &mut Spi) -> Result<StatusByte, Spi::Error> {
         const OPCODE_TX: [u8; 1] = [Opcode::Strobe(Strobe::SNOP).as_u8()];
         let mut opcode_rx = [0];
 
         loop {
-            bus.transfer(&mut opcode_rx, &OPCODE_TX).await?;
+            spi.transfer(&mut opcode_rx, &OPCODE_TX).await?;
             let status = StatusByte(opcode_rx[0]);
             if status.chip_rdy() {
                 return Ok(status);
