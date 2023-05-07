@@ -11,7 +11,6 @@
 #![feature(exclusive_range_pattern)]
 #![feature(assert_matches)]
 
-// This mod MUST go first, so that the others see its macros.
 #[macro_use]
 mod fmt;
 

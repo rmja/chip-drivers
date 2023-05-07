@@ -12,7 +12,7 @@ sim900 = []
 [dependencies]
 atat = { path = "../../../atat/atat", features = ["async"] }
 defmt = { version = "0.3", optional = true }
-embassy-sync = "0.1"
+embassy-sync = "0.2"
 embassy-time = "0.1"
 embedded-io = { version = "0.4", features = ["async"] }
 embedded-nal-async = "0.4"

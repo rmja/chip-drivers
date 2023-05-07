@@ -137,7 +137,7 @@ mod tests {
         let mut digester = SimcomDigester::new();
 
         assert_eq!(
-            (DigestResult::Urc(b"SMS Ready"), 14),
+            (DigestResult::Urc(b"SMS Ready"), 13),
             digester.digest(b"\r\nSMS Ready\r\n")
         );
         let urc = Urc::parse(b"SMS Ready").unwrap();
