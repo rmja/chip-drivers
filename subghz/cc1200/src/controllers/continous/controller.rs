@@ -8,6 +8,7 @@ use futures_async_stream::stream;
 use crate::{
     gpio::{Gpio, GpioOutput},
     regs::{
+        ext::FreqoffCfg,
         pri::{
             AgcCfg3, AgcSyncBehaviourValue, FifoCfg, LengthConfigValue, Mdmcfg1, PktCfg0, PktCfg2,
             PktFormatValue, RfendCfg1, RxoffModeValue,
@@ -84,6 +85,13 @@ impl<
         let mut agccfg3 = self.config.get::<AgcCfg3>().unwrap_or_default();
         agccfg3.set_agc_sync_behaviour(AgcSyncBehaviourValue::NoAgcGainFreeze_000);
         self.driver.write_reg(agccfg3).await?;
+
+        // Do not disable frequency offset compensation after sync word is detected
+        let mut freqoffcfg = self.config.get::<FreqoffCfg>().unwrap_or_default();
+        if freqoffcfg.foc_ki_factor() == 0 {
+            freqoffcfg.set_foc_ki_factor(0b10); // Enable with loop gain factor = 1/64
+            self.driver.write_reg(freqoffcfg).await?;
+        }
 
         // FIFO must be enabled
         let mut mdmcfg1 = self.config.get::<Mdmcfg1>().unwrap_or_default();
