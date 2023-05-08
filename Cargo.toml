@@ -11,7 +11,3 @@ authors = ["Rasmus Melchior Jacobsen <rmja@laesoe.org>"]
 repository = "https://github.com/rmja/chip-drivers"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
-
-[patch.crates-io]
-embassy-sync = { path = "../embassy/embassy-sync" }
-embassy-time = { path = "../embassy/embassy-time" }
