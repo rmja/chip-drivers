@@ -1,5 +1,5 @@
-#[cfg(feature = "continous-controller")]
-pub mod continous;
+#[cfg(feature = "serial-controller")]
+pub mod serial;
 
 #[cfg(feature = "packet-controller")]
 pub mod packet;

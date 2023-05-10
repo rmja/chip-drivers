@@ -14,6 +14,7 @@ bitfield! {
 
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum State {
     IDLE = 0b000,
     RX = 0b001,

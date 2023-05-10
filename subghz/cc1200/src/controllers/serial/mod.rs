@@ -1,5 +1,5 @@
 mod controller;
 mod error;
 
-pub use controller::{ContinousController, RxChunk};
+pub use controller::{RxChunk, SerialController};
 pub use error::ControllerError;

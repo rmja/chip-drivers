@@ -20,15 +20,8 @@ use crate::{
 
 use super::ControllerError;
 
-pub struct ContinousController<
-    'a,
-    Spi,
-    Delay,
-    ResetPin,
-    IrqGpio,
-    IrqPin,
-    const CHUNK_SIZE: usize = 16,
-> where
+pub struct SerialController<'a, Spi, Delay, ResetPin, IrqGpio, IrqPin, const CHUNK_SIZE: usize = 16>
+where
     Spi: spi::SpiDevice,
     Delay: DelayUs,
     ResetPin: embedded_hal::digital::OutputPin,
@@ -60,9 +53,9 @@ impl<
         IrqGpio: Gpio,
         IrqPin: embedded_hal_async::digital::Wait,
         const CHUNK_SIZE: usize,
-    > ContinousController<'a, Spi, Delay, ResetPin, IrqGpio, IrqPin, CHUNK_SIZE>
+    > SerialController<'a, Spi, Delay, ResetPin, IrqGpio, IrqPin, CHUNK_SIZE>
 {
-    /// Create a new continous controller
+    /// Create a new serial controller
     pub fn new(
         driver: &'a mut Driver<Spi, Delay, ResetPin>,
         irq_pin: &'a mut IrqPin,
@@ -196,7 +189,10 @@ impl<
                     self.driver.strobe_until_idle(Strobe::SIDLE).await.unwrap();
 
                     yield Err(ControllerError::UnrecoverableChipState(state));
-                    break;
+
+                    // Re-start receiver
+                    self.driver.strobe(Strobe::SFRX).await.unwrap();
+                    self.driver.strobe(Strobe::SRX).await.unwrap();
                 }
             }
         }

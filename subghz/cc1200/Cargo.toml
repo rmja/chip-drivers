@@ -6,10 +6,11 @@ description = "CC1200 low power and high performance wireless transceiver driver
 
 [features]
 packet-controller = ["embassy-time", "heapless"]
-continous-controller = ["embassy-time", "futures-async-stream"]
+serial-controller = ["embassy-time", "futures-async-stream"]
 
 [dependencies]
 bitfield = "0.14"
+defmt = { version = "0.3", optional = true }
 embassy-time = { version = "0.1", optional = true }
 embedded-hal = "1.0.0-alpha.10"
 embedded-hal-async = "0.2.0-alpha.1"

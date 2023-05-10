@@ -1,4 +1,5 @@
 #[derive(Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum DriverError {
     Timeout,
     InvalidPartNumber,
@@ -11,6 +12,6 @@ where
     SpiError: embedded_hal_async::spi::Error,
 {
     fn from(_value: SpiError) -> Self {
-        Self::Spi
+        DriverError::Spi
     }
 }
