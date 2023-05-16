@@ -84,6 +84,16 @@ pub struct GetConnectionStatus {
     pub id: usize,
 }
 
+/// 8.2.13 AT+CDNSCFG Configure Domain Name Server
+#[derive(AtatCmd)]
+#[at_cmd("+CDNSCFG", NoResponse, termination = "\r")]
+pub struct ConfigureDomainNameServer<'a> {
+    #[at_arg(len = 15)]
+    pub pri_dns: &'a str,
+    #[at_arg(len = 15)]
+    pub sec_dns: Option<&'a str>,
+}
+
 /// 8.2.14 AT+CDNSGIP Query the IP Address of Given Domain Name
 #[derive(AtatCmd)]
 #[at_cmd("+CDNSGIP", NoResponse, termination = "\r")]
@@ -280,6 +290,18 @@ mod tests {
     }
 
     #[test]
+    fn can_configure_domain_name_server() {
+        let cmd = ConfigureDomainNameServer {
+            pri_dns: "111.222.333.444",
+            sec_dns: Some("555.666.777.888"),
+        };
+        assert_eq_hex!(
+            b"AT+CDNSCFG=\"111.222.333.444\",\"555.666.777.888\"\r",
+            cmd.as_bytes()
+        );
+    }
+
+    #[test]
     fn can_resolve_host_ip() {
         let cmd = ResolveHostIp {
             host: "utiliread.dk",
@@ -298,7 +320,7 @@ mod tests {
             panic!("Invalid response");
         }
 
-        if let Urc::IpLookup(res) = urc_sub.try_next_message_pure().unwrap() {
+        if let Urc::DnsResult(Ok(res)) = urc_sub.try_next_message_pure().unwrap() {
             assert_eq!("utiliread.dk", res.host);
             assert_eq!("1.2.3.4", res.ip);
         } else {

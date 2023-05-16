@@ -45,8 +45,14 @@ impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Dns
                 .map_err(|_| SocketError::DnsTimeout)?;
             self.handle.drain_background_urcs();
 
-            if let Urc::IpLookup(result) = urc && result.host == host {
-                return Ok(result.ip.parse().unwrap());
+            if let Urc::DnsResult(result) = urc {
+                if let Ok(result) = result {
+                    if result.host == host {
+                        return Ok(result.ip.parse().unwrap());
+                    }
+                } else {
+                    return Err(SocketError::DnsError);
+                }
             }
         }
 

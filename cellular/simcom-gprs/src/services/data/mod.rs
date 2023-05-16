@@ -34,6 +34,7 @@ pub enum SocketError {
     Atat(atat::Error),
     NoAvailableSockets,
     UnsupportedIpVersion,
+    DnsError,
     DnsTimeout,
     UnableToConnect,
     ConnectTimeout,
@@ -140,6 +141,13 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
             };
             state.store(new_state, Ordering::Release);
         }
+
+        client
+            .send(&ConfigureDomainNameServer {
+                pri_dns: "1.1.1.1",
+                sec_dns: Some("1.0.0.1"),
+            })
+            .await?;
 
         Ok(())
     }

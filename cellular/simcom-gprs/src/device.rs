@@ -242,8 +242,12 @@ impl<AtCl: AtatClient> Handle<'_, AtCl> {
                 warn!("[{}] Socket closed", id);
                 self.socket_state[id].store(SOCKET_STATE_UNUSED, Ordering::Release);
             }
-            Urc::IpLookup(result) => {
-                debug!("Resolved IP for host {}", result.host);
+            Urc::DnsResult(result) => {
+                if let Ok(result) = result {
+                    debug!("Resolved IP for host {}", result.host);
+                } else {
+                    warn!("Failed to resolve IP");
+                }
             }
             Urc::DataAvailable(id) => {
                 debug!("[{}] Data available to be read", id);

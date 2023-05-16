@@ -27,7 +27,7 @@ pub enum Urc {
     AlreadyConnect(usize),
     SendOk(usize),
     Closed(usize),
-    IpLookup(HostIp),
+    DnsResult(Result<DnsLookup, usize>),
     DataAvailable(usize),
     ReadData(ReadResult),
 }
@@ -41,13 +41,13 @@ enum UrcInner {
     #[at_urc("+CPIN")]
     PinStatus(PinStatus),
     #[at_urc("+CDNSGIP")]
-    IpLookup(HostIp),
+    DnsOk(DnsLookup),
 }
 
 /// 8.2.14 AT+CDNSGIP Query the IP Address of Given Domain Name
 #[derive(Debug, Clone, AtatResp)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
-pub struct HostIp {
+pub struct DnsLookup {
     _success: u8,
     pub host: String<128>,
     pub ip: String<15>,
@@ -73,7 +73,7 @@ impl From<UrcInner> for Urc {
             UrcInner::CallReady => Urc::CallReady,
             UrcInner::SmsReady => Urc::SmsReady,
             UrcInner::PinStatus(x) => Urc::PinStatus(x),
-            UrcInner::IpLookup(x) => Urc::IpLookup(x),
+            UrcInner::DnsOk(x) => Urc::DnsResult(Ok(x)),
         }
     }
 }
@@ -87,6 +87,8 @@ impl AtatUrc for Urc {
         } else if let Some(urc) = complete::parse_data_available(resp) {
             Some(urc)
         } else if let Some(urc) = complete::parse_read_data(resp) {
+            Some(urc)
+        } else if let Some(urc) = complete::parse_dns_error(resp) {
             Some(urc)
         } else {
             UrcInner::parse(resp).map(|x| x.into())
@@ -186,11 +188,28 @@ mod tests {
         );
         let urc = Urc::parse(b"+CDNSGIP: 1,\"utiliread.dk\",\"123.123.123.123\"").unwrap();
 
-        if let Urc::IpLookup(urc) = urc {
+        if let Urc::DnsResult(Ok(urc)) = urc {
             assert_eq!(1, urc._success);
             assert_eq!("utiliread.dk", urc.host);
             assert_eq!("123.123.123.123", urc.ip);
             assert_eq!(None, urc.alt_ip);
+        } else {
+            panic!("Invalid URC");
+        }
+    }
+
+    #[test]
+    fn can_parse_ip_lookup_error() {
+        let mut digester = SimcomDigester::new();
+
+        assert_eq!(
+            (DigestResult::Urc(b"+CDNSGIP: 1,10"), 18),
+            digester.digest(b"\r\n+CDNSGIP: 1,10\r\n")
+        );
+        let urc = Urc::parse(b"+CDNSGIP: 1,10").unwrap();
+
+        if let Urc::DnsResult(Err(code)) = urc {
+            assert_eq!(10, code);
         } else {
             panic!("Invalid URC");
         }

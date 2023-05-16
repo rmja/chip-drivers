@@ -60,3 +60,15 @@ pub(super) fn parse_read_data(resp: &[u8]) -> Option<Urc> {
         None
     }
 }
+
+pub(super) fn parse_dns_error(resp: &[u8]) -> Option<Urc> {
+    if let Ok((reminder, (_, error_code))) = sequence::tuple::<_, _, (), _>((
+        bytes::complete::tag("+CDNSGIP: 1,"),
+            character::complete::u8,
+    ))(resp) && reminder.is_empty() {
+        Some(Urc::DnsResult(Err(error_code as usize)))
+    }
+    else {
+        None
+    }
+}
