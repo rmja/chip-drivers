@@ -229,9 +229,9 @@ where
 
     /// Read the current RSSI level.
     /// This action _does_ update `last_status`.
-    pub async fn read_rssi(&mut self) -> Result<Rssi, DriverError> {
+    pub async fn read_rssi(&mut self) -> Result<Option<Rssi>, DriverError> {
         let rssi = self.read_reg::<ext::Rssi1>().await?.rssi_11_4();
-        self.map_rssi(rssi)
+        Ok(self.map_rssi(rssi))
     }
 
     /// Read from the RX fifo by first reading the length and then read what is available.
@@ -268,7 +268,7 @@ where
     pub async unsafe fn read_rssi_and_fifo_raw(
         &mut self,
         buffer: &mut [u8],
-    ) -> Result<Rssi, DriverError> {
+    ) -> Result<Option<Rssi>, DriverError> {
         let len = buffer.len();
         assert!(len <= RX_FIFO_SIZE);
 
@@ -289,7 +289,7 @@ where
         let status = StatusByte(rx[3]);
         self.last_status = Some(status);
         buffer.copy_from_slice(&rx[4..]);
-        self.map_rssi(rx[2])
+        Ok(self.map_rssi(rx[2]))
     }
 
     /// Empty the RX fifo.
@@ -330,11 +330,11 @@ where
     }
 
     // Map the RSSI1 register field to an rssi value.
-    fn map_rssi(&self, rssi1_value: u8) -> Result<Rssi, DriverError> {
+    fn map_rssi(&self, rssi1_value: u8) -> Option<Rssi> {
         let rssi = rssi1_value as i8;
         match rssi {
-            -128 => Err(DriverError::InvalidRssi),
-            rssi => Ok(rssi as i16 + self.rssi_offset.unwrap_or(DEFAULT_RSSI_OFFSET)),
+            -128 => None,
+            rssi => Some(rssi as i16 + self.rssi_offset.unwrap_or(DEFAULT_RSSI_OFFSET)),
         }
     }
 

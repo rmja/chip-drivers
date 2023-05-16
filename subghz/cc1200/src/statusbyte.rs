@@ -27,10 +27,12 @@ pub enum State {
 }
 
 impl StatusByte {
+    /// Get the current chip state
     pub fn state(self) -> State {
         unsafe { transmute(self.state_bits()) }
     }
 
+    /// Get whether the chip is ready.
     /// true if the chip is ready, false otherwise
     pub fn chip_rdy(self) -> bool {
         !self.chip_rdyn()

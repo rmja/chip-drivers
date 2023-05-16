@@ -3,7 +3,6 @@
 pub enum DriverError {
     Timeout,
     InvalidPartNumber,
-    InvalidRssi,
     Spi,
 }
 

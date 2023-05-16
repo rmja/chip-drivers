@@ -40,7 +40,7 @@ pub struct RxChunk<const CHUNK_SIZE: usize = 16> {
     /// The timestamp sampled when `fifo_thr` bytes has arrived in the CC1200 rx buffer.
     pub timestamp: Instant,
     /// The rssi sampled after `fifo_thr` bytes are in the rx buffer, that is, it corresponds to the rssi of the last byte.
-    pub rssi: Rssi,
+    pub rssi: Option<Rssi>,
     /// The received bytes.
     pub bytes: [u8; CHUNK_SIZE],
 }
