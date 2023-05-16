@@ -12,13 +12,13 @@ use crate::{
     commands::{
         gprs,
         tcpip::{
-            BringUpWireless, ClientState, CloseConnection, DeactivateGprsPdpContext,
-            GetConnectionStatus, GetLocalIP, MultiIpValue, SetManualRxGetMode,
-            StartMultiIpConnection, StartTaskAndSetApn,
+            BringUpWireless, ClientState, CloseConnection, ConfigureDomainNameServer,
+            DeactivateGprsPdpContext, GetConnectionStatus, GetLocalIP, MultiIpValue,
+            SetManualRxGetMode, StartMultiIpConnection, StartTaskAndSetApn,
         },
         urc::Urc,
     },
-    device::{Handle, SOCKET_STATE_DROPPED, SOCKET_STATE_UNUSED, SOCKET_STATE_USED},
+    device::{Handle, PinConfig, SOCKET_STATE_DROPPED, SOCKET_STATE_UNUSED, SOCKET_STATE_USED},
     ContextId, Device, DriverError,
 };
 
@@ -61,8 +61,8 @@ pub struct DataService<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChann
     pub local_ip: Option<Ipv4Addr>,
 }
 
-impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
-    Device<'buf, 'sub, AtCl, AtUrcCh>
+impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>, Pins: PinConfig>
+    Device<'buf, 'sub, AtCl, AtUrcCh, Pins>
 {
     pub async fn data(
         &'dev self,

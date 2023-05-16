@@ -319,23 +319,53 @@ impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Drop for TcpSocket<'_, '_, 
 
 #[cfg(test)]
 mod tests {
+    use core::convert::Infallible;
+
     use atat::AtatIngress;
+    use embedded_hal::digital::{ErrorType, OutputPin};
     use embedded_nal_async::{IpAddr, Ipv4Addr, SocketAddr};
 
     use crate::{
-        device::{SocketState, SOCKET_STATE_UNKNOWN, SOCKET_STATE_UNUSED},
+        device::{PinConfig, SocketState, SOCKET_STATE_UNKNOWN, SOCKET_STATE_UNUSED},
         services::serial_mock::{RxMock, SerialMock},
         Device, SimcomAtatBuffers, MAX_SOCKETS,
     };
 
     use super::*;
 
+    struct Pins(ResetPin);
+    struct ResetPin(bool);
+
+    impl PinConfig for Pins {
+        type RESET = ResetPin;
+
+        fn reset(&mut self) -> &mut Self::RESET {
+            &mut self.0
+        }
+    }
+
+    impl OutputPin for ResetPin {
+        fn set_low(&mut self) -> Result<(), Self::Error> {
+            self.0 = false;
+            Ok(())
+        }
+
+        fn set_high(&mut self) -> Result<(), Self::Error> {
+            self.0 = true;
+            Ok(())
+        }
+    }
+
+    impl ErrorType for ResetPin {
+        type Error = Infallible;
+    }
+
     macro_rules! setup_atat {
         () => {{
             static BUFFERS: SimcomAtatBuffers<128> = SimcomAtatBuffers::new();
             static SERIAL: SerialMock = SerialMock::new();
             let (tx, rx) = SERIAL.split();
-            let (ingress, device) = Device::from_buffers(&BUFFERS, tx);
+            let (ingress, device) = Device::from_buffers(&BUFFERS, tx, Pins(ResetPin(true)));
             (ingress, device, rx)
         }};
     }
@@ -346,9 +376,10 @@ mod tests {
         'sub,
         AtCl: AtatClient,
         AtUrcCh: AtatUrcChannel<Urc> + Send + 'static,
+        Pins: PinConfig,
     >(
         ingress: &mut impl AtatIngress,
-        device: &'dev mut Device<'buf, 'sub, AtCl, AtUrcCh>,
+        device: &'dev mut Device<'buf, 'sub, AtCl, AtUrcCh, Pins>,
         serial: &mut RxMock<'_>,
         id: usize,
     ) -> TcpSocket<'buf, 'dev, 'sub, AtCl, AtUrcCh> {

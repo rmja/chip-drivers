@@ -1,5 +1,5 @@
+//! Commands according to 3GPP TS27.007
 mod impls;
-///! Commands according to 3GPP TS27.007
 mod responses;
 mod types;
 pub mod urcs;

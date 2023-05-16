@@ -7,7 +7,7 @@ use crate::{
         simcom::{CallReady, GetCallReady},
         urc::Urc,
     },
-    device::Handle,
+    device::{Handle, PinConfig},
     Device,
 };
 
@@ -34,17 +34,15 @@ impl From<atat::Error> for NetworkError {
 pub struct Network<'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
     handle: &'dev Handle<'sub, AtCl>,
     urc_channel: &'dev AtUrcCh,
-    gsm_status: gsm::NetworkRegistrationStat,
-    gprs_status: gprs::GPRSNetworkRegistrationStat,
 }
 
-impl<'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'dev, 'sub, AtCl, AtUrcCh> {
+impl<'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>, Pins: PinConfig>
+    Device<'dev, 'sub, AtCl, AtUrcCh, Pins>
+{
     pub fn network(&'dev self) -> Network<'dev, 'sub, AtCl, AtUrcCh> {
         Network {
             handle: &self.handle,
             urc_channel: self.urc_channel,
-            gsm_status: gsm::NetworkRegistrationStat::NotRegistered,
-            gprs_status: gprs::GPRSNetworkRegistrationStat::NotRegistered,
         }
     }
 }
@@ -65,52 +63,57 @@ impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Network<'_, '_, AtCl, AtUrc
         }
 
         let mut client = self.handle.client.lock().await;
+        let mut is_registered = false;
         for _ in 0..60 {
-            self.update_registration(&mut *client).await?;
-
-            if self.is_gsm_registered() {
+            let response = client.send(&gsm::GetNetworkRegistrationStatus).await?;
+            if response.stat.is_registered() {
+                is_registered = true;
                 break;
             }
+
+            Timer::after(Duration::from_millis(500)).await;
         }
-        if !self.is_gsm_registered() {
+        if !is_registered {
             return Err(NetworkError::NotRegistered);
         }
 
         if client.send(&gprs::GetGPRSAttached).await?.state == gprs::GPRSAttachedState::Detached {
-            async {
-                for _ in 0..10 {
-                    match client
-                        .send(&gprs::SetGPRSAttached {
-                            state: gprs::GPRSAttachedState::Attached,
-                        })
-                        .await
-                    {
-                        Ok(_) => return Ok(()),
-                        // sim800 (not sim900) reports CME ERROR 100 if it was unable to attach
-                        Err(atat::Error::CmeError(err)) if err as u16 == 100 => {}
-                        Err(err) => return Err(err.into()),
-                    }
-
-                    Timer::after(Duration::from_millis(1_000)).await;
-                }
-
-                Err(NetworkError::NotAttached)
-            }
-            .await?;
+            Self::attach_inner(&mut client).await?;
         }
 
+        let mut is_registered = false;
         for _ in 0..60 {
-            self.update_registration(&mut *client).await?;
-
-            if self.is_gprs_registered() {
+            let response = client.send(&gprs::GetGPRSNetworkRegistrationStatus).await?;
+            if response.stat.is_registered() {
+                is_registered = true;
                 break;
             }
         }
-        if !self.is_gprs_registered() {
+        if !is_registered {
             return Err(NetworkError::NotRegistered);
         }
 
         Ok(())
+    }
+
+    async fn attach_inner(client: &mut AtCl) -> Result<(), NetworkError> {
+        for _ in 0..20 {
+            match client
+                .send(&gprs::SetGPRSAttached {
+                    state: gprs::GPRSAttachedState::Attached,
+                })
+                .await
+            {
+                Ok(_) => return Ok(()),
+                // sim800 (not sim900) reports CME ERROR 100 if it was unable to attach
+                Err(atat::Error::CmeError(err)) if err as u16 == 100 => {}
+                Err(err) => return Err(err.into()),
+            }
+
+            Timer::after(Duration::from_millis(1000)).await;
+        }
+
+        Err(NetworkError::NotAttached)
     }
 
     async fn ensure_ready(&mut self) -> Result<(), NetworkError> {
@@ -261,32 +264,6 @@ impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Network<'_, '_, AtCl, AtUrc
                 password: Some(pin),
             })
             .await?;
-
-        Ok(())
-    }
-
-    fn is_gsm_registered(&self) -> bool {
-        [
-            gsm::NetworkRegistrationStat::Registered,
-            gsm::NetworkRegistrationStat::RegisteredRoaming,
-        ]
-        .contains(&self.gsm_status)
-    }
-
-    fn is_gprs_registered(&self) -> bool {
-        [
-            gprs::GPRSNetworkRegistrationStat::Registered,
-            gprs::GPRSNetworkRegistrationStat::RegisteredRoaming,
-        ]
-        .contains(&self.gprs_status)
-    }
-
-    async fn update_registration(&mut self, client: &mut AtCl) -> Result<(), NetworkError> {
-        let response = client.send(&gsm::GetNetworkRegistrationStatus).await?;
-        self.gsm_status = response.stat;
-
-        let response = client.send(&gprs::GetGPRSNetworkRegistrationStatus).await?;
-        self.gprs_status = response.stat;
 
         Ok(())
     }

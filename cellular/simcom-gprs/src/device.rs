@@ -5,6 +5,8 @@ use atat::{
     AtatUrcChannel, Config, UrcSubscription,
 };
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
+use embassy_time::{Duration, Timer};
+use embedded_hal::digital::OutputPin;
 use embedded_io::asynch::Write;
 use heapless::Vec;
 
@@ -24,11 +26,18 @@ pub(crate) const SOCKET_STATE_UNUSED: u8 = 1;
 pub(crate) const SOCKET_STATE_USED: u8 = 2;
 pub(crate) const SOCKET_STATE_DROPPED: u8 = 3;
 
-pub struct Device<'buf, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
+pub struct Device<'buf, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>, Pins: PinConfig> {
     pub handle: Handle<'sub, AtCl>,
     pub(crate) urc_channel: &'buf AtUrcCh,
     pub(crate) part_number: Option<PartNumber>,
     pub(crate) data_service_taken: AtomicBool,
+    pins: Pins,
+}
+
+pub trait PinConfig {
+    type RESET: OutputPin;
+
+    fn reset(&mut self) -> &mut Self::RESET;
 }
 
 pub struct Handle<'sub, AtCl: AtatClient> {
@@ -40,33 +49,35 @@ pub struct Handle<'sub, AtCl: AtatClient> {
     background_subscription: Mutex<CriticalSectionRawMutex, UrcSubscription<'sub, Urc>>,
 }
 
-impl<'buf, 'sub, W: Write, const INGRESS_BUF_SIZE: usize>
-    Device<'buf, 'sub, Client<'buf, W, INGRESS_BUF_SIZE>, SimcomAtatUrcChannel>
+impl<'buf, 'sub, W: Write, Pins: PinConfig, const INGRESS_BUF_SIZE: usize>
+    Device<'buf, 'sub, Client<'buf, W, INGRESS_BUF_SIZE>, SimcomAtatUrcChannel, Pins>
 where
     'buf: 'sub,
 {
     pub fn from_buffers(
         buffers: &'buf SimcomAtatBuffers<INGRESS_BUF_SIZE>,
         tx: W,
+        pins: Pins,
     ) -> (
         SimcomAtatIngress<INGRESS_BUF_SIZE>,
-        Device<'buf, 'sub, Client<'buf, W, INGRESS_BUF_SIZE>, SimcomAtatUrcChannel>,
+        Device<'buf, 'sub, Client<'buf, W, INGRESS_BUF_SIZE>, SimcomAtatUrcChannel, Pins>,
     ) {
         let (ingress, client) = buffers.split(tx, SimcomDigester::new(), Config::new());
 
         (
             ingress,
-            Device::new(client, &buffers.urc_channel, INGRESS_BUF_SIZE),
+            Device::new(client, &buffers.urc_channel, INGRESS_BUF_SIZE, pins),
         )
     }
 }
 
-impl<'buf, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Device<'buf, 'sub, AtCl, AtUrcCh>
+impl<'buf, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>, Pins: PinConfig>
+    Device<'buf, 'sub, AtCl, AtUrcCh, Pins>
 where
     'buf: 'sub,
 {
     /// Create a new device given an AT client
-    pub fn new(client: AtCl, urc_channel: &'buf AtUrcCh, max_urc_len: usize) -> Self {
+    pub fn new(client: AtCl, urc_channel: &'buf AtUrcCh, max_urc_len: usize, pins: Pins) -> Self {
         // The actual state values, except for socket_state, are cleared
         // when a socket goes from [`SOCKET_STATE_UNUSED`] to [`SOCKET_STATE_USED`].
         Self {
@@ -81,7 +92,25 @@ where
             urc_channel,
             part_number: None,
             data_service_taken: AtomicBool::new(false),
+            pins,
         }
+    }
+
+    // Hardware reset
+    pub async fn reset(&mut self) -> Result<(), DriverError> {
+        let reset_pin = self.pins.reset();
+
+        // SIM800 min. reset pulse length is 105ms
+        // SIM900 min. reset pulse length is 50us
+        reset_pin.set_low().unwrap();
+        Timer::after(Duration::from_millis(150)).await;
+        reset_pin.set_high().unwrap();
+
+        // SIM800 post reset offline duration is 2.7s
+        // SIM900 post reset offline duration is 1.2s
+        Timer::after(Duration::from_secs(3)).await;
+
+        Ok(())
     }
 
     /// Setup the fundamentals for communicating with the modem

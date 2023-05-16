@@ -48,3 +48,10 @@ pub enum GPRSNetworkRegistrationStat {
     /// Registered, roaming
     RegisteredRoaming = 5,
 }
+
+impl GPRSNetworkRegistrationStat {
+    pub fn is_registered(self) -> bool {
+        self == GPRSNetworkRegistrationStat::Registered
+            || self == GPRSNetworkRegistrationStat::RegisteredRoaming
+    }
+}

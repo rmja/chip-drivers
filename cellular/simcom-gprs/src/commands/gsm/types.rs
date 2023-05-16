@@ -75,7 +75,7 @@ pub enum NetworkRegistrationUrcConfig {
     EnabledWithLocation = 2,
 }
 
-#[derive(AtatEnum, Debug, PartialEq)]
+#[derive(AtatEnum, Clone, Copy, Debug, PartialEq)]
 pub enum NetworkRegistrationStat {
     /// Not registered, the MT is not currently searching a new operator to register to
     NotRegistered = 0,
@@ -89,4 +89,11 @@ pub enum NetworkRegistrationStat {
     Unknown = 4,
     /// Registered, roaming
     RegisteredRoaming = 5,
+}
+
+impl NetworkRegistrationStat {
+    pub fn is_registered(self) -> bool {
+        self == NetworkRegistrationStat::Registered
+            || self == NetworkRegistrationStat::RegisteredRoaming
+    }
 }
