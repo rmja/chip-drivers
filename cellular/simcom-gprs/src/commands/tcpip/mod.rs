@@ -331,6 +331,22 @@ mod tests {
     }
 
     #[test]
+    fn can_handle_resolve_host_ip_error() {
+        // This error is echo'ed
+        let (mut ingress, mut res_sub, urc_sub) = setup_atat!();
+        ingress
+            .try_write(b"AT+CDNSGIP=\"utiliread.com\"\r\r\nERROR\r\n")
+            .unwrap();
+
+        assert_eq!(
+            Response::OtherError,
+            res_sub.try_next_message_pure().unwrap()
+        );
+
+        assert_eq!(0, urc_sub.available());
+    }
+
+    #[test]
     fn can_set_manual_rx_get_mode() {
         let cmd = SetManualRxGetMode;
         assert_eq_hex!(b"AT+CIPRXGET=1\r", cmd.as_bytes());
