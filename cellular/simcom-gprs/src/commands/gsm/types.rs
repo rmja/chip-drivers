@@ -76,6 +76,7 @@ pub enum NetworkRegistrationUrcConfig {
 }
 
 #[derive(AtatEnum, Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum NetworkRegistrationStat {
     /// Not registered, the MT is not currently searching a new operator to register to
     NotRegistered = 0,

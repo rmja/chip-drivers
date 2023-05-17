@@ -34,6 +34,7 @@ pub enum GPRSNetworkRegistrationUrcConfig {
 }
 
 #[derive(AtatEnum, Debug, PartialEq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum GPRSNetworkRegistrationStat {
     /// Not registered, the MT is not currently searching a new operator to register to
     NotRegistered = 0,

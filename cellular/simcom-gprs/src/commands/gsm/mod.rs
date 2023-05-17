@@ -19,6 +19,11 @@ pub struct GetManufacturerId;
 #[at_cmd("+CGMM", ModelIdResponse, termination = "\r")]
 pub struct GetModelId;
 
+/// 3.2.10 Request Revision Identification of Software Release
+#[derive(AtatCmd)]
+#[at_cmd("+CGMR", SoftwareVersionResponse, termination = "\r")]
+pub struct GetSoftwareVersion;
+
 /// 3.2.17 AT+CLCK Facility Lock
 #[derive(AtatCmd)]
 #[at_cmd("+CLCK", NoResponse, timeout_ms = 15_000, termination = "\r")]
@@ -116,6 +121,15 @@ mod tests {
 
         let response = cmd.parse(Ok(b"SIMCOM_SIM800\r\n")).unwrap();
         assert_eq!(b"SIMCOM_SIM800", response.model.as_ref());
+    }
+
+    #[test]
+    fn can_get_software_version() {
+        let cmd = GetSoftwareVersion;
+        assert_eq_hex!(b"AT+CGMR\r", cmd.as_bytes());
+
+        let response = cmd.parse(Ok(b"Revision:1308B04SIM800M32\r\n")).unwrap();
+        assert_eq!(b"Revision:1308B04SIM800M32", response.version.as_ref());
     }
 
     #[test]

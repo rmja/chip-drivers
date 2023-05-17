@@ -16,6 +16,12 @@ pub struct ModelIdResponse {
     pub model: Bytes<16>,
 }
 
+/// 3.2.10 Request Revision Identification of Software Release
+#[derive(AtatResp)]
+pub struct SoftwareVersionResponse {
+    pub version: Bytes<32>,
+}
+
 // 3.2.32 AT+CREG Network Registration
 #[derive(AtatResp)]
 pub struct NetworkRegistrationStatus {

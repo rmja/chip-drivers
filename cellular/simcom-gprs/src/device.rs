@@ -156,7 +156,13 @@ where
             _ => Err(DriverError::UnsupportedModel),
         }?);
 
-        info!("{} was setup", self.part_number.unwrap());
+        let response = client.send(&gsm::GetSoftwareVersion).await?;
+
+        info!(
+            "{} with software version {} was setup",
+            self.part_number.unwrap(),
+            response.version.as_slice()
+        );
 
         let max_sockets = self.part_number.unwrap().max_sockets();
         for _ in 0..max_sockets {
