@@ -27,8 +27,14 @@ pub enum Urc {
     AlreadyConnect(usize),
     SendOk(usize),
     Closed(usize),
+
+    /// +CDNSGIP: ...
     DnsResult(Result<DnsLookup, usize>),
+
+    /// +CIPRXGET: 1,...
     DataAvailable(usize),
+
+    /// +CIPRXGET: 2,...
     ReadData(ReadResult),
 }
 

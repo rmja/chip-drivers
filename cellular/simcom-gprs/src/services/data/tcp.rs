@@ -153,11 +153,16 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
         let mut no_data_response_received = false;
 
         let mut timeout_instant = Instant::now() + Duration::from_secs(10);
-        while let Some(timeout) = timeout_instant.checked_duration_since(Instant::now()) {
+        'wait_for_data: while let Some(timeout) =
+            timeout_instant.checked_duration_since(Instant::now())
+        {
             // Wait for next urc
-            let urc = with_timeout(timeout, urc_subscription.next_message_pure())
-                .await
-                .map_err(|_| SocketError::ReadTimeout)?;
+            let urc = match with_timeout(timeout, urc_subscription.next_message_pure()).await {
+                Ok(urc) => urc,
+                Err(TimeoutError) => {
+                    break 'wait_for_data;
+                }
+            };
 
             self.drain_background_urcs_and_ensure_in_use()?;
 
@@ -212,6 +217,8 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
             }
         }
 
+        warn!("[{}] Timeout while reading data", self.id);
+        self.handle.socket_state[self.id].store(SOCKET_STATE_DROPPED, Ordering::Release);
         Err(SocketError::ReadTimeout)
     }
 
@@ -281,7 +288,11 @@ impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Io for TcpSocket<'_, '_, '_
 
 impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Read for TcpSocket<'_, '_, '_, AtCl, AtUrcCh> {
     async fn read(&mut self, buf: &mut [u8]) -> Result<usize, SocketError> {
-        self.read(buf).await
+        match self.read(buf).await {
+            Ok(len) => Ok(len),
+            Err(SocketError::ReadTimeout) => Ok(0),
+            Err(e) => Err(e),
+        }
     }
 }
 
