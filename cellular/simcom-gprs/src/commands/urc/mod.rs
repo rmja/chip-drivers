@@ -209,13 +209,13 @@ mod tests {
         let mut digester = SimcomDigester::new();
 
         assert_eq!(
-            (DigestResult::Urc(b"+CDNSGIP: 1,10"), 18),
-            digester.digest(b"\r\n+CDNSGIP: 1,10\r\n")
+            (DigestResult::Urc(b"+CDNSGIP: 0,8"), 17),
+            digester.digest(b"\r\n+CDNSGIP: 0,8\r\n")
         );
-        let urc = Urc::parse(b"+CDNSGIP: 1,10").unwrap();
+        let urc = Urc::parse(b"+CDNSGIP: 0,8").unwrap();
 
         if let Urc::DnsResult(Err(code)) = urc {
-            assert_eq!(10, code);
+            assert_eq!(8, code);
         } else {
             panic!("Invalid URC");
         }

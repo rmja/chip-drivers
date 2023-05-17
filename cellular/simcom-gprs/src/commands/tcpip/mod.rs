@@ -340,7 +340,33 @@ mod tests {
     }
 
     #[test]
-    fn can_handle_resolve_host_ip_error() {
+    fn can_handle_resolve_host_ip_urc_error() {
+        let cmd = ResolveHostIp {
+            host: "utiliread.dk",
+        };
+        assert_eq_hex!(b"AT+CDNSGIP=\"utiliread.dk\"\r", cmd.as_bytes());
+
+        let (mut ingress, mut res_sub, mut urc_sub) = setup_atat!();
+        ingress.try_write(b"\r\nOK\r\n").unwrap();
+        ingress.try_write(b"\r\n+CDNSGIP: 0,8\r\n").unwrap();
+
+        if let Response::Ok(message) = res_sub.try_next_message_pure().unwrap() {
+            assert!(message.is_empty());
+        } else {
+            panic!("Invalid response");
+        }
+
+        if let Urc::DnsResult(Err(kind)) = urc_sub.try_next_message_pure().unwrap() {
+            assert_eq!(8, kind);
+        } else {
+            panic!("Invalid URC");
+        }
+
+        assert_eq!(0, urc_sub.available());
+    }
+
+    #[test]
+    fn can_handle_resolve_host_ip_immediate_error() {
         // This error is echo'ed
         let (mut ingress, mut res_sub, urc_sub) = setup_atat!();
         ingress
