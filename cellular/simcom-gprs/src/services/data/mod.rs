@@ -4,7 +4,7 @@ mod tcp;
 
 use atat::{asynch::AtatClient, AtatUrcChannel};
 use core::{str::from_utf8, sync::atomic::Ordering};
-use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
+use embassy_sync::{blocking_mutex::raw::NoopRawMutex, mutex::Mutex};
 use embedded_io::ErrorKind;
 use embedded_nal_async::Ipv4Addr;
 
@@ -58,7 +58,7 @@ impl From<atat::Error> for SocketError {
 pub struct DataService<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
     handle: &'dev Handle<'sub, AtCl>,
     urc_channel: &'buf AtUrcCh,
-    dns_lock: Mutex<CriticalSectionRawMutex, ()>,
+    dns_lock: Mutex<NoopRawMutex, ()>,
     pub local_ip: Option<Ipv4Addr>,
 }
 

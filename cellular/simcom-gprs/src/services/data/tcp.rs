@@ -159,7 +159,7 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
             // Wait for next urc
             let urc = match with_timeout(timeout, urc_subscription.next_message_pure()).await {
                 Ok(urc) => urc,
-                Err(TimeoutError) => {
+                Err(_) => {
                     break 'wait_for_data;
                 }
             };

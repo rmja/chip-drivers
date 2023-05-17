@@ -4,10 +4,11 @@ use atat::{
     asynch::{AtatClient, Client},
     AtatUrcChannel, Config, UrcSubscription,
 };
-use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
+use embassy_sync::{blocking_mutex::raw::NoopRawMutex, mutex::Mutex};
 use embassy_time::{Duration, Timer};
 use embedded_hal::digital::OutputPin;
 use embedded_io::asynch::Write;
+use futures_intrusive::sync::LocalMutex;
 use heapless::Vec;
 
 use crate::{
@@ -41,12 +42,12 @@ pub trait PinConfig {
 }
 
 pub struct Handle<'sub, AtCl: AtatClient> {
-    pub(crate) client: Mutex<CriticalSectionRawMutex, AtCl>,
+    pub(crate) client: LocalMutex<AtCl>,
     pub(crate) socket_state: Vec<SocketState, MAX_SOCKETS>,
     pub(crate) data_written: [AtomicBool; MAX_SOCKETS],
     pub(crate) data_available: [AtomicBool; MAX_SOCKETS],
     pub(crate) max_urc_len: usize,
-    background_subscription: Mutex<CriticalSectionRawMutex, UrcSubscription<'sub, Urc>>,
+    background_subscription: Mutex<NoopRawMutex, UrcSubscription<'sub, Urc>>,
 }
 
 impl<'buf, 'sub, W: Write, Pins: PinConfig, const INGRESS_BUF_SIZE: usize>
@@ -82,7 +83,7 @@ where
         // when a socket goes from [`SOCKET_STATE_UNUSED`] to [`SOCKET_STATE_USED`].
         Self {
             handle: Handle {
-                client: Mutex::new(client),
+                client: LocalMutex::new(client, true),
                 socket_state: Vec::new(),
                 data_written: Default::default(),
                 data_available: Default::default(),
