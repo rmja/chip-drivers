@@ -1,5 +1,5 @@
 use atat::{asynch::AtatClient, AtatUrcChannel};
-use embassy_time::{with_timeout, Duration, Instant, Timer};
+use embassy_time::{with_timeout, Duration, Instant};
 use embedded_nal_async::{AddrType, Dns};
 
 use crate::commands::{tcpip::ResolveHostIp, urc::Urc};
@@ -32,23 +32,7 @@ impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Dns
             let subscription = self.urc_channel.subscribe().unwrap();
 
             // Start resolving the host ip
-            // It can happen that the modem returns transient ERROR's, so we do this with retries
-            'retries: for attempt in 1..=5 {
-                if attempt > 1 {
-                    debug!("Attempt {}:", attempt);
-                }
-
-                match client.send(&ResolveHostIp { host }).await {
-                    Ok(_) => {
-                        break 'retries;
-                    }
-                    Err(e) => {
-                        warn!("DNS lookup error: {:?}", e);
-                    }
-                }
-
-                Timer::after(Duration::from_millis(1000)).await;
-            }
+            client.send(&ResolveHostIp { host }).await?;
 
             subscription
         };
