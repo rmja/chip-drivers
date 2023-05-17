@@ -152,7 +152,7 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
 
         let mut no_data_response_received = false;
 
-        let mut timeout_instant = Instant::now() + Duration::from_secs(10);
+        let mut timeout_instant = Instant::now() + Duration::from_secs(60);
         'wait_for_data: while let Some(timeout) =
             timeout_instant.checked_duration_since(Instant::now())
         {
@@ -217,7 +217,7 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
             }
         }
 
-        warn!("[{}] Timeout while reading data", self.id);
+        error!("[{}] Timeout while reading data", self.id);
         self.handle.socket_state[self.id].store(SOCKET_STATE_DROPPED, Ordering::Release);
         Err(SocketError::ReadTimeout)
     }
