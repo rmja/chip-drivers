@@ -120,8 +120,17 @@ pub struct SetManualRxGetMode;
 ///
 /// This is the reason why we consider the response from AT+CIPRXGET as
 /// `NoResponse` and the +CIPRXGET part a Urc
+///
+/// No timeout is given for the command in the command reference,
+/// but times longer than the default 1s has been seen in the wild.
 #[derive(AtatCmd)]
-#[at_cmd("+CIPRXGET=2,", NoResponse, value_sep = false, termination = "\r")]
+#[at_cmd(
+    "+CIPRXGET=2,",
+    NoResponse,
+    timeout_ms = 5_000,
+    value_sep = false,
+    termination = "\r"
+)]
 pub struct ReadData {
     pub id: usize,
     // The maximum number of bytes to read in the range 0..1460
@@ -374,6 +383,34 @@ mod tests {
             assert_eq!(8, data.data_len);
             assert_eq!(0, data.pending_len);
             assert_eq!(b"HTTP\r\n\r\n", data.data.take().unwrap().as_slice());
+        } else {
+            panic!("Invalid URC");
+        }
+
+        assert_eq!(0, urc_sub.available());
+    }
+
+    #[test]
+    fn can_read_data_after_prompt() {
+        let (mut ingress, mut res_sub, mut urc_sub) = setup_atat!();
+
+        ingress.try_write(b"\r\n>").unwrap();
+
+        if let Response::Prompt(prompt) = res_sub.try_next_message_pure().unwrap() {
+            assert_eq!(b'>', prompt);
+        } else {
+            panic!("Invalid prompt");
+        }
+
+        ingress.try_write(b" ").unwrap();
+        ingress
+            .try_write(b"\r\n+CIPRXGET: 2,0,0,0\r\n\r\nOK\r\n")
+            .unwrap();
+
+        if let Urc::ReadData(data) = urc_sub.try_next_message_pure().unwrap() {
+            assert_eq!(0, data.id);
+            assert_eq!(0, data.data_len);
+            assert_eq!(0, data.pending_len);
         } else {
             panic!("Invalid URC");
         }
