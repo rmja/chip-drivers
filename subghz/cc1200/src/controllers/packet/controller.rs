@@ -291,7 +291,7 @@ where
     }
 
     /// Read the current rssi level
-    pub async fn get_rssi(&mut self) -> Result<Rssi, ControllerError> {
+    pub async fn get_rssi(&mut self) -> Result<Option<Rssi>, ControllerError> {
         let rssi = self.driver.read_rssi().await?;
         Ok(rssi)
     }
