@@ -130,7 +130,7 @@ impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Network<'_, '_, AtCl, AtUrc
     }
 
     /// Get the current signal quality from modem
-    pub async fn get_signal_quality(&mut self) -> Result<i8, NetworkError> {
+    pub async fn get_signal_quality(&self) -> Result<i8, NetworkError> {
         let mut client = self.handle.client.lock().await;
         client
             .send(&gsm::GetSignalQuality)

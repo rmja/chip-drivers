@@ -337,7 +337,7 @@ mod tests {
     use embedded_nal_async::{IpAddr, Ipv4Addr, SocketAddr};
 
     use crate::{
-        device::{PinConfig, SocketState, SOCKET_STATE_UNKNOWN, SOCKET_STATE_UNUSED},
+        device::{FlowControl, PinConfig, SocketState, SOCKET_STATE_UNKNOWN, SOCKET_STATE_UNUSED},
         services::serial_mock::{RxMock, SerialMock},
         Device, SimcomAtatBuffers, MAX_SOCKETS,
     };
@@ -376,7 +376,8 @@ mod tests {
             static BUFFERS: SimcomAtatBuffers<128> = SimcomAtatBuffers::new();
             static SERIAL: SerialMock = SerialMock::new();
             let (tx, rx) = SERIAL.split();
-            let (ingress, device) = Device::from_buffers(&BUFFERS, tx, Pins(ResetPin(true)));
+            let (ingress, device) =
+                Device::from_buffers(&BUFFERS, tx, Pins(ResetPin(true)), FlowControl::None);
             (ingress, device, rx)
         }};
     }

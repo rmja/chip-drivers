@@ -33,12 +33,20 @@ pub struct Device<'buf, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>, Pi
     pub(crate) part_number: Option<PartNumber>,
     pub(crate) data_service_taken: AtomicBool,
     pins: Pins,
+    flow_control: FlowControl,
 }
 
 pub trait PinConfig {
     type RESET: OutputPin;
 
     fn reset(&mut self) -> &mut Self::RESET;
+}
+
+pub enum FlowControl {
+    /// No flow control is being used
+    None,
+    /// Hardware flow control
+    RtsCts,
 }
 
 pub struct Handle<'sub, AtCl: AtatClient> {
@@ -59,6 +67,7 @@ where
         buffers: &'buf SimcomAtatBuffers<INGRESS_BUF_SIZE>,
         tx: W,
         pins: Pins,
+        flow_control: FlowControl,
     ) -> (
         SimcomAtatIngress<INGRESS_BUF_SIZE>,
         Device<'buf, 'sub, Client<'buf, W, INGRESS_BUF_SIZE>, SimcomAtatUrcChannel, Pins>,
@@ -67,7 +76,13 @@ where
 
         (
             ingress,
-            Device::new(client, &buffers.urc_channel, INGRESS_BUF_SIZE, pins),
+            Device::new(
+                client,
+                &buffers.urc_channel,
+                INGRESS_BUF_SIZE,
+                pins,
+                flow_control,
+            ),
         )
     }
 }
@@ -78,7 +93,13 @@ where
     'buf: 'sub,
 {
     /// Create a new device given an AT client
-    pub fn new(client: AtCl, urc_channel: &'buf AtUrcCh, max_urc_len: usize, pins: Pins) -> Self {
+    pub fn new(
+        client: AtCl,
+        urc_channel: &'buf AtUrcCh,
+        max_urc_len: usize,
+        pins: Pins,
+        flow_control: FlowControl,
+    ) -> Self {
         // The actual state values, except for socket_state, are cleared
         // when a socket goes from [`SOCKET_STATE_UNUSED`] to [`SOCKET_STATE_USED`].
         Self {
@@ -94,6 +115,7 @@ where
             part_number: None,
             data_service_taken: AtomicBool::new(false),
             pins,
+            flow_control,
         }
     }
 
@@ -135,10 +157,15 @@ where
             })
             .await?;
 
+        let (from_modem, to_modem) = match self.flow_control {
+            FlowControl::None => (v25ter::FlowControl::Disabled, v25ter::FlowControl::Disabled),
+            FlowControl::RtsCts => (v25ter::FlowControl::RtsCts, v25ter::FlowControl::RtsCts),
+        };
+
         client
             .send(&v25ter::SetFlowControl {
-                from_modem: v25ter::FlowControl::Disabled,
-                to_modem: Some(v25ter::FlowControl::Disabled),
+                from_modem,
+                to_modem: Some(to_modem),
             })
             .await?;
 
