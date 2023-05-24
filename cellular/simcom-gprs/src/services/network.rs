@@ -7,7 +7,7 @@ use crate::{
         simcom::{CallReady, GetCallReady},
         urc::Urc,
     },
-    device::{Handle, PinConfig},
+    device::{Handle, ModemConfig},
     Device,
 };
 
@@ -36,8 +36,8 @@ pub struct Network<'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
     urc_channel: &'dev AtUrcCh,
 }
 
-impl<'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>, Pins: PinConfig>
-    Device<'dev, 'sub, AtCl, AtUrcCh, Pins>
+impl<'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>, Config: ModemConfig>
+    Device<'dev, 'sub, AtCl, AtUrcCh, Config>
 {
     pub fn network(&'dev self) -> Network<'dev, 'sub, AtCl, AtUrcCh> {
         Network {

@@ -18,7 +18,7 @@ use crate::{
         },
         urc::Urc,
     },
-    device::{Handle, PinConfig, SOCKET_STATE_DROPPED, SOCKET_STATE_UNUSED, SOCKET_STATE_USED},
+    device::{Handle, ModemConfig, SOCKET_STATE_DROPPED, SOCKET_STATE_UNUSED, SOCKET_STATE_USED},
     ContextId, Device, DriverError,
 };
 
@@ -62,8 +62,8 @@ pub struct DataService<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChann
     pub local_ip: Option<Ipv4Addr>,
 }
 
-impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>, Pins: PinConfig>
-    Device<'buf, 'sub, AtCl, AtUrcCh, Pins>
+impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>, Config: ModemConfig>
+    Device<'buf, 'sub, AtCl, AtUrcCh, Config>
 {
     pub async fn data(
         &'dev self,

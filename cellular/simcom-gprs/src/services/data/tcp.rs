@@ -337,20 +337,20 @@ mod tests {
     use embedded_nal_async::{IpAddr, Ipv4Addr, SocketAddr};
 
     use crate::{
-        device::{FlowControl, PinConfig, SocketState, SOCKET_STATE_UNKNOWN, SOCKET_STATE_UNUSED},
+        device::{ModemConfig, SocketState, SOCKET_STATE_UNKNOWN, SOCKET_STATE_UNUSED},
         services::serial_mock::{RxMock, SerialMock},
         Device, SimcomAtatBuffers, MAX_SOCKETS,
     };
 
     use super::*;
 
-    struct Pins(ResetPin);
+    struct Config(ResetPin);
     struct ResetPin(bool);
 
-    impl PinConfig for Pins {
-        type RESET = ResetPin;
+    impl ModemConfig for Config {
+        type ResetPin = ResetPin;
 
-        fn reset(&mut self) -> &mut Self::RESET {
+        fn reset_pin(&mut self) -> &mut Self::ResetPin {
             &mut self.0
         }
     }
@@ -376,8 +376,7 @@ mod tests {
             static BUFFERS: SimcomAtatBuffers<128> = SimcomAtatBuffers::new();
             static SERIAL: SerialMock = SerialMock::new();
             let (tx, rx) = SERIAL.split();
-            let (ingress, device) =
-                Device::from_buffers(&BUFFERS, tx, Pins(ResetPin(true)), FlowControl::None);
+            let (ingress, device) = Device::from_buffers(&BUFFERS, tx, Config(ResetPin(true)));
             (ingress, device, rx)
         }};
     }
@@ -388,10 +387,10 @@ mod tests {
         'sub,
         AtCl: AtatClient,
         AtUrcCh: AtatUrcChannel<Urc> + Send + 'static,
-        Pins: PinConfig,
+        Config: ModemConfig,
     >(
         ingress: &mut impl AtatIngress,
-        device: &'dev mut Device<'buf, 'sub, AtCl, AtUrcCh, Pins>,
+        device: &'dev mut Device<'buf, 'sub, AtCl, AtUrcCh, Config>,
         serial: &mut RxMock<'_>,
         id: usize,
     ) -> TcpSocket<'buf, 'dev, 'sub, AtCl, AtUrcCh> {

@@ -2,10 +2,10 @@ use core::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 
 use atat::{
     asynch::{AtatClient, Client},
-    AtatUrcChannel, Config, UrcSubscription,
+    AtatUrcChannel, UrcSubscription,
 };
 use embassy_sync::{blocking_mutex::raw::NoopRawMutex, mutex::Mutex};
-use embassy_time::{Duration, Timer};
+use embassy_time::{Duration, Instant, Timer};
 use embedded_hal::digital::OutputPin;
 use embedded_io::asynch::Write;
 use futures_intrusive::sync::LocalMutex;
@@ -27,19 +27,24 @@ pub(crate) const SOCKET_STATE_UNUSED: u8 = 1;
 pub(crate) const SOCKET_STATE_USED: u8 = 2;
 pub(crate) const SOCKET_STATE_DROPPED: u8 = 3;
 
-pub struct Device<'buf, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>, Pins: PinConfig> {
+pub struct Device<'buf, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>, Config: ModemConfig> {
     pub handle: Handle<'sub, AtCl>,
     pub(crate) urc_channel: &'buf AtUrcCh,
     pub(crate) part_number: Option<PartNumber>,
     pub(crate) data_service_taken: AtomicBool,
-    pins: Pins,
-    flow_control: FlowControl,
+    config: Config,
 }
 
-pub trait PinConfig {
-    type RESET: OutputPin;
+pub trait ModemConfig {
+    type ResetPin: OutputPin;
 
-    fn reset(&mut self) -> &mut Self::RESET;
+    const FLOW_CONTROL: FlowControl = FlowControl::None;
+
+    fn reset_pin(&mut self) -> &mut Self::ResetPin;
+
+    fn get_response_timeout(start: Instant, timeout: Duration) -> Instant {
+        start + timeout
+    }
 }
 
 pub enum FlowControl {
@@ -58,37 +63,34 @@ pub struct Handle<'sub, AtCl: AtatClient> {
     background_subscription: Mutex<NoopRawMutex, UrcSubscription<'sub, Urc>>,
 }
 
-impl<'buf, 'sub, W: Write, Pins: PinConfig, const INGRESS_BUF_SIZE: usize>
-    Device<'buf, 'sub, Client<'buf, W, INGRESS_BUF_SIZE>, SimcomAtatUrcChannel, Pins>
+impl<'buf, 'sub, W: Write, Config: ModemConfig, const INGRESS_BUF_SIZE: usize>
+    Device<'buf, 'sub, Client<'buf, W, INGRESS_BUF_SIZE>, SimcomAtatUrcChannel, Config>
 where
     'buf: 'sub,
 {
     pub fn from_buffers(
         buffers: &'buf SimcomAtatBuffers<INGRESS_BUF_SIZE>,
         tx: W,
-        pins: Pins,
-        flow_control: FlowControl,
+        config: Config,
     ) -> (
         SimcomAtatIngress<INGRESS_BUF_SIZE>,
-        Device<'buf, 'sub, Client<'buf, W, INGRESS_BUF_SIZE>, SimcomAtatUrcChannel, Pins>,
+        Device<'buf, 'sub, Client<'buf, W, INGRESS_BUF_SIZE>, SimcomAtatUrcChannel, Config>,
     ) {
-        let (ingress, client) = buffers.split(tx, SimcomDigester::new(), Config::new());
+        let (ingress, client) = buffers.split(
+            tx,
+            SimcomDigester::new(),
+            atat::Config::new().get_response_timeout(Config::get_response_timeout),
+        );
 
         (
             ingress,
-            Device::new(
-                client,
-                &buffers.urc_channel,
-                INGRESS_BUF_SIZE,
-                pins,
-                flow_control,
-            ),
+            Device::new(client, &buffers.urc_channel, INGRESS_BUF_SIZE, config),
         )
     }
 }
 
-impl<'buf, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>, Pins: PinConfig>
-    Device<'buf, 'sub, AtCl, AtUrcCh, Pins>
+impl<'buf, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>, Config: ModemConfig>
+    Device<'buf, 'sub, AtCl, AtUrcCh, Config>
 where
     'buf: 'sub,
 {
@@ -97,8 +99,7 @@ where
         client: AtCl,
         urc_channel: &'buf AtUrcCh,
         max_urc_len: usize,
-        pins: Pins,
-        flow_control: FlowControl,
+        config: Config,
     ) -> Self {
         // The actual state values, except for socket_state, are cleared
         // when a socket goes from [`SOCKET_STATE_UNUSED`] to [`SOCKET_STATE_USED`].
@@ -114,14 +115,13 @@ where
             urc_channel,
             part_number: None,
             data_service_taken: AtomicBool::new(false),
-            pins,
-            flow_control,
+            config,
         }
     }
 
     // Hardware reset
     pub async fn reset(&mut self) -> Result<(), DriverError> {
-        let reset_pin = self.pins.reset();
+        let reset_pin = self.config.reset_pin();
 
         // SIM800 min. reset pulse length is 105ms
         // SIM900 min. reset pulse length is 50us
@@ -157,7 +157,7 @@ where
             })
             .await?;
 
-        let (from_modem, to_modem) = match self.flow_control {
+        let (from_modem, to_modem) = match Config::FLOW_CONTROL {
             FlowControl::None => (v25ter::FlowControl::Disabled, v25ter::FlowControl::Disabled),
             FlowControl::RtsCts => (v25ter::FlowControl::RtsCts, v25ter::FlowControl::RtsCts),
         };

@@ -40,7 +40,7 @@ pub type SimcomAtatUrcChannel = atat::UrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIB
 
 use atat::atat_derive::AtatLen;
 use commands::urc::Urc;
-pub use device::{Device, FlowControl, PinConfig};
+pub use device::{Device, FlowControl, ModemConfig};
 use device::{URC_CAPACITY, URC_SUBSCRIBERS};
 pub use digester::SimcomDigester;
 pub use error::DriverError;
