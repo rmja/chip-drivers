@@ -15,6 +15,7 @@ use crate::{
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum NetworkError {
     Atat(atat::Error),
+    PdpStateTimeout,
     NotReady,
     NotRegistered,
     NotAttached,
@@ -104,7 +105,7 @@ impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Network<'_, '_, AtCl, AtUrc
                 })
                 .await
             {
-                Ok(_) => return Ok(()),
+                Ok(_) => break,
                 // sim800 (not sim900) reports CME ERROR 100 if it was unable to attach
                 Err(atat::Error::CmeError(err)) if err as u16 == 100 => {}
                 Err(err) => return Err(err.into()),
@@ -113,7 +114,11 @@ impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Network<'_, '_, AtCl, AtUrc
             Timer::after(Duration::from_millis(1000)).await;
         }
 
-        Err(NetworkError::NotAttached)
+        if client.send(&gprs::GetGPRSAttached).await?.state == gprs::GPRSAttachedState::Attached {
+            Ok(())
+        } else {
+            Err(NetworkError::NotAttached)
+        }
     }
 
     async fn ensure_ready(&mut self) -> Result<(), NetworkError> {

@@ -2,9 +2,10 @@ mod apn;
 mod dns;
 mod tcp;
 
-use atat::{asynch::AtatClient, AtatUrcChannel};
+use atat::{asynch::AtatClient, AtatCmd, AtatUrcChannel};
 use core::{str::from_utf8, sync::atomic::Ordering};
 use embassy_sync::{blocking_mutex::raw::NoopRawMutex, mutex::Mutex};
+use embassy_time::{with_timeout, Duration, Instant};
 use embedded_io::ErrorKind;
 use embedded_nal_async::Ipv4Addr;
 
@@ -96,41 +97,56 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
     }
 
     async fn setup(&mut self, apn: Apn<'_>) -> Result<(), NetworkError> {
-        let mut client = self.handle.client.lock().await;
+        let state = self.get_pdp_context_state().await?;
+        if state != gprs::PdpState::Deactivated {
+            self.ensure_deactivated_pdp_context().await?;
+        }
 
-        client
-            .send(&gprs::SetPDPContextDefinition {
-                cid: CONTEXT_ID,
-                pdp_type: "IP",
-                apn: apn.apn,
-            })
-            .await?;
+        self.send(&gprs::SetPDPContextDefinition {
+            cid: CONTEXT_ID,
+            pdp_type: "IP",
+            apn: apn.apn,
+        })
+        .await?;
 
-        client.send(&DeactivateGprsPdpContext).await?;
+        self.send(&DeactivateGprsPdpContext).await?;
 
-        client.send(&SetManualRxGetMode).await?;
+        self.send(&SetManualRxGetMode).await?;
 
-        client
-            .send(&StartMultiIpConnection {
-                n: MultiIpValue::MultiIpConnection,
-            })
-            .await?;
+        self.send(&StartMultiIpConnection {
+            n: MultiIpValue::MultiIpConnection,
+        })
+        .await?;
 
-        client
-            .send(&StartTaskAndSetApn {
-                apn: apn.apn,
-                username: apn.username,
-                password: apn.password,
-            })
-            .await?;
+        self.send(&StartTaskAndSetApn {
+            apn: apn.apn,
+            username: apn.username,
+            password: apn.password,
+        })
+        .await?;
 
-        client.send(&BringUpWireless).await?;
+        let state = self.get_pdp_context_state().await?;
+        trace!("PDP state before bringing up wireless is {:?}", state);
 
-        let ip = client.send(&GetLocalIP).await?.ip;
-        self.local_ip = Some(from_utf8(ip.as_slice()).unwrap().parse().unwrap());
+        self.send(&BringUpWireless).await?;
+
+        let mut activated = false;
+        let timeout_instant = Instant::now() + Duration::from_secs(85);
+        while let Some(_) = timeout_instant.checked_duration_since(Instant::now()) {
+            let state = self.get_pdp_context_state().await?;
+            trace!("PDP state is {:?}", state);
+            if state == gprs::PdpState::Activated {
+                activated = true;
+                break;
+            }
+        }
+
+        if !activated {
+            return Err(NetworkError::PdpStateTimeout);
+        }
 
         for (id, state) in self.handle.socket_state.iter().enumerate() {
-            let response = client.send(&GetConnectionStatus { id }).await?;
+            let response = self.send(&GetConnectionStatus { id }).await?;
             let new_state = match response.state {
                 ClientState::Initial => SOCKET_STATE_UNUSED,
                 ClientState::Closed => SOCKET_STATE_UNUSED,
@@ -142,14 +158,90 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
             state.store(new_state, Ordering::Release);
         }
 
-        client
-            .send(&ConfigureDomainNameServer {
-                pri_dns: "1.1.1.1",
-                sec_dns: Some("1.0.0.1"),
-            })
-            .await?;
+        let ip = self.send(&GetLocalIP).await?.ip;
+        self.local_ip = Some(from_utf8(ip.as_slice()).unwrap().parse().unwrap());
+
+        self.send(&ConfigureDomainNameServer {
+            pri_dns: "1.1.1.1",
+            sec_dns: Some("1.0.0.1"),
+        })
+        .await?;
 
         Ok(())
+    }
+
+    async fn send<CMD: AtatCmd<LEN>, const LEN: usize>(
+        &mut self,
+        cmd: &CMD,
+    ) -> Result<CMD::Response, atat::Error> {
+        let mut client = self.handle.client.lock().await;
+
+        client.send(cmd).await
+    }
+
+    async fn get_pdp_context_state(&mut self) -> Result<gprs::PdpState, NetworkError> {
+        let mut urc_subscription = {
+            let mut client = self.handle.client.lock().await;
+            let subscription = self.urc_channel.subscribe().unwrap();
+
+            client.send(&gprs::GetPDPContextStates).await?;
+
+            subscription
+        };
+
+        let timeout_instant = Instant::now() + Duration::from_secs(20);
+        while let Some(remaining) = timeout_instant.checked_duration_since(Instant::now()) {
+            let urc = with_timeout(remaining, urc_subscription.next_message_pure())
+                .await
+                .map_err(|_| NetworkError::PdpStateTimeout)?;
+            self.handle.drain_background_urcs();
+
+            if let Urc::PdbState(state) = urc {
+                if state.cid == CONTEXT_ID {
+                    return Ok(state.state);
+                }
+            }
+        }
+
+        Err(NetworkError::PdpStateTimeout)
+    }
+    async fn ensure_deactivated_pdp_context(&mut self) -> Result<(), NetworkError> {
+        let mut urc_subscription = {
+            let mut client = self.handle.client.lock().await;
+            let subscription = self.urc_channel.subscribe().unwrap();
+
+            client.send(&gprs::GetPDPContextStates).await?;
+
+            subscription
+        };
+
+        let timeout_instant = Instant::now() + Duration::from_secs(20);
+        while let Some(remaining) = timeout_instant.checked_duration_since(Instant::now()) {
+            let urc = with_timeout(remaining, urc_subscription.next_message_pure())
+                .await
+                .map_err(|_| NetworkError::PdpStateTimeout)?;
+            self.handle.drain_background_urcs();
+
+            if let Urc::PdbState(state) = urc {
+                if state.cid == CONTEXT_ID {
+                    if state.state == gprs::PdpState::Deactivated {
+                        return Ok(());
+                    } else {
+                        warn!("PDP context was found to be activated, deactivating...");
+
+                        let mut client = self.handle.client.lock().await;
+                        client
+                            .send(&gprs::ActivateOrDeactivatePDPContext {
+                                cid: CONTEXT_ID,
+                                state: gprs::PdpState::Deactivated,
+                            })
+                            .await?;
+                    }
+                }
+            }
+        }
+
+        Err(NetworkError::PdpStateTimeout)
     }
 
     async fn close_dropped_sockets(&self) {
