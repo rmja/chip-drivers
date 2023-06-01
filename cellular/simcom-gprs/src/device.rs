@@ -276,6 +276,9 @@ impl<AtCl: AtatClient> Handle<'_, AtCl> {
                 warn!("[{}] Socket closed", id);
                 self.socket_state[id].store(SOCKET_STATE_UNUSED, Ordering::Release);
             }
+            Urc::PdbState(state) => {
+                debug!("PDP state for context {} is {:?}", state.cid, state.state);
+            }
             Urc::DnsResult(result) => {
                 if let Ok(result) = result {
                     debug!("Resolved IP for host {}", result.host);

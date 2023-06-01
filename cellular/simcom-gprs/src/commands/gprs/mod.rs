@@ -45,6 +45,18 @@ pub struct SetPDPContextDefinition<'a> {
     pub apn: &'a str,
 }
 
+/// 7.2.5 AT+CGACT PDP Context Activate or Deactivate
+#[derive(AtatCmd)]
+#[at_cmd("+CGACT", NoResponse, termination = "\r")]
+pub struct ActivateOrDeactivatePDPContext {
+    pub state: PdpState,
+    pub cid: ContextId,
+}
+
+#[derive(AtatCmd)]
+#[at_cmd("+CGACT?", NoResponse, timeout_ms = 150_000, termination = "\r")]
+pub struct GetPDPContextStates;
+
 /// 7.2.10 AT+CGREG Network Registration Status
 #[derive(AtatCmd)]
 #[at_cmd("+CGREG?", GPRSNetworkRegistrationStatus, termination = "\r")]
@@ -96,6 +108,17 @@ mod tests {
         };
 
         assert_eq_hex!(b"AT+CGDCONT=1,\"IP\",\"internet\"\r", cmd.as_bytes());
+    }
+
+    #[test]
+    fn can_deactivate_pdp_context() {
+        let cmd = ActivateOrDeactivatePDPContext {
+            state: PdpState::Deactivated,
+            cid: ContextId(1),
+        };
+
+        println!("{:?}", core::str::from_utf8(&cmd.as_bytes()).unwrap());
+        assert_eq_hex!(b"AT+CGACT=0,1\r", cmd.as_bytes());
     }
 
     #[test]

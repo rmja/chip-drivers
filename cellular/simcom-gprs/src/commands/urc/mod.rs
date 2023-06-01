@@ -12,7 +12,9 @@ use atat::{
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};
 use heapless::String;
 
-use super::gsm;
+use crate::ContextId;
+
+use super::{gprs, gsm};
 
 pub use gsm::urcs::*;
 
@@ -27,6 +29,8 @@ pub enum Urc {
     AlreadyConnect(usize),
     SendOk(usize),
     Closed(usize),
+
+    PdbState(PdpContextState),
 
     /// +CDNSGIP: ...
     DnsResult(Result<DnsLookup, usize>),
@@ -46,8 +50,18 @@ enum UrcInner {
     SmsReady,
     #[at_urc("+CPIN")]
     PinStatus(PinStatus),
+    #[at_urc("+CGACT")]
+    PdbState(PdpContextState),
     #[at_urc("+CDNSGIP")]
     DnsOk(DnsLookup),
+}
+
+/// 7.2.5 AT+CGACT PDP Context Activate or Deactivate
+#[derive(Debug, Clone, AtatResp)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub struct PdpContextState {
+    pub cid: ContextId,
+    pub state: gprs::PdpState,
 }
 
 /// 8.2.14 AT+CDNSGIP Query the IP Address of Given Domain Name
@@ -79,6 +93,7 @@ impl From<UrcInner> for Urc {
             UrcInner::CallReady => Urc::CallReady,
             UrcInner::SmsReady => Urc::SmsReady,
             UrcInner::PinStatus(x) => Urc::PinStatus(x),
+            UrcInner::PdbState(x) => Urc::PdbState(x),
             UrcInner::DnsOk(x) => Urc::DnsResult(Ok(x)),
         }
     }
@@ -112,6 +127,7 @@ impl atat::Parser for Urc {
             urc_helper("Call Ready"),
             urc_helper("SMS Ready"),
             urc_helper("+CPIN"),
+            urc_helper("+CGACT"),
             urc_helper("+CDNSGIP"),
         ))(buf)?;
         Ok(r)
@@ -179,6 +195,24 @@ mod tests {
         );
         let urc = Urc::parse(b"2, CONNECT OK").unwrap();
         assert_matches!(urc, Urc::ConnectOk(2));
+    }
+
+    #[test]
+    fn can_parse_pdp_context_state() {
+        let mut digester = SimcomDigester::new();
+
+        assert_eq!(
+            (DigestResult::Urc(b"+CGACT: 1,0"), 15),
+            digester.digest(b"\r\n+CGACT: 1,0\r\n")
+        );
+        let urc = Urc::parse(b"+CGACT: 1,0").unwrap();
+
+        if let Urc::PdbState(urc) = urc {
+            assert_eq!(ContextId(1), urc.cid);
+            assert_eq!(gprs::PdpState::Deactivated, urc.state);
+        } else {
+            panic!("Invalid URC");
+        }
     }
 
     #[test]
