@@ -12,6 +12,20 @@ impl SimcomDigester {
         let inner = AtDigester::new()
             .with_custom_success(|buf| {
                 let (_reminder, (head, data, tail)) = branch::alt((
+                    // IP Address, response from AT+CIFSR
+                    sequence::tuple((
+                        bytes::streaming::tag(b"\r\n"),
+                        combinator::recognize(sequence::tuple((
+                            character::streaming::u8,
+                            bytes::streaming::tag("."),
+                            character::streaming::u8,
+                            bytes::streaming::tag("."),
+                            character::streaming::u8,
+                            bytes::streaming::tag("."),
+                            character::streaming::u8,
+                        ))),
+                        bytes::streaming::tag(b"\r\n"),
+                    )),
                     sequence::tuple((
                         combinator::success(&b""[..]),
                         combinator::success(&b""[..]),

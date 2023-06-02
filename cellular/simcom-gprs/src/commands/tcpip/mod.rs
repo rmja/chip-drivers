@@ -71,7 +71,7 @@ pub struct BringUpWireless;
 /// AT+CIFSR replies with the local IP without a terminating OK.
 /// We therefore append an AT command to ensure that OK is sent.
 #[derive(AtatCmd)]
-#[at_cmd("+CIFSR\rAT", LocalIP, termination = "\r")]
+#[at_cmd("+CIFSR", LocalIP, termination = "\r")]
 pub struct GetLocalIP;
 
 /// 8.2.12 AT+CIPSTATUS Query Current Connection Status
@@ -240,11 +240,10 @@ mod tests {
     #[test]
     fn can_get_local_ip() {
         let cmd = GetLocalIP;
-        assert_eq_hex!(b"AT+CIFSR\rAT\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CIFSR\r", cmd.as_bytes());
 
         let (mut ingress, mut res_sub, _) = setup_atat!();
         ingress.try_write(b"\r\n10.0.109.44\r\n").unwrap();
-        ingress.try_write(b"\r\nOK\r\n").unwrap();
 
         if let Response::Ok(message) = res_sub.try_next_message_pure().unwrap() {
             let response = cmd.parse(Ok(&message)).unwrap();
