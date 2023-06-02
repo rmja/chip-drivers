@@ -11,7 +11,7 @@ use embedded_nal_async::Ipv4Addr;
 
 use crate::{
     commands::{
-        gprs,
+        gprs::{self, ActivateOrDeactivatePDPContext},
         tcpip::{
             BringUpWireless, ClientState, CloseConnection, ConfigureDomainNameServer,
             DeactivateGprsPdpContext, GetConnectionStatus, GetLocalIP, MultiIpValue,
@@ -130,20 +130,11 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
 
         self.send(&BringUpWireless).await?;
 
-        let mut activated = false;
-        let timeout_instant = Instant::now() + Duration::from_secs(85);
-        while let Some(_) = timeout_instant.checked_duration_since(Instant::now()) {
-            let state = self.get_pdp_context_state().await?;
-            trace!("PDP state is {:?}", state);
-            if state == gprs::PdpState::Activated {
-                activated = true;
-                break;
-            }
-        }
-
-        if !activated {
-            return Err(NetworkError::PdpStateTimeout);
-        }
+        self.send(&ActivateOrDeactivatePDPContext {
+            cid: CONTEXT_ID,
+            state: gprs::PdpState::Activated,
+        })
+        .await?;
 
         for (id, state) in self.handle.socket_state.iter().enumerate() {
             let response = self.send(&GetConnectionStatus { id }).await?;
