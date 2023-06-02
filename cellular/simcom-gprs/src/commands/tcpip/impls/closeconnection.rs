@@ -12,6 +12,10 @@ use crate::commands::{
 impl AtatCmd<35> for CloseConnection {
     type Response = CloseOk;
 
+    // There is no timeout documentation for sim900, but it is more than one second.
+    #[cfg(feature = "sim900")]
+    const MAX_TIMEOUT_MS: u32 = 2000;
+
     fn as_bytes(&self) -> heapless::Vec<u8, 35> {
         let inner = CloseConnectionInner { id: self.id };
         inner.as_bytes()

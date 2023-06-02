@@ -125,16 +125,16 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
         })
         .await?;
 
-        let state = self.get_pdp_context_state().await?;
-        trace!("PDP state before bringing up wireless is {:?}", state);
-
         self.send(&BringUpWireless).await?;
 
-        self.send(&ActivateOrDeactivatePDPContext {
-            cid: CONTEXT_ID,
-            state: gprs::PdpState::Activated,
-        })
-        .await?;
+        let state = self.get_pdp_context_state().await?;
+        if state == gprs::PdpState::Deactivated {
+            self.send(&ActivateOrDeactivatePDPContext {
+                cid: CONTEXT_ID,
+                state: gprs::PdpState::Activated,
+            })
+            .await?;
+        }
 
         for (id, state) in self.handle.socket_state.iter().enumerate() {
             let response = self.send(&GetConnectionStatus { id }).await?;
