@@ -256,7 +256,7 @@ mod tests {
     }
 
     #[test]
-    fn can_parse_data_available() {
+    fn can_parse_data_available_sim800() {
         let mut digester = SimcomDigester::new();
 
         assert_eq!(
@@ -268,7 +268,19 @@ mod tests {
     }
 
     #[test]
-    fn can_parse_read_data() {
+    fn can_parse_data_available_sim900() {
+        let mut digester = SimcomDigester::new();
+
+        assert_eq!(
+            (DigestResult::Urc(b"+CIPRXGET:1,2"), 17),
+            digester.digest(b"\r\n+CIPRXGET:1,2\r\n")
+        );
+        let urc = Urc::parse(b"+CIPRXGET:1,2").unwrap();
+        assert_matches!(urc, Urc::DataAvailable(2));
+    }
+
+    #[test]
+    fn can_parse_read_data_sim800() {
         let mut digester = SimcomDigester::new();
 
         assert_eq!(
@@ -276,6 +288,25 @@ mod tests {
             digester.digest(b"\r\n+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n")
         );
         let urc = Urc::parse(b"+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n").unwrap();
+        if let Urc::ReadData(data) = urc {
+            assert_eq!(5, data.id);
+            assert_eq!(8, data.data_len);
+            assert_eq!(0, data.pending_len);
+            assert_eq!(b"HTTP\r\n\r\n", data.data.take().unwrap().as_slice());
+        } else {
+            panic!("Invalid URC");
+        }
+    }
+
+    #[test]
+    fn can_parse_read_data_sim900() {
+        let mut digester = SimcomDigester::new();
+
+        assert_eq!(
+            (DigestResult::Urc(b"+CIPRXGET:2,5,8,0\r\nHTTP\r\n\r\n"), 29),
+            digester.digest(b"\r\n+CIPRXGET:2,5,8,0\r\nHTTP\r\n\r\n")
+        );
+        let urc = Urc::parse(b"+CIPRXGET:2,5,8,0\r\nHTTP\r\n\r\n").unwrap();
         if let Urc::ReadData(data) = urc {
             assert_eq!(5, data.id);
             assert_eq!(8, data.data_len);

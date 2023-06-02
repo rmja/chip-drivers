@@ -30,7 +30,7 @@ pub(super) fn parse_connection_status(resp: &[u8]) -> Option<Urc> {
 
 pub(super) fn parse_data_available(resp: &[u8]) -> Option<Urc> {
     if let Ok((reminder, (_, id))) = sequence::tuple::<_, _, (), _>((
-        bytes::complete::tag("+CIPRXGET: 1,"),
+        combinator::recognize(sequence::tuple((bytes::complete::tag("+CIPRXGET:"), combinator::opt(bytes::complete::tag(b" ")), bytes::complete::tag("1,")))),
             character::complete::u8,
     ))(resp) && reminder.is_empty() {
         Some(Urc::DataAvailable(id as usize))
@@ -42,7 +42,7 @@ pub(super) fn parse_data_available(resp: &[u8]) -> Option<Urc> {
 
 pub(super) fn parse_read_data(resp: &[u8]) -> Option<Urc> {
     if let Ok((reminder, (_, id, _, (_, pending_len, _, data)))) = sequence::tuple::<_, _, (), _>((
-        bytes::complete::tag("+CIPRXGET: 2,"),
+        combinator::recognize(sequence::tuple((bytes::complete::tag("+CIPRXGET:"), combinator::opt(bytes::complete::tag(b" ")), bytes::complete::tag("2,")))),
             character::complete::u8,
             bytes::complete::tag(","),
             combinator::flat_map(character::complete::u16, |data_len| {
