@@ -12,7 +12,7 @@ use crate::{
 /// 4. Under RF parameters, set:
 ///     Carrier Frequency: 868.949890MHz (868.950MHz)
 ///     Symbol Rate: 100.75 ksps (Diehl Sharky 775 uses 101,5ksps)
-///     RX Filter BW: 208.333333kHz (200kHz)
+///     RX Filter BW: 238.095238Hz (240kHz)
 ///     Modulation Format: 2-FSK
 ///     Deviation: 50.048828kHz (50kHz)
 /// 5. In the Register View, make the following final adjustments:
@@ -65,7 +65,7 @@ pub const fn wmbus_modetmto_diehl<'a, const SYNC_THR: u8>() -> ConfigPatch<'a> {
             0x19, // PREAMBLE_CFG1          Preamble Length Configuration Reg. 1
             0x8A, // PREAMBLE_CFG0          Preamble Detection Configuration Reg. 0
             0xD8, // IQIC                   Digital Image Channel Compensation Configuration
-            0x08, // CHAN_BW                Channel Filter Configuration
+            0x07, // CHAN_BW                Channel Filter Configuration
             0x42, // MDMCFG1                General Modem Parameter Configuration Reg. 1
             0x05, // MDMCFG0                General Modem Parameter Configuration Reg. 0
             0xA4, // SYMBOL_RATE2           Symbol Rate Configuration Exponent and Mantissa [1..
@@ -98,7 +98,7 @@ pub const fn wmbus_modetmto_diehl<'a, const SYNC_THR: u8>() -> ConfigPatch<'a> {
             0xFF, // PKT_LEN                Packet Length Configuration
             0x1C, // IF_MIX_CFG             IF Mix Configuration
             0x20, // FREQOFF_CFG            Frequency Offset Correction Configuration
-            0x0B, // TOC_CFG                Timing Offset Correction Configuration
+            0x4B, // TOC_CFG                Timing Offset Correction Configuration
             0x00, // MARC_SPARE             MARC Spare
             0x00, // ECG_CFG                External Clock Frequency Configuration
             0x02, // MDMCFG2                General Modem Parameter Configuration Reg. 2
