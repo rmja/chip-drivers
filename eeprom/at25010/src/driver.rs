@@ -1,6 +1,8 @@
-use crate::{opcode::Opcode, DriverError, PartNumber};
+use crate::{opcode::Opcode, Error, PartNumber};
 use bitfield::bitfield;
 use embedded_hal_async::{delay, spi};
+use embedded_storage::nor_flash::ErrorType;
+use embedded_storage_async::nor_flash::{NorFlash, ReadNorFlash};
 
 const PAGE_SIZE: usize = 8;
 
@@ -72,9 +74,9 @@ where
     }
 
     /// Read a sequence of bytes from the EEPROM.
-    pub async fn read(&mut self, origin: u16, buffer: &mut [u8]) -> Result<(), DriverError> {
+    pub async fn read(&mut self, origin: u16, buffer: &mut [u8]) -> Result<(), Error> {
         if origin as usize + buffer.len() > self.capacity() as usize {
-            return Err(DriverError::Capacity);
+            return Err(Error::OutOfBounds);
         }
 
         self.spi
@@ -88,9 +90,9 @@ where
     }
 
     /// Write a sequence of bytes to the EEPROM.
-    pub async fn write(&mut self, origin: u16, buffer: &[u8]) -> Result<(), DriverError> {
+    pub async fn write(&mut self, origin: u16, buffer: &[u8]) -> Result<(), Error> {
         if origin as usize + buffer.len() > self.capacity() as usize {
-            return Err(DriverError::Capacity);
+            return Err(Error::OutOfBounds);
         }
 
         let t_cs_us = (min_tcs_ns(self.part_number) + 999) / 1000;
@@ -107,7 +109,7 @@ where
         // See if write was enabled (it may have been disabled by the WP pin).
         let sr = self.read_status_register().await?;
         if !sr.wel() {
-            return Err(DriverError::WriteProtection);
+            return Err(Error::WriteProtection);
         }
 
         let mut address = origin;
@@ -149,7 +151,7 @@ where
         Ok(())
     }
 
-    pub async fn flush(&mut self) -> Result<(), DriverError> {
+    pub async fn flush(&mut self) -> Result<(), Error> {
         let sr = self.read_status_register().await?;
         if !sr.bsy() {
             return Ok(());
@@ -172,20 +174,20 @@ where
         Ok(())
     }
 
-    async fn enable_write(&mut self) -> Result<(), DriverError> {
+    async fn enable_write(&mut self) -> Result<(), Error> {
         const TX: [u8; 1] = [Opcode::WREN.as_u8()];
         self.spi.write(&TX).await?;
         Ok(())
     }
 
-    async fn read_status_register(&mut self) -> Result<StatusRegister, DriverError> {
+    async fn read_status_register(&mut self) -> Result<StatusRegister, Error> {
         const TX: [u8; 2] = [Opcode::RDSR.as_u8(), 0x00];
         let mut rx: [u8; 2] = [0x00, 0x00];
         self.spi.transfer(&mut rx, &TX).await?;
         Ok(StatusRegister(rx[1]))
     }
 
-    async fn write_page(&mut self, address: u16, buffer: &[u8]) -> Result<(), DriverError> {
+    async fn write_page(&mut self, address: u16, buffer: &[u8]) -> Result<(), Error> {
         let len = buffer.len();
         assert!(len > 0);
         assert!(len <= PAGE_SIZE - (address as usize % PAGE_SIZE));
@@ -196,6 +198,57 @@ where
                 spi::Operation::Write(buffer),
             ])
             .await?;
+
+        Ok(())
+    }
+}
+
+impl<SpiDevice, Delay> ErrorType for Driver<SpiDevice, Delay>
+where
+    SpiDevice: spi::SpiDevice,
+    Delay: delay::DelayUs,
+{
+    type Error = Error;
+}
+
+impl<SpiDevice, Delay> ReadNorFlash for Driver<SpiDevice, Delay>
+where
+    SpiDevice: spi::SpiDevice,
+    Delay: delay::DelayUs,
+{
+    const READ_SIZE: usize = 1;
+
+    async fn read(&mut self, offset: u32, bytes: &mut [u8]) -> Result<(), Self::Error> {
+        self.read(offset as u16, bytes).await
+    }
+
+    fn capacity(&self) -> usize {
+        self.capacity() as usize
+    }
+}
+
+impl<SpiDevice, Delay> NorFlash for Driver<SpiDevice, Delay>
+where
+    SpiDevice: spi::SpiDevice,
+    Delay: delay::DelayUs,
+{
+    const WRITE_SIZE: usize = PAGE_SIZE;
+    const ERASE_SIZE: usize = PAGE_SIZE;
+
+    async fn write(&mut self, offset: u32, bytes: &[u8]) -> Result<(), Self::Error> {
+        self.write(offset as u16, bytes).await
+    }
+
+    async fn erase(&mut self, from: u32, to: u32) -> Result<(), Self::Error> {
+        if from % PAGE_SIZE as u32 != 0 || to % PAGE_SIZE as u32 != 0 {
+            return Err(Error::NotAligned);
+        }
+
+        let mut origin = from as u16;
+        while (origin as u32) < to {
+            self.write(origin, &[0xff; PAGE_SIZE]).await?;
+            origin += PAGE_SIZE as u16;
+        }
 
         Ok(())
     }

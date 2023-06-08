@@ -3,10 +3,7 @@
 #![feature(async_fn_in_trait, impl_trait_projections)]
 #![feature(inherent_associated_types)]
 
-extern crate alloc;
-
 mod driver;
-mod embeddedio;
 mod error;
 mod opcode;
 
@@ -21,4 +18,4 @@ pub enum PartNumber {
 }
 
 pub use driver::{Driver, StatefulDriver};
-pub use error::DriverError;
+pub use error::Error;

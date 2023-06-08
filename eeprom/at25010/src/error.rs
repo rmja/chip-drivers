@@ -1,11 +1,24 @@
+use embedded_storage::nor_flash::{NorFlashError, NorFlashErrorKind};
+
 #[derive(Debug)]
-pub enum DriverError {
+pub enum Error {
+    NotAligned,
+    OutOfBounds,
     WriteProtection,
-    Capacity,
     Spi,
 }
 
-impl<SpiError> From<SpiError> for DriverError
+impl NorFlashError for Error {
+    fn kind(&self) -> NorFlashErrorKind {
+        match *self {
+            Error::NotAligned => NorFlashErrorKind::NotAligned,
+            Error::OutOfBounds => NorFlashErrorKind::OutOfBounds,
+            _ => NorFlashErrorKind::Other,
+        }
+    }
+}
+
+impl<SpiError> From<SpiError> for Error
 where
     SpiError: embedded_hal_async::spi::Error,
 {
