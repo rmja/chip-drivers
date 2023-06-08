@@ -1,6 +1,7 @@
 use embedded_storage::nor_flash::{NorFlashError, NorFlashErrorKind};
 
 #[derive(Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum Error {
     NotAligned,
     OutOfBounds,
