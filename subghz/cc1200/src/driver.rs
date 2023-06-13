@@ -62,7 +62,7 @@ where
             delay,
             reset_pin,
             last_status: None,
-            rssi_offset: None,
+            rssi_offset: Some(DEFAULT_RSSI_OFFSET),
             freq_off: None,
         }
     }
@@ -334,7 +334,7 @@ where
         let rssi = rssi1_value as i8;
         match rssi {
             -128 => None,
-            rssi => Some(rssi as i16 + self.rssi_offset.unwrap_or(DEFAULT_RSSI_OFFSET)),
+            rssi => Some(rssi as i16 + self.rssi_offset.unwrap_or_default()),
         }
     }
 
