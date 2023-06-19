@@ -243,9 +243,9 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
         self.handle.data_written[self.id].store(false, Ordering::Release);
 
         // Write the data buffer
-        client.send(&WriteData { buf }).await?;
+        client.send(&WriteData { buf: &buf[..len] }).await?;
 
-        debug!("[{}] Wrote {} bytes", self.id, buf.len());
+        debug!("[{}] Wrote {} bytes", self.id, len);
 
         Ok(len)
     }
