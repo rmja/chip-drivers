@@ -10,7 +10,9 @@ sim800 = []
 sim900 = []
 
 [dependencies]
-atat = { path = "../../../atat/atat", features = ["async"] }
+atat = { version = "0.18", git = "https://github.com/rmja/atat", branch = "custom-timeout-compute", features = [
+    "async",
+] }
 defmt = { version = "0.3", optional = true }
 embassy-sync = "0.2"
 embassy-time = "0.1"
