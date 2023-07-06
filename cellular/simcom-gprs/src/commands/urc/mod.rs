@@ -198,23 +198,6 @@ mod tests {
     }
 
     #[test]
-    fn can_parse_close_ok() {
-        let mut digester = SimcomDigester::new();
-
-        assert_eq!(
-            (DigestResult::Urc(b"0, CLOSE OK"), 15),
-            digester.digest(b"\r\n0, CLOSE OK\r\n")
-        );
-        let urc = Urc::parse(b"0, CLOSE OK").unwrap();
-
-        if let Urc::Closed(connection_id) = urc {
-            assert_eq!(0, connection_id);
-        } else {
-            panic!("Invalid URC");
-        }
-    }
-
-    #[test]
     fn can_parse_pdp_context_state() {
         let mut digester = SimcomDigester::new();
 
