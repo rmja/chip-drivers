@@ -19,7 +19,10 @@ use crate::{
         },
         urc::Urc,
     },
-    device::{Handle, ModemConfig, SOCKET_STATE_DROPPED, SOCKET_STATE_UNUSED, SOCKET_STATE_USED},
+    device::{
+        Handle, ModemConfig, SOCKET_STATE_DROPPED, SOCKET_STATE_UNUSED, SOCKET_STATE_USED,
+        URC_CAPACITY, URC_SUBSCRIBERS,
+    },
     ContextId, Device, DriverError,
 };
 
@@ -56,15 +59,27 @@ impl From<atat::Error> for SocketError {
     }
 }
 
-pub struct DataService<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
+pub struct DataService<
+    'buf,
+    'dev,
+    'sub,
+    AtCl: AtatClient,
+    AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>,
+> {
     handle: &'dev Handle<'sub, AtCl>,
     urc_channel: &'buf AtUrcCh,
     dns_lock: Mutex<NoopRawMutex, ()>,
     pub local_ip: Option<Ipv4Addr>,
 }
 
-impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>, Config: ModemConfig>
-    Device<'buf, 'sub, AtCl, AtUrcCh, Config>
+impl<
+        'buf,
+        'dev,
+        'sub,
+        AtCl: AtatClient + 'static,
+        AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>,
+        Config: ModemConfig,
+    > Device<'buf, 'sub, AtCl, AtUrcCh, Config>
 {
     pub async fn data(
         &'dev self,
@@ -84,8 +99,13 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>, Config: M
     }
 }
 
-impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
-    DataService<'buf, 'dev, 'sub, AtCl, AtUrcCh>
+impl<
+        'buf,
+        'dev,
+        'sub,
+        AtCl: AtatClient + 'static,
+        AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>,
+    > DataService<'buf, 'dev, 'sub, AtCl, AtUrcCh>
 {
     fn new(handle: &'dev Handle<'sub, AtCl>, urc_channel: &'buf AtUrcCh) -> Self {
         Self {

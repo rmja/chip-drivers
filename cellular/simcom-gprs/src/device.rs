@@ -14,8 +14,8 @@ use heapless::Vec;
 use crate::{
     commands::{gsm, urc::Urc, v25ter, AT},
     services::data::SocketError,
-    DriverError, PartNumber, SimcomAtatBuffers, SimcomAtatIngress, SimcomAtatUrcChannel,
-    SimcomDigester, MAX_SOCKETS,
+    DriverError, PartNumber, SimcomBuffers, SimcomDigester, SimcomIngress, SimcomUrcChannel,
+    MAX_SOCKETS,
 };
 
 pub(crate) const URC_CAPACITY: usize = 1 + 3 * (1 + MAX_SOCKETS); // A dns reply, and (SEND OK + RXGET + CLOSED) per socket + background subscription
@@ -27,7 +27,13 @@ pub(crate) const SOCKET_STATE_UNUSED: u8 = 1;
 pub(crate) const SOCKET_STATE_USED: u8 = 2;
 pub(crate) const SOCKET_STATE_DROPPED: u8 = 3;
 
-pub struct Device<'buf, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>, Config: ModemConfig> {
+pub struct Device<
+    'buf,
+    'sub,
+    AtCl: AtatClient,
+    AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>,
+    Config: ModemConfig,
+> {
     pub handle: Handle<'sub, AtCl>,
     pub(crate) urc_channel: &'buf AtUrcCh,
     pub(crate) part_number: Option<PartNumber>,
@@ -60,21 +66,22 @@ pub struct Handle<'sub, AtCl: AtatClient> {
     pub(crate) data_written: [AtomicBool; MAX_SOCKETS],
     pub(crate) data_available: [AtomicBool; MAX_SOCKETS],
     pub(crate) max_urc_len: usize,
-    background_subscription: Mutex<NoopRawMutex, UrcSubscription<'sub, Urc>>,
+    background_subscription:
+        Mutex<NoopRawMutex, UrcSubscription<'sub, Urc, URC_CAPACITY, URC_SUBSCRIBERS>>,
 }
 
 impl<'buf, 'sub, W: Write, Config: ModemConfig, const INGRESS_BUF_SIZE: usize>
-    Device<'buf, 'sub, Client<'buf, W, INGRESS_BUF_SIZE>, SimcomAtatUrcChannel, Config>
+    Device<'buf, 'sub, Client<'buf, W, INGRESS_BUF_SIZE>, SimcomUrcChannel, Config>
 where
     'buf: 'sub,
 {
     pub fn from_buffers(
-        buffers: &'buf SimcomAtatBuffers<INGRESS_BUF_SIZE>,
+        buffers: &'buf SimcomBuffers<INGRESS_BUF_SIZE>,
         tx: W,
         config: Config,
     ) -> (
-        SimcomAtatIngress<INGRESS_BUF_SIZE>,
-        Device<'buf, 'sub, Client<'buf, W, INGRESS_BUF_SIZE>, SimcomAtatUrcChannel, Config>,
+        SimcomIngress<INGRESS_BUF_SIZE>,
+        Device<'buf, 'sub, Client<'buf, W, INGRESS_BUF_SIZE>, SimcomUrcChannel, Config>,
     ) {
         let (ingress, client) = buffers.split(
             tx,
@@ -89,8 +96,13 @@ where
     }
 }
 
-impl<'buf, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>, Config: ModemConfig>
-    Device<'buf, 'sub, AtCl, AtUrcCh, Config>
+impl<
+        'buf,
+        'sub,
+        AtCl: AtatClient,
+        AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>,
+        Config: ModemConfig,
+    > Device<'buf, 'sub, AtCl, AtUrcCh, Config>
 where
     'buf: 'sub,
 {
@@ -222,7 +234,7 @@ where
     }
 }
 
-impl<AtCl: AtatClient> Handle<'_, AtCl> {
+impl<AtCl: AtatClient + 'static> Handle<'_, AtCl> {
     pub(crate) fn take_unused(&self) -> Result<usize, SocketError> {
         for id in 0..self.socket_state.len() {
             if self.try_take(id) {

@@ -1,4 +1,5 @@
 [workspace]
+resolver = "2"
 members = [
     "cellular/simcom-gprs",
     "eeprom/at25010",

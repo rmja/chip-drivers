@@ -15,13 +15,18 @@ use crate::{
         tcpip::{ReadData, SendData, StartConnection, WriteData},
         urc::Urc,
     },
-    device::Handle,
+    device::{Handle, URC_CAPACITY, URC_SUBSCRIBERS},
 };
 
 use super::{DataService, SocketError, SOCKET_STATE_DROPPED, SOCKET_STATE_USED};
 
-impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpConnect
-    for DataService<'buf, 'dev, 'sub, AtCl, AtUrcCh>
+impl<
+        'buf,
+        'dev,
+        'sub,
+        AtCl: AtatClient + 'static,
+        AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>,
+    > TcpConnect for DataService<'buf, 'dev, 'sub, AtCl, AtUrcCh>
 {
     type Error = SocketError;
 
@@ -50,14 +55,25 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> TcpConnec
     }
 }
 
-pub struct TcpSocket<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
+pub struct TcpSocket<
+    'buf,
+    'dev,
+    'sub,
+    AtCl: AtatClient,
+    AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>,
+> {
     id: usize,
     handle: &'dev Handle<'sub, AtCl>,
     urc_channel: &'buf AtUrcCh,
 }
 
-impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
-    TcpSocket<'buf, 'dev, 'sub, AtCl, AtUrcCh>
+impl<
+        'buf,
+        'dev,
+        'sub,
+        AtCl: AtatClient + 'static,
+        AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>,
+    > TcpSocket<'buf, 'dev, 'sub, AtCl, AtUrcCh>
 {
     pub(crate) fn try_new(
         handle: &'dev Handle<'sub, AtCl>,
@@ -282,11 +298,15 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>>
     }
 }
 
-impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Io for TcpSocket<'_, '_, '_, AtCl, AtUrcCh> {
+impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>> Io
+    for TcpSocket<'_, '_, '_, AtCl, AtUrcCh>
+{
     type Error = SocketError;
 }
 
-impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Read for TcpSocket<'_, '_, '_, AtCl, AtUrcCh> {
+impl<AtCl: AtatClient + 'static, AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>> Read
+    for TcpSocket<'_, '_, '_, AtCl, AtUrcCh>
+{
     async fn read(&mut self, buf: &mut [u8]) -> Result<usize, SocketError> {
         match self.read(buf).await {
             Ok(len) => Ok(len),
@@ -296,7 +316,7 @@ impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Read for TcpSocket<'_, '_, 
     }
 }
 
-impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Write
+impl<AtCl: AtatClient + 'static, AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>> Write
     for TcpSocket<'_, '_, '_, AtCl, AtUrcCh>
 {
     async fn write(&mut self, buf: &[u8]) -> Result<usize, SocketError> {
@@ -311,7 +331,9 @@ impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Write
     }
 }
 
-impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Drop for TcpSocket<'_, '_, '_, AtCl, AtUrcCh> {
+impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>> Drop
+    for TcpSocket<'_, '_, '_, AtCl, AtUrcCh>
+{
     fn drop(&mut self) {
         // Only set DROPPED state if the connection is not already closed
         if self.handle.socket_state[self.id]
@@ -339,7 +361,7 @@ mod tests {
     use crate::{
         device::{ModemConfig, SocketState, SOCKET_STATE_UNKNOWN, SOCKET_STATE_UNUSED},
         services::serial_mock::{RxMock, SerialMock},
-        Device, SimcomAtatBuffers, MAX_SOCKETS,
+        Device, SimcomBuffers, MAX_SOCKETS,
     };
 
     use super::*;
@@ -373,7 +395,7 @@ mod tests {
 
     macro_rules! setup_atat {
         () => {{
-            static BUFFERS: SimcomAtatBuffers<128> = SimcomAtatBuffers::new();
+            static BUFFERS: SimcomBuffers<128> = SimcomBuffers::new();
             static SERIAL: SerialMock = SerialMock::new();
             let (tx, rx) = SERIAL.split();
             let (ingress, device) = Device::from_buffers(&BUFFERS, tx, Config(ResetPin(true)));
@@ -385,8 +407,8 @@ mod tests {
         'buf,
         'dev,
         'sub,
-        AtCl: AtatClient,
-        AtUrcCh: AtatUrcChannel<Urc> + Send + 'static,
+        AtCl: AtatClient + 'static,
+        AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS> + Send + 'static,
         Config: ModemConfig,
     >(
         ingress: &mut impl AtatIngress,

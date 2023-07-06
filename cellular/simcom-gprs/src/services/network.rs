@@ -7,7 +7,7 @@ use crate::{
         simcom::{CallReady, GetCallReady},
         urc::Urc,
     },
-    device::{Handle, ModemConfig},
+    device::{Handle, ModemConfig, URC_CAPACITY, URC_SUBSCRIBERS},
     Device,
 };
 
@@ -32,13 +32,23 @@ impl From<atat::Error> for NetworkError {
     }
 }
 
-pub struct Network<'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> {
+pub struct Network<
+    'dev,
+    'sub,
+    AtCl: AtatClient,
+    AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>,
+> {
     handle: &'dev Handle<'sub, AtCl>,
     urc_channel: &'dev AtUrcCh,
 }
 
-impl<'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>, Config: ModemConfig>
-    Device<'dev, 'sub, AtCl, AtUrcCh, Config>
+impl<
+        'dev,
+        'sub,
+        AtCl: AtatClient,
+        AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>,
+        Config: ModemConfig,
+    > Device<'dev, 'sub, AtCl, AtUrcCh, Config>
 {
     pub fn network(&'dev self) -> Network<'dev, 'sub, AtCl, AtUrcCh> {
         Network {
@@ -48,7 +58,9 @@ impl<'dev, 'sub, AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>, Config: ModemCo
     }
 }
 
-impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc>> Network<'_, '_, AtCl, AtUrcCh> {
+impl<AtCl: AtatClient + 'static, AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>>
+    Network<'_, '_, AtCl, AtUrcCh>
+{
     /// Attach the modem to the network
     pub async fn attach(&mut self, pin: Option<&str>) -> Result<(), NetworkError> {
         self.ensure_ready().await?;
