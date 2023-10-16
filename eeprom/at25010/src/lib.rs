@@ -1,6 +1,6 @@
 #![cfg_attr(not(test), no_std)]
 #![allow(incomplete_features)]
-#![feature(async_fn_in_trait, impl_trait_projections)]
+#![feature(async_fn_in_trait)]
 #![feature(inherent_associated_types)]
 
 mod driver;

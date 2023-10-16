@@ -6,7 +6,6 @@
 #![feature(inherent_associated_types)]
 #![feature(let_chains)]
 #![feature(async_fn_in_trait)]
-#![feature(const_slice_split_at_not_mut)]
 #![cfg_attr(feature = "serial-controller", feature(generators))]
 
 extern crate bitfield;

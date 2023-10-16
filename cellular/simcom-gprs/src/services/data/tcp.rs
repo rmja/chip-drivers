@@ -3,10 +3,7 @@ use core::sync::atomic::Ordering;
 use atat::{asynch::AtatClient, AtatCmd, AtatUrcChannel};
 use core::fmt::Write as _;
 use embassy_time::{with_timeout, Duration, Instant};
-use embedded_io::{
-    asynch::{Read, Write},
-    Io,
-};
+use embedded_io_async::{Read, Write};
 use embedded_nal_async::{SocketAddr, TcpConnect};
 use heapless::String;
 
@@ -298,8 +295,8 @@ impl<
     }
 }
 
-impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>> Io
-    for TcpSocket<'_, '_, '_, AtCl, AtUrcCh>
+impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>>
+    embedded_io::ErrorType for TcpSocket<'_, '_, '_, AtCl, AtUrcCh>
 {
     type Error = SocketError;
 }

@@ -356,8 +356,14 @@ mod tests {
     }
 
     fn expect_write_wren(spi: &mut MockSpiDevice<u8>, seq: &mut Sequence) {
-        spi.expect_write_transaction()
-            .withf(|tx| tx[0] == &[Opcode::WREN.as_u8()])
+        spi.expect_transaction()
+            .withf(|ops| {
+                if let spi::Operation::Write(tx) = &ops[0] {
+                    tx[0] == Opcode::WREN.as_u8()
+                } else {
+                    false
+                }
+            })
             .times(1)
             .in_sequence(seq)
             .return_const(Ok(()));

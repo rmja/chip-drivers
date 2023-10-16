@@ -7,7 +7,7 @@ use atat::{
 use embassy_sync::{blocking_mutex::raw::NoopRawMutex, mutex::Mutex};
 use embassy_time::{Duration, Instant, Timer};
 use embedded_hal::digital::OutputPin;
-use embedded_io::asynch::Write;
+use embedded_io_async::Write;
 use futures_intrusive::sync::LocalMutex;
 use heapless::Vec;
 

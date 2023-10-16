@@ -10,13 +10,15 @@ sim800 = []
 sim900 = []
 
 [dependencies]
-atat = { version = "0.19", features = ["async"] }
+# atat = { version = "0.19", features = ["async"] }
+atat = { version = "0.19", git = "https://github.com/BlackbirdHQ/atat", rev="31a45fcfe911be5a9184e582540fc748a18ad3e1", features = ["async"] } # Needed form embedded-io 0.6
 defmt = { version = "0.3", optional = true }
-embassy-sync = "0.2"
+embassy-sync = "0.3"
 embassy-time = "0.1"
-embedded-hal = "1.0.0-alpha.10"
-embedded-io = { version = "0.4", features = ["async"] }
-embedded-nal-async = "0.4"
+embedded-hal = "1.0.0-rc.1"
+embedded-io = "0.6"
+embedded-io-async = "0.6"
+embedded-nal-async = "0.6"
 futures = { version = "0.3", default-features = false }
 futures-intrusive = { version = "0.5", default-features = false }
 heapless = "0.7"
@@ -24,8 +26,8 @@ heapless-bytes = "0.3"
 serde = { version = "1", default-features = false, features = ["derive"] }
 
 [dev-dependencies]
-assert_hex = "0.2"
+assert_hex = "0.4"
 critical-section = { version = "1", features = ["std"] }
 embassy-time = { version = "0.1", features = ["std", "generic-queue"] }
-embedded-io = { version = "0.4", features = ["async", "std"] }
+embedded-io-async = { version = "0.6", features = ["std"] }
 tokio = { version = "1", features = ["macros", "rt"] }

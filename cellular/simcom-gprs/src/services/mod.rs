@@ -42,11 +42,11 @@ mod serial_mock {
         }
     }
 
-    impl embedded_io::Io for TxMock<'_> {
+    impl embedded_io::ErrorType for TxMock<'_> {
         type Error = Infallible;
     }
 
-    impl embedded_io::blocking::Write for TxMock<'_> {
+    impl embedded_io::Write for TxMock<'_> {
         fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
             self.buf.extend_from_slice(buf);
             Ok(buf.len())
@@ -59,7 +59,7 @@ mod serial_mock {
         }
     }
 
-    impl embedded_io::asynch::Write for TxMock<'_> {
+    impl embedded_io_async::Write for TxMock<'_> {
         async fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
             self.buf.extend_from_slice(buf);
             Ok(buf.len())
