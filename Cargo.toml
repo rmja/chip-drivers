@@ -5,6 +5,7 @@ members = [
     "eeprom/at25010",
     "embedded-hal-async-mocks",
     "subghz/cc1200",
+    "embedded-hal-async-mocks",
 ]
 
 [workspace.package]

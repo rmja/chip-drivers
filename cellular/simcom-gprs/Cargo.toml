@@ -11,7 +11,9 @@ sim900 = []
 
 [dependencies]
 # atat = { version = "0.19", features = ["async"] }
-atat = { version = "0.19", git = "https://github.com/BlackbirdHQ/atat", rev="31a45fcfe911be5a9184e582540fc748a18ad3e1", features = ["async"] } # Needed form embedded-io 0.6
+atat = { version = "0.19", git = "https://github.com/rmja/atat", rev = "afb51ea", features = [
+    "async",
+] } # Needed form embedded-io 0.6 and syn 2
 defmt = { version = "0.3", optional = true }
 embassy-sync = "0.3"
 embassy-time = "0.1"
