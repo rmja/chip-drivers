@@ -179,7 +179,23 @@ impl<
                     // Enter idle state
                     self.driver.strobe_until_idle(Strobe::SIDLE).await.unwrap();
 
-                    yield Err(ControllerError::RxFifoOverflow);
+                    yield Err(ControllerError::FifoOverflow);
+
+                    // Re-start receiver
+                    self.driver.strobe(Strobe::SFRX).await.unwrap();
+                    self.driver.strobe(Strobe::SRX).await.unwrap();
+                }
+                State::TX_FIFO_ERROR => {
+                    // This should really not be possible, but it seems to happen anyway
+                    // Maybe because of chip calibration
+                    // Enter idle state
+                    self.driver.strobe_until_idle(Strobe::SIDLE).await.unwrap();
+
+                    // Emit as fifo error
+                    yield Err(ControllerError::FifoOverflow);
+
+                    // Flush the tx fifo
+                    self.driver.strobe(Strobe::SFTX).await.unwrap();
 
                     // Re-start receiver
                     self.driver.strobe(Strobe::SFRX).await.unwrap();
