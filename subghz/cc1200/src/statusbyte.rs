@@ -16,13 +16,21 @@ bitfield! {
 #[derive(Copy, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum State {
+    /// Idle state
     IDLE = 0b000,
+    /// Receive mode
     RX = 0b001,
+    /// Transmit mode
     TX = 0b010,
+    /// Fast TX ready
     FSTXON = 0b011,
+    /// Frequency synthesizer calibration is running
     CALIBRATE = 0b100,
+    /// PLL is settling
     SETTLING = 0b101,
+    /// RX FIFO has over/underflowed
     RX_FIFO_ERROR = 0b110,
+    /// TX FIFO has over/underflowed.
     TX_FIFO_ERROR = 0b111,
 }
 

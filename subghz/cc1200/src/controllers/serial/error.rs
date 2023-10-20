@@ -3,8 +3,9 @@ use crate::{DriverError, State};
 #[derive(Debug)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ControllerError {
-    Driver(DriverError),
+    Recalibrated,
     FifoOverflow,
+    Driver(DriverError),
     UnrecoverableChipState(State),
 }
 
