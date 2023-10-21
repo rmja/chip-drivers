@@ -1,6 +1,5 @@
 #![cfg_attr(not(test), no_std)]
 #![allow(incomplete_features)]
-#![feature(async_fn_in_trait)]
 #![feature(generic_const_exprs)]
 #![feature(const_trait_impl)]
 #![feature(async_closure)]
