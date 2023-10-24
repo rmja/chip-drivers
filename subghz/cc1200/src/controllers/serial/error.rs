@@ -7,6 +7,7 @@ pub enum ControllerError {
     FifoOverflow,
     Driver(DriverError),
     UnrecoverableChipState(State),
+    Offline,
 }
 
 impl From<DriverError> for ControllerError {

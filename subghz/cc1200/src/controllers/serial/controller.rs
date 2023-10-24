@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use embassy_time::{Duration, Instant};
+use embassy_time::{with_timeout, Duration, Instant, TimeoutError};
 use embedded_hal_async::{delay::DelayUs, spi};
 use futures::Stream;
 use futures_async_stream::stream;
@@ -164,77 +164,101 @@ impl<
         'r: 'a,
     {
         loop {
-            self.irq_pin.wait_for_high().await.unwrap();
-            let timestamp = Instant::now();
+            match with_timeout(Duration::from_secs(10), self.irq_pin.wait_for_high()).await {
+                Ok(Ok(())) => {
+                    let timestamp = Instant::now();
 
-            let mut chunk_bytes = [0; CHUNK_SIZE];
-            let rssi = unsafe {
-                self.driver
-                    .read_rssi_and_fifo_raw(&mut chunk_bytes)
-                    .await
-                    .unwrap()
-            };
-
-            match self.driver.last_status().unwrap().state() {
-                State::RX => {
-                    yield Ok(RxChunk {
-                        timestamp,
-                        rssi,
-                        bytes: chunk_bytes,
-                    });
-
-                    if self.recalibrate_timeout <= timestamp {
-                        let result: Result<(), ControllerError> = async {
-                            // Enter idle state
-                            self.driver.strobe_until_idle(Strobe::SIDLE).await?;
-
-                            // Run manual calibration
-                            self.driver.strobe(Strobe::SCAL).await?;
-
-                            // Wait for calibration to complete
-                            self.driver.strobe_until_idle(Strobe::SNOP).await?;
-
-                            // Flush RX buffer before we start the receiver
-                            // This can only be safely done if the chip is in IDLE state.
-                            self.driver.strobe(Strobe::SFRX).await?;
-
-                            // Start receiver
-                            self.driver.strobe(Strobe::SRX).await?;
-
-                            Ok(())
-                        }
-                        .await;
-
-                        yield match result {
-                            Ok(()) => {
-                                self.recalibrate_timeout = timestamp + RECALIBRATE_INTERVAL;
-                                Err(ControllerError::Recalibrated)
-                            }
-                            Err(e) => Err(e),
-                        };
-                    }
-                }
-                State::CALIBRATE => {}
-                State::SETTLING => {}
-                State::RX_FIFO_ERROR => {
-                    let result: Result<(), ControllerError> = async {
-                        // Enter idle state
-                        self.driver.strobe_until_idle(Strobe::SIDLE).await?;
-
-                        // Re-start receiver
-                        self.driver.strobe(Strobe::SFRX).await?;
-                        self.driver.strobe(Strobe::SRX).await?;
-
-                        Ok(())
-                    }
-                    .await;
-
-                    yield match result {
-                        Ok(()) => Err(ControllerError::FifoOverflow),
-                        Err(e) => Err(e),
+                    let mut chunk_bytes = [0; CHUNK_SIZE];
+                    let rssi = unsafe {
+                        self.driver
+                            .read_rssi_and_fifo_raw(&mut chunk_bytes)
+                            .await
+                            .unwrap()
                     };
+
+                    match self.driver.last_status().unwrap().state() {
+                        State::RX => {
+                            yield Ok(RxChunk {
+                                timestamp,
+                                rssi,
+                                bytes: chunk_bytes,
+                            });
+
+                            if self.recalibrate_timeout <= timestamp {
+                                let result: Result<(), ControllerError> = async {
+                                    // Enter idle state
+                                    self.driver.strobe_until_idle(Strobe::SIDLE).await?;
+
+                                    // Run manual calibration
+                                    self.driver.strobe(Strobe::SCAL).await?;
+
+                                    // Wait for calibration to complete
+                                    self.driver.strobe_until_idle(Strobe::SNOP).await?;
+
+                                    // Flush RX buffer before we start the receiver
+                                    // This can only be safely done if the chip is in IDLE state.
+                                    self.driver.strobe(Strobe::SFRX).await?;
+
+                                    // Start receiver
+                                    self.driver.strobe(Strobe::SRX).await?;
+
+                                    Ok(())
+                                }
+                                .await;
+
+                                yield match result {
+                                    Ok(()) => {
+                                        self.recalibrate_timeout = timestamp + RECALIBRATE_INTERVAL;
+                                        Err(ControllerError::Recalibrated)
+                                    }
+                                    Err(e) => Err(e),
+                                };
+                            }
+                        }
+                        State::CALIBRATE => {}
+                        State::SETTLING => {}
+                        State::RX_FIFO_ERROR => {
+                            let result: Result<(), ControllerError> = async {
+                                // Enter idle state
+                                self.driver.strobe_until_idle(Strobe::SIDLE).await?;
+
+                                // Re-start receiver
+                                self.driver.strobe(Strobe::SFRX).await?;
+                                self.driver.strobe(Strobe::SRX).await?;
+
+                                Ok(())
+                            }
+                            .await;
+
+                            yield match result {
+                                Ok(()) => Err(ControllerError::FifoOverflow),
+                                Err(e) => Err(e),
+                            };
+                        }
+                        state => {
+                            let result: Result<(), ControllerError> = async {
+                                // Hardware reset the chip
+                                self.driver.reset().await?;
+
+                                // Re-initialize and start the receiver
+                                self.init().await?;
+                                self.setup_receive().await?;
+
+                                Ok(())
+                            }
+                            .await;
+
+                            yield match result {
+                                Ok(()) => Err(ControllerError::UnrecoverableChipState(state)),
+                                Err(e) => Err(e),
+                            };
+                        }
+                    }
                 }
-                state => {
+                Ok(_) => panic!("Unable to wait for high on transition pin"),
+                Err(TimeoutError) => {
+                    // No transition was received
+
                     let result: Result<(), ControllerError> = async {
                         // Hardware reset the chip
                         self.driver.reset().await?;
@@ -248,7 +272,7 @@ impl<
                     .await;
 
                     yield match result {
-                        Ok(()) => Err(ControllerError::UnrecoverableChipState(state)),
+                        Ok(()) => Err(ControllerError::Offline),
                         Err(e) => Err(e),
                     };
                 }
