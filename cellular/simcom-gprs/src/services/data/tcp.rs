@@ -98,7 +98,8 @@ impl<
                     ip,
                     port,
                 })
-                .await?;
+                .await
+                .map_err(|_| SocketError::UnableToConnect)?;
 
             urc_subscription
         };
@@ -158,7 +159,8 @@ impl<
                     id: self.id,
                     max_len,
                 })
-                .await?;
+                .await
+                .map_err(|_| SocketError::UnableToRead)?;
 
             urc_subscription
         };
@@ -215,7 +217,8 @@ impl<
                                 id: self.id,
                                 max_len,
                             })
-                            .await?;
+                            .await
+                            .map_err(|_| SocketError::UnableToRead)?;
 
                         // Reset timeout to ensure that we in fact read the response
                         timeout_instant = Instant::now() + Duration::from_secs(10);

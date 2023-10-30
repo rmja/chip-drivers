@@ -43,6 +43,7 @@ pub enum SocketError {
     UnableToConnect,
     ConnectTimeout,
     Closed,
+    UnableToRead,
     ReadTimeout,
     WriteTimeout,
 }
