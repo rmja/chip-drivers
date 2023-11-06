@@ -122,7 +122,11 @@ pub struct SetManualRxGetMode;
 /// `NoResponse` and the +CIPRXGET part a Urc
 ///
 /// No timeout is given for the command in the command reference,
-/// but times longer than the default 1s has been seen in the wild.
+/// but times much longer than the default 1s has been seen in the wild.
+///
+/// A typical simcard in speeddrop will provide 64 kbit/s
+/// The simcom max read is 1460 bytes.
+/// This should therefore not have any significant impact on the timeout.
 #[derive(AtatCmd)]
 #[at_cmd(
     "+CIPRXGET=2,",
