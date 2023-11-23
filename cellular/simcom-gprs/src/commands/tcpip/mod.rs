@@ -131,7 +131,7 @@ pub struct SetManualRxGetMode;
 #[at_cmd(
     "+CIPRXGET=2,",
     NoResponse,
-    timeout_ms = 5_000,
+    timeout_ms = 10_000,
     value_sep = false,
     termination = "\r"
 )]
