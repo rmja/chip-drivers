@@ -16,6 +16,6 @@ embedded-hal = "1.0.0-rc.1"
 embedded-hal-async = "1.0.0-rc.1"
 futures = { version = "0.3", default-features = false }
 futures-async-stream = { version = "0.2", optional = true }
-heapless = { version = "0.7", optional = true }
+heapless = { version = "0.8", optional = true }
 num-derive = "0.4"
 num-traits = { version = "0.2", default-features = false }
