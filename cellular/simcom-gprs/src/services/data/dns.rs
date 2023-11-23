@@ -65,7 +65,8 @@ impl<AtCl: AtatClient + 'static, AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_
     async fn get_host_by_address(
         &self,
         _addr: embedded_nal_async::IpAddr,
-    ) -> Result<heapless::String<256>, Self::Error> {
+        _result: &mut [u8],
+    ) -> Result<usize, Self::Error> {
         unimplemented!()
     }
 }

@@ -5,7 +5,7 @@ edition = "2021"
 
 [features]
 default = ["sim800"]
-defmt = ["dep:defmt", "atat/defmt", "heapless/defmt-impl"]
+defmt = ["dep:defmt", "atat/defmt", "heapless/defmt-03"]
 sim800 = []
 sim900 = []
 
@@ -13,17 +13,17 @@ sim900 = []
 # atat = { version = "0.20", features = ["async"] }
 atat = { version = "0.20", features = [
     "async",
-], git = "https://github.com/BlackbirdHQ/atat", rev = "27c1264" }
+], git = "https://github.com/BlackbirdHQ/atat", rev = "f97f3f2" }
 defmt = { version = "0.3", optional = true }
 embassy-sync = "0.4"
 embassy-time = "0.1"
 embedded-hal = "1.0.0-rc.1"
 embedded-io = "0.6"
 embedded-io-async = "0.6"
-embedded-nal-async = "0.6"
+embedded-nal-async = "0.7"
 futures = { version = "0.3", default-features = false }
 futures-intrusive = { version = "0.5", default-features = false }
-heapless = "0.7"
+heapless = "0.8"
 heapless-bytes = "0.3"
 serde = { version = "1", default-features = false, features = ["derive"] }
 

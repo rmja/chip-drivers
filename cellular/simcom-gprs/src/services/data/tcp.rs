@@ -27,12 +27,12 @@ impl<
 {
     type Error = SocketError;
 
-    type Connection<'m> = TcpSocket<'buf, 'dev, 'sub, AtCl, AtUrcCh> where Self : 'm;
+    type Connection<'a> = TcpSocket<'buf, 'dev, 'sub, AtCl, AtUrcCh> where Self : 'a;
 
-    async fn connect<'m>(&'m self, remote: SocketAddr) -> Result<Self::Connection<'m>, Self::Error>
-    where
-        Self: 'm,
-    {
+    async fn connect<'a>(
+        &'a self,
+        remote: SocketAddr,
+    ) -> Result<Self::Connection<'a>, Self::Error> {
         self.handle.drain_background_urcs();
 
         // Close any sockets that have been dropped

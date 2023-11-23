@@ -29,6 +29,8 @@ impl Serialize for Facility {
 
 #[cfg(test)]
 mod tests {
+    use core::str::FromStr;
+
     use atat::serde_at::{to_string, SerializeOptions};
     use heapless::String;
 
@@ -41,6 +43,6 @@ mod tests {
             ..SerializeOptions::default()
         };
         let str: String<32> = to_string(&Facility::SC, "", options).unwrap();
-        assert_eq!(String::<32>::from("\"SC\""), str);
+        assert_eq!(String::<32>::from_str("\"SC\"").unwrap(), str);
     }
 }
