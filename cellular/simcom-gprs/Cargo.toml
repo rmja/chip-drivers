@@ -13,10 +13,10 @@ sim900 = []
 # atat = { version = "0.20", features = ["async"] }
 atat = { version = "0.20", features = [
     "async",
-], git = "https://github.com/BlackbirdHQ/atat", rev = "f97f3f2" }
+], git = "https://github.com/BlackbirdHQ/atat", rev = "38e0322" }
 defmt = { version = "0.3", optional = true }
-embassy-sync = "0.4"
-embassy-time = "0.1"
+embassy-sync = "0.5"
+embassy-time = "0.2"
 embedded-hal = "1.0.0-rc.1"
 embedded-io = "0.6"
 embedded-io-async = "0.6"
@@ -30,6 +30,6 @@ serde = { version = "1", default-features = false, features = ["derive"] }
 [dev-dependencies]
 assert_hex = "0.4"
 critical-section = { version = "1", features = ["std"] }
-embassy-time = { version = "0.1", features = ["std", "generic-queue"] }
+embassy-time = { version = "0.2", features = ["std", "generic-queue"] }
 embedded-io-async = { version = "0.6", features = ["std"] }
 tokio = { version = "1", features = ["macros", "rt"] }
