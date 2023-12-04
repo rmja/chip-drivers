@@ -50,7 +50,14 @@ pub enum SocketError {
 
 impl embedded_io::Error for SocketError {
     fn kind(&self) -> ErrorKind {
-        ErrorKind::Other
+        match &self {
+            SocketError::UnsupportedIpVersion => ErrorKind::Unsupported,
+            SocketError::DnsTimeout => ErrorKind::TimedOut,
+            SocketError::UnableToConnect => ErrorKind::ConnectionRefused,
+            SocketError::ConnectTimeout => ErrorKind::TimedOut,
+            SocketError::Closed => ErrorKind::ConnectionAborted,
+            _ => ErrorKind::Other,
+        }
     }
 }
 
