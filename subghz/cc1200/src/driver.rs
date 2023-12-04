@@ -19,7 +19,7 @@ const DEFAULT_RSSI_OFFSET: i16 = -99; // The default offset defined in the users
 
 pub struct Driver<Spi, Delay, ResetPin>
 where
-    Delay: delay::DelayUs,
+    Delay: delay::DelayNs,
     ResetPin: OutputPin,
 {
     spi: Spi,
@@ -53,7 +53,7 @@ impl<T> From<(T, T)> for CalibrationValue<T> {
 impl<Spi, Delay, ResetPin> Driver<Spi, Delay, ResetPin>
 where
     Spi: spi::SpiDevice,
-    Delay: delay::DelayUs,
+    Delay: delay::DelayNs,
     ResetPin: OutputPin,
 {
     pub fn new(spi: Spi, delay: Delay, reset_pin: Option<ResetPin>) -> Self {
@@ -90,7 +90,9 @@ where
             let status = Self::wait_for_xtal(&mut self.spi, &mut self.delay).await?;
             self.last_status = status;
 
-            if let Some(status) = status && status.chip_rdy() {
+            if let Some(status) = status
+                && status.chip_rdy()
+            {
                 Ok(())
             } else {
                 Err(DriverError::Timeout)
@@ -102,7 +104,9 @@ where
             let status = Self::wait_for_xtal(&mut self.spi, &mut self.delay).await?;
             self.last_status = status;
 
-            if let Some(status) = status && status.chip_rdy() {
+            if let Some(status) = status
+                && status.chip_rdy()
+            {
                 Ok(())
             } else {
                 Err(DriverError::Timeout)

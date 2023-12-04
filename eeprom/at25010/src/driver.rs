@@ -25,7 +25,7 @@ const RETRY_INTERVAL_US: u32 = 100;
 pub struct Driver<SpiDevice, Delay>
 where
     SpiDevice: spi::SpiDevice,
-    Delay: delay::DelayUs,
+    Delay: delay::DelayNs,
 {
     spi: SpiDevice,
     delay: Delay,
@@ -35,7 +35,7 @@ where
 pub struct StatefulDriver<SpiDevice, Delay>
 where
     SpiDevice: spi::SpiDevice,
-    Delay: delay::DelayUs,
+    Delay: delay::DelayNs,
 {
     pub driver: Driver<SpiDevice, Delay>,
     pub position: u16,
@@ -44,7 +44,7 @@ where
 impl<SpiDevice, Delay> Driver<SpiDevice, Delay>
 where
     SpiDevice: spi::SpiDevice,
-    Delay: delay::DelayUs,
+    Delay: delay::DelayNs,
 {
     pub const fn new(spi: SpiDevice, delay: Delay, part_number: PartNumber) -> Self {
         Self {
@@ -206,7 +206,7 @@ where
 impl<SpiDevice, Delay> ErrorType for Driver<SpiDevice, Delay>
 where
     SpiDevice: spi::SpiDevice,
-    Delay: delay::DelayUs,
+    Delay: delay::DelayNs,
 {
     type Error = Error;
 }
@@ -214,7 +214,7 @@ where
 impl<SpiDevice, Delay> ReadNorFlash for Driver<SpiDevice, Delay>
 where
     SpiDevice: spi::SpiDevice,
-    Delay: delay::DelayUs,
+    Delay: delay::DelayNs,
 {
     const READ_SIZE: usize = 1;
 
@@ -230,7 +230,7 @@ where
 impl<SpiDevice, Delay> NorFlash for Driver<SpiDevice, Delay>
 where
     SpiDevice: spi::SpiDevice,
-    Delay: delay::DelayUs,
+    Delay: delay::DelayNs,
 {
     const WRITE_SIZE: usize = PAGE_SIZE;
     const ERASE_SIZE: usize = PAGE_SIZE;

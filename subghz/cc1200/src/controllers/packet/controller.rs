@@ -55,7 +55,7 @@ use crate::{
     ConfigPatch, Driver, Rssi, State, Strobe, RX_FIFO_SIZE, TX_FIFO_SIZE,
 };
 use embassy_time::Instant;
-use embedded_hal_async::{delay::DelayUs, spi};
+use embedded_hal_async::{delay::DelayNs, spi};
 use heapless::Vec;
 
 use super::ControllerError;
@@ -70,7 +70,7 @@ pub struct PacketController<
     const WRITE_QUEUE_CAPACITY: usize,
 > where
     Spi: spi::SpiDevice,
-    Delay: DelayUs,
+    Delay: DelayNs,
     ResetPin: embedded_hal::digital::OutputPin,
     IrqGpio: Gpio,
     IrqPin: embedded_hal_async::digital::Wait,
@@ -96,7 +96,7 @@ impl<'a, Spi, Delay, ResetPin, IrqGpio, IrqPin, const WRITE_QUEUE_CAPACITY: usiz
     PacketController<'a, Spi, Delay, ResetPin, IrqGpio, IrqPin, WRITE_QUEUE_CAPACITY>
 where
     Spi: spi::SpiDevice,
-    Delay: DelayUs,
+    Delay: DelayNs,
     ResetPin: embedded_hal::digital::OutputPin,
     IrqGpio: Gpio,
     IrqPin: embedded_hal_async::digital::Wait,
@@ -357,22 +357,23 @@ where
         buffer: &mut [u8],
     ) -> Result<usize, ControllerError> {
         // Determine if it is time to transition to fixed packet length mode
-        if self.pktcfg0.length_config() == LengthConfigValue::InfinitePacketLengthMode && let Some(frame_length) = token.frame_length && token.read_from_rxfifo + RX_FIFO_SIZE >= frame_length {
-                // We are now sufficently close to the end of the packet.
-                // The remaining bytes that we need to receive can fit in the RX fifo.
-                // Transition to fixed packet length mode.
-                self.pktcfg0
-                    .set_length_config(LengthConfigValue::FixedPacketLengthMode);
-                self.driver
-                    .write_reg(self.pktcfg0)
-                    .await?;
+        if self.pktcfg0.length_config() == LengthConfigValue::InfinitePacketLengthMode
+            && let Some(frame_length) = token.frame_length
+            && token.read_from_rxfifo + RX_FIFO_SIZE >= frame_length
+        {
+            // We are now sufficently close to the end of the packet.
+            // The remaining bytes that we need to receive can fit in the RX fifo.
+            // Transition to fixed packet length mode.
+            self.pktcfg0
+                .set_length_config(LengthConfigValue::FixedPacketLengthMode);
+            self.driver.write_reg(self.pktcfg0).await?;
 
-                // Setup fifo pin
-                // Asserted when end of packet is reached.
-                self.irq_iocfg = IrqGpio::Iocfg::default();
-                self.irq_iocfg.set_gpio_cfg(GpioOutput::PKT_SYNC_RXTX);
-                self.irq_iocfg.set_gpio_inv(true);
-                self.driver.write_reg(self.irq_iocfg).await?;
+            // Setup fifo pin
+            // Asserted when end of packet is reached.
+            self.irq_iocfg = IrqGpio::Iocfg::default();
+            self.irq_iocfg.set_gpio_cfg(GpioOutput::PKT_SYNC_RXTX);
+            self.irq_iocfg.set_gpio_inv(true);
+            self.driver.write_reg(self.irq_iocfg).await?;
         }
 
         // Wait for the FIFO to reach threshold or for packet to be fully received

@@ -1,7 +1,7 @@
 use core::marker::PhantomData;
 
 use embassy_time::{with_timeout, Duration, Instant, TimeoutError};
-use embedded_hal_async::{delay::DelayUs, spi};
+use embedded_hal_async::{delay::DelayNs, spi};
 use futures::Stream;
 use futures_async_stream::stream;
 
@@ -25,7 +25,7 @@ const RECALIBRATE_INTERVAL: Duration = Duration::from_secs(600); // Every 10 min
 pub struct SerialController<'a, Spi, Delay, ResetPin, IrqGpio, IrqPin, const CHUNK_SIZE: usize = 16>
 where
     Spi: spi::SpiDevice,
-    Delay: DelayUs,
+    Delay: DelayNs,
     ResetPin: embedded_hal::digital::OutputPin,
     IrqGpio: Gpio,
     IrqPin: embedded_hal_async::digital::Wait,
@@ -51,7 +51,7 @@ pub struct RxChunk<const CHUNK_SIZE: usize = 16> {
 impl<
         'a,
         Spi: spi::SpiDevice,
-        Delay: DelayUs,
+        Delay: DelayNs,
         ResetPin: embedded_hal::digital::OutputPin,
         IrqGpio: Gpio,
         IrqPin: embedded_hal_async::digital::Wait,
