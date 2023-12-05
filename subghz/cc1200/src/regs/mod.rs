@@ -3,7 +3,9 @@ use core::mem::transmute;
 use crate::gpio::{Gpio0Output, Gpio1Output, Gpio2Output, Gpio3Output, GpioOutput};
 
 mod generated;
+mod marc_state;
 pub use generated::*;
+pub use marc_state::MarcStateValue;
 
 use self::pri::{FifoCfg, Iocfg0, Iocfg1, Iocfg2, Iocfg3};
 

@@ -290,6 +290,7 @@ where
 
         self.spi.transfer(rx, tx).await?;
 
+        // The status byte is emitted twice by the chip as we send two opcodes
         let status = StatusByte(rx[3]);
         self.last_status = Some(status);
         buffer.copy_from_slice(&rx[4..]);

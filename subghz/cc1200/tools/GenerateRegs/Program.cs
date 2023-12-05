@@ -15,6 +15,10 @@ var skipEnum = new HashSet<string>()
     { "LockTimeValue" },
     { "RampShapeValue" },
 };
+var manualEnum = new HashSet<string>()
+{
+    { "MarcStateValue" },
+};
 
 var knownVariantNames = new Dictionary<(string, int), string>
 {
@@ -210,6 +214,12 @@ void WriteRegister(StringBuilder writer, Register register)
         {
             var bitsSetter = setter is null ? "_" : setter + "_bits";
             writer.AppendLine($"    {getter}_bits, {bitsSetter}: {range};");
+        }
+        else if (manualEnum.Contains(enumName))
+        {
+            // bitfield does not currently support pub(crate)
+            var bitsSetter = setter is null ? "_" : setter + "_bits";
+            writer.AppendLine($"    pub {getter}_bits, {bitsSetter}: {range};");
         }
         else
         {

@@ -7245,7 +7245,7 @@ pub mod ext {
         /// MARC 2 pin state value
         marc_2pin_state_bits, _: 6, 5;
 
-        pub marc_state, _: 4, 0;
+        pub marc_state_bits, _: 4, 0;
     }
 
     impl Marcstate {
