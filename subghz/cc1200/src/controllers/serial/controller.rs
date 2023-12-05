@@ -236,20 +236,25 @@ impl<
                             };
                         }
                         state => {
-                            let is_transient_error = |marcstate: Marcstate| {
-                                marcstate.marc_2pin_state() == Marc2pinStateValue::Rx
-                                    && marcstate.marc_state() == MarcStateValue::RX
-                            };
-
-                            let result: Result<Marcstate, ControllerError> = async {
+                            let result: Result<RxChunk<CHUNK_SIZE>, ControllerError> = async {
                                 // Poll the marcstate register to figure out what is wrong
                                 let marcstate = self.driver.read_reg::<Marcstate>().await?;
-                                if is_transient_error(marcstate) {
+                                if marcstate.marc_2pin_state() == Marc2pinStateValue::Rx
+                                    && marcstate.marc_state() == MarcStateValue::RX
+                                {
                                     // Transient communication error: It seems that we first received some unknown state,
                                     // but now it seems that we are back in the RX state
 
+                                    // TODO: REMOVE HARDWARE RESET, INIT, AND SETUP_RECEIVE...
+                                    // Hardware reset the chip
+                                    self.driver.reset().await?;
+
+                                    // Re-initialize and start the receiver
+                                    self.init().await?;
+                                    self.setup_receive().await?;
+
                                     // No need to make an effort to reset the chip
-                                    Ok(marcstate)
+                                    Err(ControllerError::TransientChipError(state, marcstate))
                                 } else {
                                     // It seems that we are not currently receiving
 
@@ -260,20 +265,12 @@ impl<
                                     self.init().await?;
                                     self.setup_receive().await?;
 
-                                    Ok(marcstate)
+                                    Err(ControllerError::UnrecoverableChipState(state, marcstate))
                                 }
                             }
                             .await;
 
-                            yield match result {
-                                Ok(marcstate) if is_transient_error(marcstate) => {
-                                    Err(ControllerError::TransientChipError(state, marcstate))
-                                }
-                                Ok(marcstate) => {
-                                    Err(ControllerError::UnrecoverableChipState(state, marcstate))
-                                }
-                                Err(e) => Err(e),
-                            };
+                            yield result
                         }
                     }
                 }
