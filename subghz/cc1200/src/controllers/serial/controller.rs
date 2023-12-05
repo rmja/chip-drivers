@@ -8,12 +8,12 @@ use futures_async_stream::stream;
 use crate::{
     gpio::{Gpio, GpioOutput},
     regs::{
-        ext::{FreqoffCfg, Marcstate},
+        ext::{FreqoffCfg, Marc2pinStateValue, Marcstate},
         pri::{
             AgcCfg3, AgcSyncBehaviourValue, FifoCfg, LengthConfigValue, Mdmcfg1, PktCfg0, PktCfg2,
             PktFormatValue, RfendCfg1, RxoffModeValue,
         },
-        Iocfg,
+        Iocfg, MarcStateValue,
     },
     ConfigPatch, Driver, Rssi, State, Strobe,
 };
@@ -236,20 +236,39 @@ impl<
                             };
                         }
                         state => {
+                            let is_transient_error = |marcstate: Marcstate| {
+                                marcstate.marc_2pin_state() == Marc2pinStateValue::Rx
+                                    && marcstate.marc_state() == MarcStateValue::RX
+                            };
+
                             let result: Result<Marcstate, ControllerError> = async {
+                                // Poll the marcstate register to figure out what is wrong
                                 let marcstate = self.driver.read_reg::<Marcstate>().await?;
-                                // Hardware reset the chip
-                                self.driver.reset().await?;
+                                if is_transient_error(marcstate) {
+                                    // Transient communication error: It seems that we first received some unknown state,
+                                    // but now it seems that we are back in the RX state
 
-                                // Re-initialize and start the receiver
-                                self.init().await?;
-                                self.setup_receive().await?;
+                                    // No need to make an effort to reset the chip
+                                    Ok(marcstate)
+                                } else {
+                                    // It seems that we are not currently receiving
 
-                                Ok(marcstate)
+                                    // Hardware reset the chip
+                                    self.driver.reset().await?;
+
+                                    // Re-initialize and start the receiver
+                                    self.init().await?;
+                                    self.setup_receive().await?;
+
+                                    Ok(marcstate)
+                                }
                             }
                             .await;
 
                             yield match result {
+                                Ok(marcstate) if is_transient_error(marcstate) => {
+                                    Err(ControllerError::TransientChipError(state, marcstate))
+                                }
                                 Ok(marcstate) => {
                                     Err(ControllerError::UnrecoverableChipState(state, marcstate))
                                 }

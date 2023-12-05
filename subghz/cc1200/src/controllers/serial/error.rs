@@ -6,6 +6,7 @@ pub enum ControllerError {
     Recalibrated,
     FifoOverflow,
     Driver(DriverError),
+    TransientChipError(State, Marcstate),
     UnrecoverableChipState(State, Marcstate),
     Offline,
 }
