@@ -213,19 +213,45 @@ where
         &mut self,
         patch: ConfigPatch<'patch>,
     ) -> Result<(), DriverError> {
-        let (pri, ext) = patch.split();
-        if let Some(pri) = pri {
-            self.write_regs(pri.first_address, pri.values).await?;
+        let (pri, ext) = patch.first_address.split(patch.values.len());
+        let (pri_values, ext_values) = patch.values.split_at(pri.1);
+        if !pri_values.is_empty() {
+            self.write_regs(pri.0, pri_values).await?;
         }
 
-        if let Some(ext) = ext {
-            self.write_regs(ext.first_address, ext.values).await?;
+        if !ext_values.is_empty() {
+            self.write_regs(ext.0, ext_values).await?;
 
+            let ext = ConfigPatch {
+                first_address: ext.0,
+                values: ext_values,
+            };
             if self.freq_off.is_some() && ext.get::<Freqoff1>().is_some()
                 || ext.get::<Freqoff0>().is_some()
             {
                 self.write_freq_off().await?;
             }
+        }
+
+        Ok(())
+    }
+
+    /// Read configuration from chip.
+    /// This action _does_ update `last_status`.
+    pub async fn read<'patch>(
+        &mut self,
+        first_address: RegisterAddress,
+        buffer: &mut [u8],
+    ) -> Result<(), DriverError> {
+        let (pri, ext) = first_address.split(buffer.len());
+        let (pri_buf, ext_buf) = buffer.split_at_mut(pri.1);
+
+        if !pri_buf.is_empty() {
+            self.read_regs(pri.0, pri_buf).await?;
+        }
+
+        if !ext_buf.is_empty() {
+            self.read_regs(ext.0, ext_buf).await?;
         }
 
         Ok(())

@@ -1,4 +1,4 @@
-use crate::regs::{ext::IfMixCfg, pri::PktLen, Register, RegisterAddress};
+use crate::regs::{ext::IfMixCfg, Register, RegisterAddress};
 
 #[derive(Clone, Copy)]
 pub struct ConfigPatch<'a> {
@@ -24,27 +24,19 @@ impl<'a> ConfigPatch<'a> {
         }
     }
 
-    pub const fn split(self) -> (Option<ConfigPatch<'a>>, Option<ConfigPatch<'a>>) {
-        if self.first_address.0 <= PktLen::ADDRESS.0
-            && self.first_address.0 + self.values.len() as u16 <= PktLen::ADDRESS.0
-        {
-            (Some(self), None)
-        } else if self.first_address.0 >= IfMixCfg::ADDRESS.0 {
-            (None, Some(self))
-        } else {
-            let pri_len = PktLen::ADDRESS.0 - self.first_address.0 + 1;
-            let (pri, ext) = self.values.split_at(pri_len as usize);
-            (
-                Some(ConfigPatch {
-                    first_address: self.first_address,
-                    values: pri,
-                }),
-                Some(ConfigPatch {
-                    first_address: IfMixCfg::ADDRESS,
-                    values: ext,
-                }),
-            )
-        }
+    pub const fn split(self) -> (ConfigPatch<'a>, ConfigPatch<'a>) {
+        let (pri, ext) = self.first_address.split(self.values.len());
+        let (pri_values, ext_values) = self.values.split_at(pri.1);
+        (
+            ConfigPatch {
+                first_address: pri.0,
+                values: pri_values,
+            },
+            ConfigPatch {
+                first_address: ext.0,
+                values: ext_values,
+            },
+        )
     }
 }
 
@@ -66,9 +58,6 @@ mod tests {
         let freqoff_cfg = config.get::<FreqoffCfg>().unwrap();
 
         let (pri, ext) = config.split();
-        let pri = pri.unwrap();
-        let ext = ext.unwrap();
-
         assert_eq!(iocfg2, pri.get::<Iocfg2>().unwrap());
         assert_eq!(freqoff_cfg, ext.get::<FreqoffCfg>().unwrap());
     }
@@ -77,11 +66,8 @@ mod tests {
     fn can_split() {
         let config = wmbus_modecmto::<0>();
         let (pri, ext) = config.split();
-        let pri = pri.unwrap();
         assert_eq!(Iocfg3::ADDRESS, pri.first_address);
         assert_eq!(47, pri.values.len());
-
-        let ext = ext.unwrap();
         assert_eq!(IfMixCfg::ADDRESS, ext.first_address);
         assert_eq!(58, ext.values.len());
     }
