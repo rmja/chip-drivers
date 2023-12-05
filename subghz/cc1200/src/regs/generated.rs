@@ -18,6 +18,7 @@ pub trait Register: Clone + Copy + Default + From<u8> {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct RegisterAddress(pub(crate) u16);
 
 pub mod pri {
@@ -25,7 +26,7 @@ pub mod pri {
     bitfield! {
         /// GPIO3 IO Pin Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Iocfg3(u8);
 
         /// Analog transfer enable
@@ -72,10 +73,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for Iocfg3 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Iocfg3 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// GPIO2 IO Pin Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Iocfg2(u8);
 
         /// Analog transfer enable. Refer to IOCFG3
@@ -108,10 +122,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for Iocfg2 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Iocfg2 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// GPIO1 IO Pin Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Iocfg1(u8);
 
         /// Analog transfer enable. Refer to IOCFG3
@@ -144,10 +171,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for Iocfg1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Iocfg1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// GPIO0 IO Pin Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Iocfg0(u8);
 
         /// Analog transfer enable. Refer to IOCFG3
@@ -180,10 +220,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for Iocfg0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Iocfg0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Sync Word Configuration [31:24]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Sync3(u8);
 
         /// Sync word [31:24]
@@ -210,10 +263,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for Sync3 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Sync3 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Sync Word Configuration [23:16]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Sync2(u8);
 
         /// Sync word [23:16]
@@ -240,10 +306,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for Sync2 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Sync2 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Sync Word Configuration [15:8]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Sync1(u8);
 
         /// Sync word [15:8]
@@ -270,10 +349,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for Sync1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Sync1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Sync Word Configuration [7:0]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Sync0(u8);
 
         /// Sync Word [7:0]
@@ -300,10 +392,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for Sync0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Sync0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Sync Word Detection Configuration Reg. 1
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct SyncCfg1(u8);
 
         /// Sync word configuration. When SYNC_MODE = 000b, all samples (noise or data) received after RX mode is entered will either be put in the RX FIFO or output on a GPIO configured as SERIAL_RX. Note that when 4'ary modulation is used the sync word uses 2'ary modulation (the symbol rate is kept the same)
@@ -363,10 +468,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for SyncCfg1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for SyncCfg1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Sync Word Detection Configuration Reg. 0
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct SyncCfg0(u8);
 
         pub sync_cfg0_not_used, _: 7, 6;
@@ -451,10 +569,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for SyncCfg0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for SyncCfg0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Deviation Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct DeviationM(u8);
 
         /// Frequency deviation (mantissa part)<BR/>
@@ -483,10 +614,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for DeviationM {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for DeviationM {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Modulation Format and Frequency Deviation Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct ModcfgDevE(u8);
 
         /// Modem mode configuration
@@ -549,10 +693,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for ModcfgDevE {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for ModcfgDevE {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Digital DC Removal Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct DcfiltCfg(u8);
 
         pub dcfilt_cfg_not_used, _: 7;
@@ -631,10 +788,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for DcfiltCfg {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for DcfiltCfg {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Preamble Length Configuration Reg. 1
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct PreambleCfg1(u8);
 
         pub preamble_cfg1_not_used, _: 7, 6;
@@ -731,10 +901,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for PreambleCfg1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for PreambleCfg1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Preamble Detection Configuration Reg. 0
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct PreambleCfg0(u8);
 
         /// Preamble detection enable
@@ -804,10 +987,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for PreambleCfg0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for PreambleCfg0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Digital Image Channel Compensation Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Iqic(u8);
 
         /// IQ image compensation enable. When this bit is set the following must be true:<BR/>
@@ -922,10 +1118,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for Iqic {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Iqic {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Channel Filter Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct ChanBw(u8);
 
         /// ADC_CIC_DECFACT is a table index which programs the first decimation filter and program the RX filter bandwidth. ADC_CIC_DECFACT table index:
@@ -977,10 +1186,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for ChanBw {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for ChanBw {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// General Modem Parameter Configuration Reg. 1
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Mdmcfg1(u8);
 
         /// When CARRIER_SENSE_GATE is 1, the demodulator will not start to look for a sync word before CARRIER_SENSE is asserted
@@ -1089,10 +1311,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for Mdmcfg1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Mdmcfg1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// General Modem Parameter Configuration Reg. 0
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Mdmcfg0(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -1184,10 +1419,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for Mdmcfg0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Mdmcfg0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Symbol Rate Configuration Exponent and Mantissa [19:16]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct SymbolRate2(u8);
 
         /// Symbol rate (exponent part)<BR/>
@@ -1219,10 +1467,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for SymbolRate2 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for SymbolRate2 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Symbol Rate Configuration Mantissa [15:8]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct SymbolRate1(u8);
 
         /// Symbol rate (mantissa part [15:8]). See SYMBOL_RATE2
@@ -1249,10 +1510,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for SymbolRate1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for SymbolRate1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Symbol Rate Configuration Mantissa [7:0]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct SymbolRate0(u8);
 
         /// Symbol rate (mantissa part [7:0]). See SYMBOL_RATE2
@@ -1279,10 +1553,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for SymbolRate0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for SymbolRate0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// AGC Reference Level Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AgcRef(u8);
 
         /// AGC reference level. The AGC reference level must be higher than the minimum SNR to the demodulator. The AGC reduces the analog front end gain when the magnitude output from channel filter > AGC reference level. An optimum AGC reference level is given by several conditions, but a rule of thumb is to use the formula:<BR/>
@@ -1312,10 +1599,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for AgcRef {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AgcRef {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Carrier Sense Threshold Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AgcCsThr(u8);
 
         /// AGC carrier sense threshold. Two's complement number with 1 dB resolution
@@ -1342,10 +1642,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for AgcCsThr {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AgcCsThr {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// RSSI Offset Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AgcGainAdjust(u8);
 
         /// AGC gain adjustment. This register is used to adjust RSSI[11:0] to the actual carrier input signal level to compensate for interpolation gains (two's complement with 1 dB resolution)
@@ -1372,10 +1685,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for AgcGainAdjust {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AgcGainAdjust {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Automatic Gain Control Configuration Reg. 3
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AgcCfg3(u8);
 
         /// AGC behavior after sync word detection
@@ -1438,10 +1764,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for AgcCfg3 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AgcCfg3 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Automatic Gain Control Configuration Reg. 2
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AgcCfg2(u8);
 
         ///
@@ -1505,10 +1844,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for AgcCfg2 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AgcCfg2 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Automatic Gain Control Configuration Reg. 1
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AgcCfg1(u8);
 
         pub agc_cfg1_not_used, _: 7;
@@ -1607,10 +1959,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for AgcCfg1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AgcCfg1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Automatic Gain Control Configuration Reg. 0
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AgcCfg0(u8);
 
         /// AGC hysteresis level. The difference between the desired signal level and the actual signal level must be larger than AGC hysteresis level before the AGC changes the front end gain
@@ -1729,10 +2094,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for AgcCfg0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AgcCfg0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// FIFO Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FifoCfg(u8);
 
         /// Automatically flushes the last packet received in the RX FIFO if a CRC error occurred. If this bit has been turned off and should be turned on again, an SFRX strobe must first be issued
@@ -1762,10 +2140,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for FifoCfg {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FifoCfg {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Device Address Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct DevAddr(u8);
 
         /// Address used for packet filtering in RX
@@ -1792,10 +2183,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for DevAddr {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for DevAddr {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Synthesizer Calibration and Settling Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct SettlingCfg(u8);
 
         pub settling_cfg_not_used, _: 7, 5;
@@ -1868,10 +2272,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for SettlingCfg {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for SettlingCfg {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Synthesizer Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsCfg(u8);
 
         pub fs_cfg_not_used, _: 7, 5;
@@ -1956,10 +2373,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for FsCfg {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsCfg {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// eWOR Configuration Reg. 1
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct WorCfg1(u8);
 
         /// eWOR timer resolution. Controls the t_Event0 and RX timeout resolution<BR/>
@@ -2029,10 +2459,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for WorCfg1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for WorCfg1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// eWOR Configuration Reg. 0
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct WorCfg0(u8);
 
         /// RX duty cycle mode configuration. eWOR mode and RXDCM cannot be enabled at the same time. Both modes can be used in RX Sniff Mode implementation
@@ -2124,10 +2567,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for WorCfg0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for WorCfg0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Event 0 Configuration MSB
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct WorEvent0Msb(u8);
 
         /// Event 0 timeout (MSB)<BR/>
@@ -2155,10 +2611,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for WorEvent0Msb {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for WorEvent0Msb {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Event 0 Configuration LSB
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct WorEvent0Lsb(u8);
 
         /// Event 0 timeout (LSB). See WOR_EVENT0_MSB
@@ -2185,10 +2654,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for WorEvent0Lsb {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for WorEvent0Lsb {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// RX Duty Cycle Mode Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct RxdcmTime(u8);
 
         /// Configures the time spent in RXDCM state</br>
@@ -2219,10 +2701,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for RxdcmTime {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for RxdcmTime {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Packet Configuration Reg. 2
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct PktCfg2(u8);
 
         pub pkt_cfg2_not_used, _: 7;
@@ -2323,10 +2818,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for PktCfg2 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for PktCfg2 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Packet Configuration Reg. 1
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct PktCfg1(u8);
 
         /// Forward error correction enable
@@ -2437,10 +2945,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for PktCfg1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for PktCfg1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Packet Configuration Reg. 0
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct PktCfg0(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -2515,10 +3036,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for PktCfg0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for PktCfg0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// RFEND Configuration Reg. 1
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct RfendCfg1(u8);
 
         pub rfend_cfg1_not_used, _: 7, 6;
@@ -2584,10 +3118,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for RfendCfg1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for RfendCfg1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// RFEND Configuration Reg. 0
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct RfendCfg0(u8);
 
         pub rfend_cfg0_not_used, _: 7;
@@ -2688,10 +3235,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for RfendCfg0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for RfendCfg0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Power Amplifier Configuration Reg. 1
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct PaCfg1(u8);
 
         pub pa_cfg2_not_used, _: 7;
@@ -2732,10 +3292,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for PaCfg1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for PaCfg1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Power Amplifier Configuration Reg. 0
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct PaCfg0(u8);
 
         /// First intermediate power level. The first intermediate power level can be programmed within the power level range 0 - 7/16 in steps of 1/16
@@ -2777,10 +3350,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for PaCfg0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for PaCfg0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// ASK Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AskCfg(u8);
 
         /// Controls the bandwidth of the data filter in ASK/OOK mode. The -3 dB cut-off frequency (fCut-Off) is given below:</br>
@@ -2840,10 +3426,23 @@ pub mod pri {
         }
     }
 
+    impl core::fmt::Debug for AskCfg {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AskCfg {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Packet Length Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct PktLen(u8);
 
         /// In fixed length mode this field indicates the packet length, and a value of 0 indicates the length to be 256 bytes. In variable length packet mode, this value indicates the maximum allowed length packets
@@ -2869,6 +3468,19 @@ pub mod pri {
             Self(0x03)
         }
     }
+
+    impl core::fmt::Debug for PktLen {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for PktLen {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
 }
 
 pub mod ext {
@@ -2876,7 +3488,7 @@ pub mod ext {
     bitfield! {
         /// IF Mix Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct IfMixCfg(u8);
 
         pub if_mix_cfg_not_used, _: 7, 5;
@@ -2924,10 +3536,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for IfMixCfg {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for IfMixCfg {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Offset Correction Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FreqoffCfg(u8);
 
         pub freqoff_cfg_not_used, _: 7, 6;
@@ -3015,10 +3640,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FreqoffCfg {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FreqoffCfg {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Timing Offset Correction Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct TocCfg(u8);
 
         /// Timing offset correction limit. TOC_LIMIT specifies maximum symbol rate offset the receiver is able to handle. TOC_LIMIT != 00b requires 2 - 4 bytes preamble for symbol rate offset compensation
@@ -3085,10 +3723,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for TocCfg {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for TocCfg {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// MARC Spare
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct MarcSpare(u8);
 
         pub marc_spare_not_used, _: 7, 4;
@@ -3126,10 +3777,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for MarcSpare {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for MarcSpare {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// External Clock Frequency Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct EcgCfg(u8);
 
         pub ecg_cfg_not_used, _: 7, 5;
@@ -3195,10 +3859,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for EcgCfg {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for EcgCfg {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// General Modem Parameter Configuration Reg. 2
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Mdmcfg2(u8);
 
         /// Sets the resolution of an ASK bit transition (# of points). The following rule must be satisfied:<BR/>
@@ -3284,10 +3961,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Mdmcfg2 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Mdmcfg2 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// External Control Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct ExtCtrl(u8);
 
         pub ext_ctrl_not_used, _: 7, 3;
@@ -3343,10 +4033,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for ExtCtrl {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for ExtCtrl {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// RC Oscillator Calibration Fine
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct RccalFine(u8);
 
         pub rccal_fine_not_used, _: 7;
@@ -3375,10 +4078,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for RccalFine {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for RccalFine {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// RC Oscillator Calibration Coarse
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct RccalCoarse(u8);
 
         pub rccal_coarse_not_used, _: 7;
@@ -3407,10 +4123,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for RccalCoarse {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for RccalCoarse {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// RC Oscillator Calibration Clock Offset
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct RccalOffset(u8);
 
         pub rccal_offset_not_used, _: 7, 5;
@@ -3439,10 +4168,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for RccalOffset {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for RccalOffset {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Offset MSB
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Freqoff1(u8);
 
         /// Frequency offset [15:8]. Updated by user or SAFC strobe. The value is in two's complement format
@@ -3469,10 +4211,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Freqoff1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Freqoff1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Offset LSB
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Freqoff0(u8);
 
         /// Frequency offset [7:0]. Updated by user or SAFC strobe. The value is in two's complement format
@@ -3499,10 +4254,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Freqoff0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Freqoff0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Configuration [23:16]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Freq2(u8);
 
         /// Frequency [23:16]<BR/>
@@ -3530,10 +4298,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Freq2 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Freq2 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Configuration [15:8]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Freq1(u8);
 
         /// Frequency [15:8]. See FREQ2
@@ -3560,10 +4341,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Freq1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Freq1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Configuration [7:0]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Freq0(u8);
 
         /// Frequency [7:0]. See FREQ2
@@ -3590,10 +4384,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Freq0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Freq0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Analog to Digital Converter Configuration Reg. 2
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct IfAdc2(u8);
 
         pub if_adc2_not_used, _: 7, 4;
@@ -3622,10 +4429,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for IfAdc2 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for IfAdc2 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Analog to Digital Converter Configuration Reg. 1
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct IfAdc1(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -3661,10 +4481,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for IfAdc1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for IfAdc1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Analog to Digital Converter Configuration Reg. 0
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct IfAdc0(u8);
 
         pub if_adc0_not_used, _: 7, 6;
@@ -3699,10 +4532,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for IfAdc0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for IfAdc0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Synthesizer Digital Reg. 1
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsDig1(u8);
 
         pub fs_dig1_not_used, _: 7, 6;
@@ -3743,10 +4589,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsDig1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsDig1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Synthesizer Digital Reg. 0
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsDig0(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -3823,10 +4682,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsDig0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsDig0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Synthesizer Calibration Reg. 3
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsCal3(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -3869,10 +4741,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsCal3 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsCal3 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Synthesizer Calibration Reg. 2
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsCal2(u8);
 
         pub fs_cal2_not_used, _: 7, 6;
@@ -3901,10 +4786,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsCal2 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsCal2 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Synthesizer Calibration Reg. 1
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsCal1(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -3940,10 +4838,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsCal1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsCal1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Synthesizer Calibration Reg. 0
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsCal0(u8);
 
         pub fs_cal0_not_used, _: 7, 4;
@@ -3997,10 +4908,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsCal0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsCal0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Synthesizer Charge Pump Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsChp(u8);
 
         pub fs_chp_not_used, _: 7, 6;
@@ -4029,10 +4953,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsChp {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsChp {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Synthesizer Divide by 2
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsDivtwo(u8);
 
         pub fs_divtwo_not_used, _: 7, 2;
@@ -4061,10 +4998,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsDivtwo {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsDivtwo {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// FS Digital Synthesizer Module Configuration Reg. 1
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsDsm1(u8);
 
         pub fs_dsm1_not_used, _: 7, 3;
@@ -4096,10 +5046,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsDsm1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsDsm1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// FS Digital Synthesizer Module Configuration Reg. 0
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsDsm0(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -4132,10 +5095,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsDsm0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsDsm0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Synthesizer Divider Chain Configuration Reg. 1
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsDvc1(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -4171,10 +5147,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsDvc1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsDvc1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Synthesizer Divider Chain Configuration Reg. 0
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsDvc0(u8);
 
         pub fs_dvc0_not_used, _: 7, 5;
@@ -4206,10 +5195,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsDvc0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsDvc0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Synthesizer Local Bias Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsLbi(u8);
 
         pub fs_lbi_not_used, _: 7, 0;
@@ -4235,10 +5237,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsLbi {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsLbi {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Synthesizer Phase Frequency Detector Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsPfd(u8);
 
         pub fsd_pfd_not_used, _: 7;
@@ -4273,10 +5288,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsPfd {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsPfd {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Synthesizer Prescaler Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsPre(u8);
 
         pub fs_pre_not_used, _: 7;
@@ -4311,10 +5339,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsPre {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsPre {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Synthesizer Divider Regulator Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsRegDivCml(u8);
 
         pub fs_reg_div_cml_not_used, _: 7, 5;
@@ -4346,10 +5387,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsRegDivCml {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsRegDivCml {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Synthesizer Spare
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsSpare(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -4376,10 +5430,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsSpare {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsSpare {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// FS Voltage Controlled Oscillator Configuration Reg. 4
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsVco4(u8);
 
         pub fs_vco4_not_used, _: 7, 5;
@@ -4408,10 +5475,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsVco4 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsVco4 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// FS Voltage Controlled Oscillator Configuration Reg. 3
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsVco3(u8);
 
         pub fs_vco3_not_used, _: 7, 1;
@@ -4440,10 +5520,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsVco3 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsVco3 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// FS Voltage Controlled Oscillator Configuration Reg. 2
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsVco2(u8);
 
         pub fs_vco2_not_used, _: 7;
@@ -4472,10 +5565,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsVco2 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsVco2 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// FS Voltage Controlled Oscillator Configuration Reg. 1
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsVco1(u8);
 
         /// VCO VCDAC configuration. Used in open-loop CAL mode.  Note that avdd is the internal VCO regulated voltage
@@ -4512,10 +5618,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsVco1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsVco1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// FS Voltage Controlled Oscillator Configuration Reg. 0
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsVco0(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -4548,10 +5667,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsVco0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsVco0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Global Bias Configuration Reg. 6
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Gbias6(u8);
 
         pub gbias6_not_used, _: 7, 6;
@@ -4580,10 +5712,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Gbias6 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Gbias6 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Global Bias Configuration Reg. 5
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Gbias5(u8);
 
         pub gbias5_not_used, _: 7, 4;
@@ -4612,10 +5757,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Gbias5 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Gbias5 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Global Bias Configuration Reg. 4
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Gbias4(u8);
 
         pub gbias4_not_used, _: 7, 6;
@@ -4644,10 +5802,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Gbias4 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Gbias4 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Global Bias Configuration Reg. 3
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Gbias3(u8);
 
         pub gbias3_not_used, _: 7, 6;
@@ -4676,10 +5847,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Gbias3 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Gbias3 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Global Bias Configuration Reg. 2
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Gbias2(u8);
 
         pub gbias2_not_used, _: 7;
@@ -4711,10 +5895,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Gbias2 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Gbias2 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Global Bias Configuration Reg. 1
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Gbias1(u8);
 
         pub gbias1_not_used, _: 7, 5;
@@ -4743,10 +5940,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Gbias1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Gbias1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Global Bias Configuration Reg. 0
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Gbias0(u8);
 
         pub gbias0_not_used, _: 7, 2;
@@ -4778,10 +5988,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Gbias0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Gbias0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Intermediate Frequency Amplifier Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Ifamp(u8);
 
         pub ifamp_not_used, _: 7, 4;
@@ -4835,10 +6058,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Ifamp {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Ifamp {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Low Noise Amplifier Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Lna(u8);
 
         pub lna_not_used, _: 7, 2;
@@ -4867,10 +6103,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Lna {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Lna {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// RX Mixer Configuration
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Rxmix(u8);
 
         pub rxmix_not_used, _: 7, 2;
@@ -4899,10 +6148,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Rxmix {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Rxmix {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Crystal Oscillator Configuration Reg. 5
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Xosc5(u8);
 
         pub xosc5_not_used, _: 7, 4;
@@ -4931,10 +6193,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Xosc5 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Xosc5 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Crystal Oscillator Configuration Reg. 4
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Xosc4(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -4961,10 +6236,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Xosc4 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Xosc4 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Crystal Oscillator Configuration Reg. 3
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Xosc3(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -4994,10 +6282,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Xosc3 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Xosc3 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Crystal Oscillator Configuration Reg. 2
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Xosc2(u8);
 
         pub xosc2_not_used, _: 7, 4;
@@ -5038,10 +6339,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Xosc2 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Xosc2 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Crystal Oscillator Configuration Reg. 1
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Xosc1(u8);
 
         pub xosc1_not_used, _: 7, 3;
@@ -5083,10 +6397,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Xosc1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Xosc1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Crystal Oscillator Configuration Reg. 0
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Xosc0(u8);
 
         pub xosc0_not_used, _: 7, 2;
@@ -5118,10 +6445,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Xosc0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Xosc0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Analog Spare
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AnalogSpare(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -5148,10 +6488,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AnalogSpare {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AnalogSpare {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Power Amplifier Configuration Reg. 3
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct PaCfg3(u8);
 
         pub pa_cfg3_not_used, _: 7, 3;
@@ -5180,10 +6533,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for PaCfg3 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for PaCfg3 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// eWOR Timer Counter Value MSB
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct WorTime1(u8);
 
         /// eWOR timer counter value [15:8]
@@ -5210,10 +6576,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for WorTime1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for WorTime1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// eWOR Timer Counter Value LSB
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct WorTime0(u8);
 
         /// eWOR timer counter value [7:0]
@@ -5240,10 +6619,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for WorTime0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for WorTime0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// eWOR Timer Capture Value MSB
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct WorCapture1(u8);
 
         /// eWOR timer capture value [15:8]. Capture timer value on sync detect to simplify timer re-synchronization
@@ -5270,10 +6662,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for WorCapture1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for WorCapture1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// eWOR Timer Capture Value LSB
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct WorCapture0(u8);
 
         /// eWOR timer capture Value [7:0]. Capture timer value on sync detect to simplify timer re-synchronization
@@ -5300,10 +6705,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for WorCapture0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for WorCapture0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// MARC Built-In Self-Test
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Bist(u8);
 
         pub bist_not_used, _: 7, 4;
@@ -5341,10 +6759,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Bist {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Bist {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// DC Filter Offset I MSB
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct DcfiltoffsetI1(u8);
 
         /// DC compensation, real value [15:8]
@@ -5371,10 +6802,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for DcfiltoffsetI1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for DcfiltoffsetI1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// DC Filter Offset I LSB
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct DcfiltoffsetI0(u8);
 
         /// DC compensation, real value [7:0]
@@ -5401,10 +6845,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for DcfiltoffsetI0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for DcfiltoffsetI0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// DC Filter Offset Q MSB
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct DcfiltoffsetQ1(u8);
 
         /// DC compensation, imaginary value [15:8]
@@ -5431,10 +6888,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for DcfiltoffsetQ1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for DcfiltoffsetQ1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// DC Filter Offset Q LSB
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct DcfiltoffsetQ0(u8);
 
         /// DC compensation, imaginary value [7:0]
@@ -5461,10 +6931,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for DcfiltoffsetQ0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for DcfiltoffsetQ0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// IQ Imbalance Value I MSB
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct IqieI1(u8);
 
         /// IQ imbalance value, real part [15:8]
@@ -5491,10 +6974,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for IqieI1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for IqieI1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// IQ Imbalance Value I LSB
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct IqieI0(u8);
 
         /// IQ imbalance value, real part [7:0]
@@ -5521,10 +7017,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for IqieI0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for IqieI0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// IQ Imbalance Value Q MSB
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct IqieQ1(u8);
 
         /// IQ imbalance value, imaginary part [15:8]
@@ -5551,10 +7060,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for IqieQ1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for IqieQ1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// IQ Imbalance Value Q LSB
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct IqieQ0(u8);
 
         /// IQ imbalance value, imaginary part [7:0]
@@ -5581,10 +7103,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for IqieQ0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for IqieQ0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Received Signal Strength Indicator Reg. 1
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Rssi1(u8);
 
         /// Received signal strength indicator. 8 MSB of RSSI[11:0]. RSSI[11:0] is a two's complement number with 0.0625 dB resolution hence ranging from -128 to 127 dBm. A value of -128 dBm indicates that the RSSI is invalid. To get a correct RSSI value a calibrated RSSI offset value should be subtracted from the value given by RSSI[11:0]. This RSSI offset value can either be subtracted from RSSI[11:0] manually or the offset can be written to AGC_GAIN_ADJUST.GAIN_ADJUSTMENT meaning that RSSI[11:0] will give a correct value directly
@@ -5611,10 +7146,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Rssi1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Rssi1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Received Signal Strength Indicator Reg.0
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Rssi0(u8);
 
         pub rssi0_not_used, _: 7;
@@ -5673,10 +7221,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Rssi0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Rssi0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// MARC State
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Marcstate(u8);
 
         pub marcstate_not_used, _: 7;
@@ -5725,10 +7286,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Marcstate {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Marcstate {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Link Quality Indicator Value
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct LqiVal(u8);
 
         /// CRC OK. Asserted in RX when PKT_CFG1.CRC_CFG = 1 or 10b and a good packet is received. This signal is always on if the radio is in TX or if the radio is in RX and PKT_CFG1.CRC_CFG = 0. The signal is de-asserted when RX mode is entered and PKT_CFG1.CRC_CFG != 0
@@ -5765,10 +7339,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for LqiVal {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for LqiVal {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Preamble and Sync Word Error
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct PqtSyncErr(u8);
 
         /// Preamble qualifier value. The actual preamble qualifier value can be greater than 15 but since PQT_ERROR is only 4 bits wide PQT_ERROR = MIN[actual PQT qualifier value] modulo 16. This means that if PQT _ERROR = 0001b the actual preamble qualifier value is either 1 or 17. When a sync word is detected (SYNC_EVENT is asserted) the PQT_ERROR register field is not updated again before RX mode is re-entered. As long as the radio is in RX searching for a sync word the register field will be updated continuously
@@ -5798,10 +7385,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for PqtSyncErr {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for PqtSyncErr {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Demodulator Status
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct DemStatus(u8);
 
         /// RSSI step found during packet reception (after the assertion of SYNC_EVENT). The RSSI step is 10 or 16 dB and is configured through AGC_CFG1.RSSI_STEP_THR
@@ -5868,10 +7468,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for DemStatus {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for DemStatus {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Offset Estimate MSB
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FreqoffEst1(u8);
 
         /// Frequency offset estimate [15:8] MSB<BR/>
@@ -5899,10 +7512,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FreqoffEst1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FreqoffEst1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Offset Estimate LSB
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FreqoffEst0(u8);
 
         /// See FREQOFF_EST1
@@ -5929,10 +7555,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FreqoffEst0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FreqoffEst0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Automatic Gain Control Reg. 3
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AgcGain3(u8);
 
         pub agc_gain3_not_used, _: 7;
@@ -5961,10 +7600,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AgcGain3 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AgcGain3 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Automatic Gain Control Reg. 2
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AgcGain2(u8);
 
         /// Override AGC gain control
@@ -6004,10 +7656,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AgcGain2 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AgcGain2 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Automatic Gain Control Reg. 1
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AgcGain1(u8);
 
         pub agc_gain1_not_used, _: 7, 5;
@@ -6039,10 +7704,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AgcGain1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AgcGain1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Automatic Gain Control Reg. 0
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AgcGain0(u8);
 
         pub agc_gain0_not_used, _: 7;
@@ -6074,10 +7752,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AgcGain0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AgcGain0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Custom Frequency Modulation RX Data
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct CfmRxDataOut(u8);
 
         /// 8-bit signed soft-decision symbol data, either from normal receiver or transparent receiver. Can be read using burst mode to do custom demodulation<BR/>
@@ -6106,10 +7797,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for CfmRxDataOut {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for CfmRxDataOut {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Custom Frequency Modulation TX Data
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct CfmTxDataIn(u8);
 
         /// 8-bit signed soft TX data input register for custom SW controlled modulation. Can be accessed using burst mode to get arbitrary modulation<BR/>
@@ -6137,10 +7841,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for CfmTxDataIn {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for CfmTxDataIn {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// ASK Soft Decision Output
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AskSoftRxData(u8);
 
         pub ask_soft_not_used, _: 7, 6;
@@ -6171,10 +7888,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AskSoftRxData {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AskSoftRxData {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Random Number Generator Value
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Rndgen(u8);
 
         /// Random number generator enable
@@ -6211,10 +7941,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Rndgen {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Rndgen {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Signal Magnitude after CORDIC [16]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Magn2(u8);
 
         pub magn_not_used, _: 7, 1;
@@ -6243,10 +7986,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Magn2 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Magn2 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Signal Magnitude after CORDIC [15:8]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Magn1(u8);
 
         /// Instantaneous signal magnitude after CORDIC, 17-bit [15:8]
@@ -6273,10 +8029,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Magn1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Magn1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Signal Magnitude after CORDIC [7:0]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Magn0(u8);
 
         /// Instantaneous signal magnitude after CORDIC, 17-bit [7:0]
@@ -6303,10 +8072,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Magn0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Magn0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Signal Angular after CORDIC [9:8]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Ang1(u8);
 
         pub ang1_not_used, _: 7, 2;
@@ -6335,10 +8117,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Ang1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Ang1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Signal Angular after CORDIC [7:0]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Ang0(u8);
 
         /// Instantaneous signal angular after CORDIC, 10-bit [7:0]
@@ -6365,10 +8160,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Ang0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Ang0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Channel Filter Data Real Part [16]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct ChfiltI2(u8);
 
         pub chfilt_i2_not_used, _: 7, 2;
@@ -6406,10 +8214,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for ChfiltI2 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for ChfiltI2 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Channel Filter Data Real Part [15:8]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct ChfiltI1(u8);
 
         /// Channel filter data, real part, 17-bit [15:8]
@@ -6436,10 +8257,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for ChfiltI1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for ChfiltI1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Channel Filter Data Real Part [7:0]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct ChfiltI0(u8);
 
         /// Channel filter data, real part, 17-bit [7:0]
@@ -6466,10 +8300,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for ChfiltI0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for ChfiltI0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Channel Filter Data Imaginary Part [16]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct ChfiltQ2(u8);
 
         pub chfilt_q2_not_used, _: 7, 1;
@@ -6498,10 +8345,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for ChfiltQ2 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for ChfiltQ2 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Channel Filter Data Imaginary Part [15:8]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct ChfiltQ1(u8);
 
         /// Channel filter data, imaginary part, 17-bit [15:8]
@@ -6528,10 +8388,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for ChfiltQ1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for ChfiltQ1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Channel Filter Data Imaginary Part [7:0]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct ChfiltQ0(u8);
 
         /// Channel filter data, imaginary part, 17-bit [7:0]
@@ -6558,10 +8431,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for ChfiltQ0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for ChfiltQ0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// General Purpose Input/Output Status
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct GpioStatus(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -6591,10 +8477,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for GpioStatus {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for GpioStatus {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Synthesizer Calibration Control
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FscalCtrl(u8);
 
         pub fscal_ctrl_not_used, _: 7;
@@ -6645,10 +8544,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FscalCtrl {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FscalCtrl {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Synthesizer Phase Adjust
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct PhaseAdjust(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -6675,10 +8587,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for PhaseAdjust {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for PhaseAdjust {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Part Number
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Partnumber(u8);
 
         /// Chip ID
@@ -6712,10 +8637,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Partnumber {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Partnumber {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Part Revision
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Partversion(u8);
 
         /// Chip revision
@@ -6742,10 +8680,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Partversion {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Partversion {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Serial Status
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct SerialStatus(u8);
 
         pub serial_status_not_used, _: 7, 6;
@@ -6796,10 +8747,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for SerialStatus {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for SerialStatus {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Modem Status Reg. 1
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct ModemStatus1(u8);
 
         /// Asserted simultaneously as SYNC_EVENT. De-asserted when an SRX strobe has been issued
@@ -6847,10 +8811,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for ModemStatus1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for ModemStatus1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Modem Status Reg. 0
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct ModemStatus0(u8);
 
         pub modem_status0_not_used, _: 7;
@@ -6897,10 +8874,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for ModemStatus0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for ModemStatus0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// MARC Status Reg. 1
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct MarcStatus1(u8);
 
         /// This register should be read to find what caused the MCU_WAKEUP signal to be asserted
@@ -6946,10 +8936,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for MarcStatus1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for MarcStatus1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// MARC Status Reg. 0
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct MarcStatus0(u8);
 
         pub marc_status0_not_used, _: 7, 4;
@@ -6994,10 +8997,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for MarcStatus0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for MarcStatus0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Power Amplifier Intermediate Frequency Amplifier Test
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct PaIfampTest(u8);
 
         pub pa_ifamp_test_not_used, _: 7, 5;
@@ -7038,10 +9054,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for PaIfampTest {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for PaIfampTest {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Synthesizer Test
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FsrfTest(u8);
 
         pub fsrf_test_not_used, _: 7;
@@ -7079,10 +9108,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FsrfTest {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FsrfTest {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Synthesizer Prescaler Test
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct PreTest(u8);
 
         pub pre_test_not_used, _: 7, 5;
@@ -7114,10 +9156,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for PreTest {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for PreTest {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Frequency Synthesizer Prescaler Override
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct PreOvr(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -7147,10 +9202,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for PreOvr {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for PreOvr {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Analog to Digital Converter Test
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AdcTest(u8);
 
         pub adc_test_not_used, _: 7, 6;
@@ -7182,10 +9250,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AdcTest {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AdcTest {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Digital Divider Chain Test
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct DvcTest(u8);
 
         pub dvc_test_not_used, _: 7, 5;
@@ -7214,10 +9295,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for DvcTest {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for DvcTest {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Analog Test
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Atest(u8);
 
         pub atest_not_used, _: 7;
@@ -7249,10 +9343,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Atest {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Atest {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Analog Test LVDS
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AtestLvds(u8);
 
         pub atest_lvds_not_used, _: 7, 6;
@@ -7284,10 +9391,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AtestLvds {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AtestLvds {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Analog Test Mode
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AtestMode(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -7317,10 +9437,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AtestMode {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AtestMode {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Crystal Oscillator Test Reg. 1
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct XoscTest1(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -7356,10 +9489,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for XoscTest1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for XoscTest1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Crystal Oscillator Test Reg. 0
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct XoscTest0(u8);
 
         /// For test purposes only, use values from SmartRF Studio.
@@ -7386,10 +9532,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for XoscTest0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for XoscTest0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// AES
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Aes(u8);
 
         pub aes_not_used, _: 7, 2;
@@ -7428,10 +9587,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Aes {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Aes {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// MODEM Test
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct MdmTest(u8);
 
         pub mdm_test_not_used, _: 7, 4;
@@ -7460,10 +9632,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for MdmTest {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for MdmTest {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// RX FIFO Pointer First Entry
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Rxfirst(u8);
 
         /// Pointer to the first entry in the RX FIFO
@@ -7490,10 +9675,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Rxfirst {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Rxfirst {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// TX FIFO Pointer First Entry
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Txfirst(u8);
 
         /// Pointer to the first entry in the TX FIFO
@@ -7520,10 +9718,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Txfirst {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Txfirst {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// RX FIFO Pointer Last Entry
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Rxlast(u8);
 
         /// Pointer to the last entry in the RX FIFO
@@ -7550,10 +9761,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Rxlast {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Rxlast {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// TX FIFO Pointer Last Entry
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct Txlast(u8);
 
         /// Pointer to the last entry in the TX FIFO
@@ -7580,10 +9804,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for Txlast {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for Txlast {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// TX FIFO Status
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct NumTxbytes(u8);
 
         /// Number of bytes in the TX FIFO
@@ -7610,10 +9847,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for NumTxbytes {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for NumTxbytes {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// RX FIFO Status
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct NumRxbytes(u8);
 
         /// Number of bytes in the RX FIFO
@@ -7640,10 +9890,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for NumRxbytes {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for NumRxbytes {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// TX FIFO Status
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FifoNumTxbytes(u8);
 
         pub fifo_num_txbytes_not_used, _: 7, 4;
@@ -7672,10 +9935,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FifoNumTxbytes {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FifoNumTxbytes {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// RX FIFO Status
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct FifoNumRxbytes(u8);
 
         pub fifo_num_rxbytes_not_used, _: 7, 4;
@@ -7704,10 +9980,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for FifoNumRxbytes {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for FifoNumRxbytes {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// RX FIFO Status
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct RxfifoPreBuf(u8);
 
         /// Contains the first byte received in the RX FIFO when the RX FIFO is empty (i.e. RXFIRST = RXLAST)
@@ -7734,10 +10023,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for RxfifoPreBuf {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for RxfifoPreBuf {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Key [127:120]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesKey15(u8);
 
         /// 16 bytes AES key, [127:120]
@@ -7764,10 +10066,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesKey15 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesKey15 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Key [119:112]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesKey14(u8);
 
         /// 16 bytes AES key, [119:112]
@@ -7794,10 +10109,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesKey14 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesKey14 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Key [111:104]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesKey13(u8);
 
         /// 16 bytes AES key, [111:104]
@@ -7824,10 +10152,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesKey13 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesKey13 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Key [103:96]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesKey12(u8);
 
         /// 16 bytes AES key, [103:96]
@@ -7854,10 +10195,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesKey12 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesKey12 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Key [95:88]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesKey11(u8);
 
         /// 16 bytes AES key, [95:88]
@@ -7884,10 +10238,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesKey11 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesKey11 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Key [87:80]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesKey10(u8);
 
         /// 16 bytes AES key, [87:80]
@@ -7914,10 +10281,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesKey10 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesKey10 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Key [79:72]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesKey9(u8);
 
         /// 16 bytes AES key, [79:72]
@@ -7944,10 +10324,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesKey9 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesKey9 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Key [71:64]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesKey8(u8);
 
         /// 16 bytes AES key, [71:64]
@@ -7974,10 +10367,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesKey8 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesKey8 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Key [63:56]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesKey7(u8);
 
         /// 16 bytes AES key, [63:56]
@@ -8004,10 +10410,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesKey7 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesKey7 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Key [55:48]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesKey6(u8);
 
         /// 16 bytes AES key, [55:48]
@@ -8034,10 +10453,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesKey6 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesKey6 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Key [47:40]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesKey5(u8);
 
         /// 16 bytes AES key, [47:40]
@@ -8064,10 +10496,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesKey5 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesKey5 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Key [39:32]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesKey4(u8);
 
         /// 16 bytes AES key, [39:32]
@@ -8094,10 +10539,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesKey4 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesKey4 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Key [31:24]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesKey3(u8);
 
         /// 16 bytes AES key, [31:24]
@@ -8124,10 +10582,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesKey3 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesKey3 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Key [23:16]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesKey2(u8);
 
         /// 16 bytes AES key, [23:16]
@@ -8154,10 +10625,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesKey2 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesKey2 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Key [15:8]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesKey1(u8);
 
         /// 16 bytes AES key, [15:8]
@@ -8184,10 +10668,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesKey1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesKey1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Key [7:0]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesKey0(u8);
 
         /// 16 bytes AES key, [7:0]
@@ -8214,10 +10711,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesKey0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesKey0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [127:120]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesBuffer15(u8);
 
         /// AES data buffer [127:120]. The content serves as input to the AES encryption module, and the content will be overwritten with the encrypted data when the AES encryption is completed
@@ -8244,10 +10754,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesBuffer15 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesBuffer15 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [119:112]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesBuffer14(u8);
 
         /// AES data buffer [119:112]. See AES_BUFFER15 for details
@@ -8274,10 +10797,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesBuffer14 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesBuffer14 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [111:104]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesBuffer13(u8);
 
         /// AES data buffer [111:104]. See AES_BUFFER15 for details
@@ -8304,10 +10840,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesBuffer13 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesBuffer13 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [103:93]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesBuffer12(u8);
 
         /// AES data buffer [103:93]. See AES_BUFFER15 for details
@@ -8334,10 +10883,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesBuffer12 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesBuffer12 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [95:88]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesBuffer11(u8);
 
         /// AES data buffer [95:88]. See AES_BUFFER15 for details
@@ -8364,10 +10926,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesBuffer11 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesBuffer11 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [87:80]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesBuffer10(u8);
 
         /// AES data buffer [87:80]. See AES_BUFFER15 for details
@@ -8394,10 +10969,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesBuffer10 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesBuffer10 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [79:72]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesBuffer9(u8);
 
         /// AES data buffer [79:72]. See AES_BUFFER15 for details
@@ -8424,10 +11012,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesBuffer9 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesBuffer9 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [71:64]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesBuffer8(u8);
 
         /// AES data buffer [71:64]. See AES_BUFFER15 for details
@@ -8454,10 +11055,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesBuffer8 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesBuffer8 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [63:56]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesBuffer7(u8);
 
         /// AES data buffer [63:56]. See AES_BUFFER15 for details
@@ -8484,10 +11098,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesBuffer7 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesBuffer7 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [55:48]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesBuffer6(u8);
 
         /// AES data buffer [55:48]. See AES_BUFFER15 for details
@@ -8514,10 +11141,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesBuffer6 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesBuffer6 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [47:40]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesBuffer5(u8);
 
         /// AES data buffer [47:40]. See AES_BUFFER15 for details
@@ -8544,10 +11184,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesBuffer5 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesBuffer5 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [39:32]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesBuffer4(u8);
 
         /// AES data buffer [39:32]. See AES_BUFFER15 for details
@@ -8574,10 +11227,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesBuffer4 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesBuffer4 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [31:24]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesBuffer3(u8);
 
         /// AES data buffer [131:24]. See AES_BUFFER15 for details
@@ -8604,10 +11270,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesBuffer3 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesBuffer3 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [23:16]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesBuffer2(u8);
 
         /// AES data buffer [23:16]. See AES_BUFFER15 for details
@@ -8634,10 +11313,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesBuffer2 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesBuffer2 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [15:8]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesBuffer1(u8);
 
         /// AES data buffer [15:8]. See AES_BUFFER15 for details
@@ -8664,10 +11356,23 @@ pub mod ext {
         }
     }
 
+    impl core::fmt::Debug for AesBuffer1 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesBuffer1 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
+        }
+    }
+
     bitfield! {
         /// Advanced Encryption Standard Buffer [7:0]
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct AesBuffer0(u8);
 
         /// AES data buffer [7:0]. See AES_BUFFER15 for details
@@ -8691,6 +11396,19 @@ pub mod ext {
     impl Default for AesBuffer0 {
         fn default() -> Self {
             Self(0x00)
+        }
+    }
+
+    impl core::fmt::Debug for AesBuffer0 {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "0x{:02x}", self.0)
+        }
+    }
+
+    #[cfg(feature = "defmt")]
+    impl defmt::Format for AesBuffer0 {
+        fn format(&self, fmt: defmt::Formatter) {
+            defmt::write!(fmt, "0x{:02x}", self.0);
         }
     }
 }

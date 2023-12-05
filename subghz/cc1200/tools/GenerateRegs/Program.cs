@@ -57,7 +57,8 @@ var knownVariantNames = new Dictionary<(string, int), string>
     [("TransparentIntfactValue", 0b10)] = "FourTimes",
 };
 
-var filename = "C:\\Program Files (x86)\\Texas Instruments\\SmartRF Tools\\SmartRF Studio 7\\config\\xml\\cc1200\\register_definition.xml";
+// Copied from C:\\Program Files (x86)\\Texas Instruments\\SmartRF Tools\\SmartRF Studio 7\\config\\xml\\cc1200\\register_definition.xml
+var filename = "register_definition.xml";
 await using var file = File.OpenRead(filename);
 using var streamReader = new StreamReader(file, Encoding.UTF8);
 using var xmlReader = XmlReader.Create(streamReader, new XmlReaderSettings
@@ -92,6 +93,7 @@ Console.WriteLine($$"""
     }
 
     #[derive(Clone, Copy, Debug, PartialEq)]
+    #[cfg_attr(feature = "defmt", derive(defmt::Format))]
     pub struct RegisterAddress(pub(crate) u16);
 
     """);
@@ -146,7 +148,7 @@ void WriteRegister(StringBuilder writer, Register register)
     bitfield! {
         /// {{registerDescription}}
         ///
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub struct {{structName}}(u8);
     """);
     foreach (var bitfield in register.Bitfield)
@@ -293,6 +295,25 @@ void WriteRegister(StringBuilder writer, Register register)
         impl Default for {{structName}} {
             fn default() -> Self {
                 Self({{defaultString}})
+            }
+        }
+
+        """);
+
+    writer.AppendLine($$"""
+        impl core::fmt::Debug for {{structName}} {
+            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                write!(f, "0x{:02x}", self.0)
+            }
+        }
+
+        """);
+
+    writer.AppendLine($$"""
+        #[cfg(feature = "defmt")]
+        impl defmt::Format for {{structName}} {
+            fn format(&self, fmt: defmt::Formatter) {
+                defmt::write!(fmt, "0x{:02x}", self.0);
             }
         }
         """);
