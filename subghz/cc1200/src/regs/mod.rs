@@ -4,6 +4,7 @@ use crate::gpio::{Gpio0Output, Gpio1Output, Gpio2Output, Gpio3Output, GpioOutput
 
 mod generated;
 mod marc_state;
+mod register_address;
 pub use generated::*;
 pub use marc_state::MarcStateValue;
 
