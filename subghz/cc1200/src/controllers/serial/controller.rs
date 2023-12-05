@@ -8,7 +8,7 @@ use futures_async_stream::stream;
 use crate::{
     gpio::{Gpio, GpioOutput},
     regs::{
-        ext::FreqoffCfg,
+        ext::{FreqoffCfg, Marcstate},
         pri::{
             AgcCfg3, AgcSyncBehaviourValue, FifoCfg, LengthConfigValue, Mdmcfg1, PktCfg0, PktCfg2,
             PktFormatValue, RfendCfg1, RxoffModeValue,
@@ -236,7 +236,8 @@ impl<
                             };
                         }
                         state => {
-                            let result: Result<(), ControllerError> = async {
+                            let result: Result<Marcstate, ControllerError> = async {
+                                let marcstate = self.driver.read_reg::<Marcstate>().await?;
                                 // Hardware reset the chip
                                 self.driver.reset().await?;
 
@@ -244,12 +245,14 @@ impl<
                                 self.init().await?;
                                 self.setup_receive().await?;
 
-                                Ok(())
+                                Ok(marcstate)
                             }
                             .await;
 
                             yield match result {
-                                Ok(()) => Err(ControllerError::UnrecoverableChipState(state)),
+                                Ok(marcstate) => {
+                                    Err(ControllerError::UnrecoverableChipState(state, marcstate))
+                                }
                                 Err(e) => Err(e),
                             };
                         }

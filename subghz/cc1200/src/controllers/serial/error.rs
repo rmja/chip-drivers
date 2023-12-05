@@ -1,4 +1,4 @@
-use crate::{DriverError, State};
+use crate::{regs::ext::Marcstate, DriverError, State};
 
 #[derive(Debug)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
@@ -6,7 +6,7 @@ pub enum ControllerError {
     Recalibrated,
     FifoOverflow,
     Driver(DriverError),
-    UnrecoverableChipState(State),
+    UnrecoverableChipState(State, Marcstate),
     Offline,
 }
 
@@ -29,8 +29,8 @@ mod tests {
 
     #[test]
     fn display_state_error() {
-        let error = ControllerError::UnrecoverableChipState(State::RX_FIFO_ERROR);
+        let error = ControllerError::UnrecoverableChipState(State::RX_FIFO_ERROR, Marcstate(0x41));
         let msg = format!("{:?}", error);
-        assert_eq!("UnrecoverableChipState(RX_FIFO_ERROR)", &msg);
+        assert_eq!("UnrecoverableChipState(RX_FIFO_ERROR, 0x41)", &msg);
     }
 }
