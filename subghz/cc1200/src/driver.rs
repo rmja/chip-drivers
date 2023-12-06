@@ -213,19 +213,14 @@ where
         &mut self,
         patch: ConfigPatch<'patch>,
     ) -> Result<(), DriverError> {
-        let (pri, ext) = patch.first_address.split(patch.values.len());
-        let (pri_values, ext_values) = patch.values.split_at(pri.1);
-        if !pri_values.is_empty() {
-            self.write_regs(pri.0, pri_values).await?;
+        let (pri, ext) = patch.split_pri_ext();
+        if !pri.is_empty() {
+            self.write_regs(pri.first_address, pri.values).await?;
         }
 
-        if !ext_values.is_empty() {
-            self.write_regs(ext.0, ext_values).await?;
+        if !ext.is_empty() {
+            self.write_regs(ext.first_address, ext.values).await?;
 
-            let ext = ConfigPatch {
-                first_address: ext.0,
-                values: ext_values,
-            };
             if self.freq_off.is_some() && ext.get::<Freqoff1>().is_some()
                 || ext.get::<Freqoff0>().is_some()
             {
