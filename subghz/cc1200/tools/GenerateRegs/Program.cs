@@ -96,7 +96,7 @@ Console.WriteLine($$"""
         fn value(&self) -> u8;
     }
 
-    #[derive(Clone, Copy, Debug, PartialEq)]
+    #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
     #[cfg_attr(feature = "defmt", derive(defmt::Format))]
     pub struct RegisterAddress(pub(crate) u16);
 

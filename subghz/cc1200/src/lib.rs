@@ -36,7 +36,7 @@ pub const RX_FIFO_SIZE: usize = 128;
 pub const TX_FIFO_SIZE: usize = 128;
 
 pub use self::{
-    config::ConfigPatch,
+    config::{Config, ConfigPatch},
     driver::{CalibrationValue, Driver},
     error::DriverError,
     opcode::Strobe,

@@ -1,4 +1,11 @@
 use crate::regs::{ext::IfMixCfg, Register, RegisterAddress};
+pub struct Config(pub [u8; 105]);
+
+impl Default for Config {
+    fn default() -> Self {
+        Self([0; 105])
+    }
+}
 
 #[derive(Clone, Copy)]
 pub struct ConfigPatch<'a> {
@@ -7,6 +14,17 @@ pub struct ConfigPatch<'a> {
 }
 
 impl<'a> ConfigPatch<'a> {
+    pub const fn new(config: &'a Config) -> Self {
+        ConfigPatch {
+            first_address: Iocfg3::ADDRESS,
+            values: &config.0,
+        }
+    }
+
+    pub const fn len(&self) -> usize {
+        self.values.len()
+    }
+
     /// Get a register value, or None if the register is not part of the configuration.
     pub fn get<R: Register>(&self) -> Option<R> {
         let index =
