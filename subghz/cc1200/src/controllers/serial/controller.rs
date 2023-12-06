@@ -185,7 +185,7 @@ impl<
                             });
 
                             if self.recalibrate_timeout <= timestamp {
-                                let result: Result<(), ControllerError> = async {
+                                let result: Result<RxChunk<CHUNK_SIZE>, ControllerError> = async {
                                     // Enter idle state
                                     self.driver.strobe_until_idle(Strobe::SIDLE).await?;
 
@@ -202,23 +202,17 @@ impl<
                                     // Start receiver
                                     self.driver.strobe(Strobe::SRX).await?;
 
-                                    Ok(())
+                                    self.recalibrate_timeout = timestamp + RECALIBRATE_INTERVAL;
+                                    Err(ControllerError::Recalibrated)
                                 }
                                 .await;
-
-                                yield match result {
-                                    Ok(()) => {
-                                        self.recalibrate_timeout = timestamp + RECALIBRATE_INTERVAL;
-                                        Err(ControllerError::Recalibrated)
-                                    }
-                                    Err(e) => Err(e),
-                                };
+                                yield result;
                             }
                         }
                         State::CALIBRATE => {}
                         State::SETTLING => {}
                         State::RX_FIFO_ERROR => {
-                            let result: Result<(), ControllerError> = async {
+                            let result: Result<RxChunk<CHUNK_SIZE>, ControllerError> = async {
                                 // Enter idle state
                                 self.driver.strobe_until_idle(Strobe::SIDLE).await?;
 
@@ -226,14 +220,10 @@ impl<
                                 self.driver.strobe(Strobe::SFRX).await?;
                                 self.driver.strobe(Strobe::SRX).await?;
 
-                                Ok(())
+                                Err(ControllerError::FifoOverflow)
                             }
                             .await;
-
-                            yield match result {
-                                Ok(()) => Err(ControllerError::FifoOverflow),
-                                Err(e) => Err(e),
-                            };
+                            yield result;
                         }
                         state => {
                             let result: Result<RxChunk<CHUNK_SIZE>, ControllerError> = async {
@@ -269,7 +259,6 @@ impl<
                                 }
                             }
                             .await;
-
                             yield result
                         }
                     }
