@@ -6,7 +6,7 @@ use crate::{
         Register, RegisterAddress,
     },
     statusbyte::{State, StatusByte},
-    ConfigPatch, DriverError, PartNumber, Rssi, RX_FIFO_SIZE, TX_FIFO_SIZE,
+    Config, ConfigPatch, DriverError, PartNumber, Rssi, RX_FIFO_SIZE, TX_FIFO_SIZE,
 };
 use embedded_hal::{digital::OutputPin, spi::Operation};
 use embedded_hal_async::{delay, spi};
@@ -231,25 +231,15 @@ where
         Ok(())
     }
 
-    /// Read configuration from chip.
+    /// Read entire configuration from chip.
     /// This action _does_ update `last_status`.
-    pub async fn read<'patch>(
-        &mut self,
-        first_address: RegisterAddress,
-        buffer: &mut [u8],
-    ) -> Result<(), DriverError> {
-        let (pri, ext) = first_address.split(buffer.len());
-        let (pri_buf, ext_buf) = buffer.split_at_mut(pri.1);
-
-        if !pri_buf.is_empty() {
-            self.read_regs(pri.0, pri_buf).await?;
-        }
-
-        if !ext_buf.is_empty() {
-            self.read_regs(ext.0, ext_buf).await?;
-        }
-
-        Ok(())
+    pub async fn read_config(&mut self) -> Result<Config, DriverError> {
+        let mut config = Config([0; 105]);
+        let pri_len = RegisterAddress::PRI_MAX.0 - RegisterAddress::PRI_MIN.0 + 1;
+        let (pri_buf, ext_buf) = config.0.split_at_mut(pri_len as usize);
+        self.read_regs(RegisterAddress::PRI_MIN, pri_buf).await?;
+        self.read_regs(RegisterAddress::EXT_MIN, ext_buf).await?;
+        Ok(config)
     }
 
     /// Read the current RSSI level.

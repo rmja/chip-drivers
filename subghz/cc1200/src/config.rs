@@ -7,12 +7,6 @@ const EXT_MAX: RegisterAddress = RegisterAddress::EXT_MAX;
 
 pub struct Config(pub [u8; 105]);
 
-impl Default for Config {
-    fn default() -> Self {
-        Self([0; 105])
-    }
-}
-
 #[derive(Clone, Copy)]
 pub struct ConfigPatch<'a> {
     pub first_address: RegisterAddress,
