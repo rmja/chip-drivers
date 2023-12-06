@@ -7,6 +7,12 @@ const EXT_MAX: RegisterAddress = RegisterAddress::EXT_MAX;
 
 pub struct Config(pub [u8; 105]);
 
+impl Config {
+    pub const fn patch(&self) -> ConfigPatch {
+        ConfigPatch::new(self)
+    }
+}
+
 #[derive(Clone, Copy)]
 pub struct ConfigPatch<'a> {
     pub first_address: RegisterAddress,
@@ -88,7 +94,7 @@ mod tests {
     #[test]
     fn can_get() {
         let config = wmbus_modecmto::<0>();
-        let patch = ConfigPatch::new(&config);
+        let patch = config.patch();
         let iocfg2 = patch.get::<Iocfg2>().unwrap();
         let freqoff_cfg = patch.get::<FreqoffCfg>().unwrap();
 
@@ -100,7 +106,7 @@ mod tests {
     #[test]
     fn can_split_pri_ext() {
         let config = wmbus_modecmto::<0>();
-        let patch = ConfigPatch::new(&config);
+        let patch = config.patch();
         let (pri, ext) = patch.split_pri_ext();
         assert_eq!(Iocfg3::ADDRESS, pri.first_address);
         assert_eq!(47, pri.values.len());
