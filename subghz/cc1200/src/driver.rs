@@ -1,3 +1,5 @@
+use core::convert::Infallible;
+
 use crate::{
     cmd::{BurstHeader, Response, SingleCommand, Strobe, StrobeCommand},
     regs::{
@@ -8,7 +10,10 @@ use crate::{
     statusbyte::{State, StatusByte},
     Config, ConfigPatch, DriverError, PartNumber, Rssi, RX_FIFO_SIZE, TX_FIFO_SIZE,
 };
-use embedded_hal::{digital::OutputPin, spi::Operation};
+use embedded_hal::{
+    digital::{self, OutputPin},
+    spi::Operation,
+};
 use embedded_hal_async::{delay, spi};
 use futures::{
     future::{self, Either},
@@ -17,7 +22,7 @@ use futures::{
 
 const DEFAULT_RSSI_OFFSET: i16 = -99; // The default offset defined in the users guide
 
-pub struct Driver<Spi, Delay, ResetPin>
+pub struct Driver<Spi, Delay, ResetPin = NoPin>
 where
     Delay: delay::DelayNs,
     ResetPin: OutputPin,
@@ -28,6 +33,22 @@ where
     last_status: Option<StatusByte>,
     rssi_offset: Option<Rssi>,
     freq_off: Option<i16>,
+}
+
+pub struct NoPin;
+
+impl digital::ErrorType for NoPin {
+    type Error = Infallible;
+}
+
+impl digital::OutputPin for NoPin {
+    fn set_low(&mut self) -> Result<(), Self::Error> {
+        Ok(())
+    }
+
+    fn set_high(&mut self) -> Result<(), Self::Error> {
+        Ok(())
+    }
 }
 
 pub struct CalibrationValue<T> {
@@ -56,11 +77,22 @@ where
     Delay: delay::DelayNs,
     ResetPin: OutputPin,
 {
-    pub fn new(spi: Spi, delay: Delay, reset_pin: Option<ResetPin>) -> Self {
+    pub fn new(spi: Spi, delay: Delay) -> Self {
         Self {
             spi,
             delay,
-            reset_pin,
+            reset_pin: None,
+            last_status: None,
+            rssi_offset: Some(DEFAULT_RSSI_OFFSET),
+            freq_off: None,
+        }
+    }
+
+    pub fn new_with_reset(spi: Spi, delay: Delay, reset_pin: ResetPin) -> Self {
+        Self {
+            spi,
+            delay,
+            reset_pin: Some(reset_pin),
             last_status: None,
             rssi_offset: Some(DEFAULT_RSSI_OFFSET),
             freq_off: None,
@@ -474,5 +506,291 @@ pub(crate) fn lo_divider(frequency: u32) -> u8 {
         164_000_000..=192_000_000 => 20,
         136_700_000..=160_000_000 => 24,
         _ => panic!("Invalid frequency select"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use embedded_hal_async_mocks::{delay::MockDelay, spi::MockSpiDevice};
+    use static_cell::make_static;
+
+    use crate::regs::{ext::FreqoffCfg, pri::Iocfg2};
+
+    use super::*;
+
+    #[tokio::test]
+    async fn read_reg_primary() {
+        // Given
+        let mut spi = MockSpiDevice::new();
+        let delay = MockDelay::new();
+
+        spi.expect_transaction_operations(make_static!([Operation::Transfer(
+            make_static!([0x22, 0x33]),
+            &[0x80 | 0x01, 0x00]
+        )]));
+
+        // When
+        let mut driver: Driver<_, _> = Driver::new(spi, delay);
+        let value = driver.read_reg::<Iocfg2>().await.unwrap();
+
+        // Then
+        assert_eq!(0x22, driver.last_status.unwrap().0);
+        assert_eq!(0x33, value.0);
+    }
+
+    #[tokio::test]
+    async fn read_reg_extended() {
+        // Given
+        let mut spi = MockSpiDevice::new();
+        let delay = MockDelay::new();
+
+        spi.expect_transaction_operations(make_static!([Operation::Transfer(
+            make_static!([0x22, 0x00, 0x33]),
+            &[0x80 | 0x2F, 0x01, 0x00]
+        )]));
+
+        // When
+        let mut driver: Driver<_, _> = Driver::new(spi, delay);
+        let value = driver.read_reg::<FreqoffCfg>().await.unwrap();
+
+        // Then
+        assert_eq!(0x22, driver.last_status.unwrap().0);
+        assert_eq!(0x33, value.0);
+    }
+
+    #[tokio::test]
+    async fn read_regs_primary() {
+        // Given
+        let mut spi = MockSpiDevice::new();
+        let delay = MockDelay::new();
+
+        spi.expect_transaction_operations(make_static!([
+            Operation::Transfer(make_static!([0x22]), &[0xC0 | 0x01]),
+            Operation::Read(make_static!([0x33, 0x44]))
+        ]));
+
+        // When
+        let mut driver: Driver<_, _> = Driver::new(spi, delay);
+        let mut buf = [0; 2];
+        driver.read_regs(Iocfg2::ADDRESS, &mut buf).await.unwrap();
+
+        // Then
+        assert_eq!(0x22, driver.last_status.unwrap().0);
+        assert_eq!([0x33, 0x44].as_ref(), buf);
+    }
+
+    #[tokio::test]
+    async fn read_regs_extended() {
+        // Given
+        let mut spi = MockSpiDevice::new();
+        let delay = MockDelay::new();
+
+        spi.expect_transaction_operations(make_static!([
+            Operation::Transfer(make_static!([0x22, 0x00]), &[0xC0 | 0x2F, 0x01]),
+            Operation::Read(make_static!([0x33, 0x44]))
+        ]));
+
+        // When
+        let mut driver: Driver<_, _> = Driver::new(spi, delay);
+        let mut buf = [0; 2];
+        driver
+            .read_regs(FreqoffCfg::ADDRESS, &mut buf)
+            .await
+            .unwrap();
+
+        // Then
+        assert_eq!(0x22, driver.last_status.unwrap().0);
+        assert_eq!([0x33, 0x44].as_ref(), buf);
+    }
+
+    #[tokio::test]
+    async fn read_fifo_raw() {
+        // Given
+        let mut spi = MockSpiDevice::new();
+        let delay = MockDelay::new();
+
+        spi.expect_transaction_operations(make_static!([
+            Operation::Transfer(make_static!([0x22]), &[0xC0 | 0x3F]),
+            Operation::Read(make_static!([0x33, 0x44]))
+        ]));
+
+        // When
+        let mut driver: Driver<_, _> = Driver::new(spi, delay);
+        let mut buf = [0; 2];
+        unsafe { driver.read_fifo_raw(&mut buf).await.unwrap() };
+
+        // Then
+        assert_eq!(0x22, driver.last_status.unwrap().0);
+        assert_eq!([0x33, 0x44].as_ref(), buf);
+    }
+
+    #[tokio::test]
+    async fn read_rssi_and_fifo_raw() {
+        // Given
+        let mut spi = MockSpiDevice::new();
+        let delay = MockDelay::new();
+
+        spi.expect_transaction_operations(make_static!([Operation::Transfer(
+            make_static!([0x00, 0x00, 0x11, 0x22, 0x33, 0x44]),
+            &[0x80 | 0x2F, 0x71, 0x00, 0xC0 | 0x3F, 0x00, 0x00]
+        )]));
+
+        // When
+        let mut driver: Driver<_, _> = Driver::new(spi, delay);
+        let mut buf = [0; 2];
+        let rssi = unsafe {
+            driver
+                .read_rssi_and_fifo_raw(&mut buf)
+                .await
+                .unwrap()
+                .unwrap()
+        };
+
+        // Then
+        assert_eq!(0x11 - 99, rssi);
+        assert_eq!(0x22, driver.last_status.unwrap().0);
+        assert_eq!([0x33, 0x44].as_ref(), buf);
+    }
+
+    #[tokio::test]
+    async fn drain_fifo_0() {
+        // Given
+        let mut spi = MockSpiDevice::new();
+        let delay = MockDelay::new();
+
+        spi.expect_transaction_operations(make_static!([Operation::Transfer(
+            make_static!([0x22, 0x00, 0]),
+            &[0x80 | 0x2F, 0xD7, 0x00]
+        )]));
+
+        // When
+        let mut driver: Driver<_, _> = Driver::new(spi, delay);
+        let discarded = driver.drain_fifo().await.unwrap();
+
+        // Then
+        assert_eq!(0, discarded);
+        assert_eq!(0x22, driver.last_status.unwrap().0);
+    }
+
+    #[tokio::test]
+    async fn drain_fifo_1() {
+        // Given
+        let mut spi = MockSpiDevice::new();
+        let delay = MockDelay::new();
+
+        spi.expect_transaction_operations(make_static!([Operation::Transfer(
+            make_static!([0x00, 0x00, 1]),
+            &[0x80 | 0x2F, 0xD7, 0x00]
+        )]));
+
+        spi.expect_transaction_operations(make_static!([Operation::Transfer(
+            make_static!([0x22, 0x00]),
+            &[0xC0 | 0x3F, 0x00]
+        )]));
+
+        // When
+        let mut driver: Driver<_, _> = Driver::new(spi, delay);
+        let discarded = driver.drain_fifo().await.unwrap();
+
+        // Then
+        assert_eq!(1, discarded);
+        assert_eq!(0x22, driver.last_status.unwrap().0);
+    }
+
+    #[tokio::test]
+    async fn drain_fifo_16() {
+        // Given
+        let mut spi = MockSpiDevice::new();
+        let delay = MockDelay::new();
+
+        spi.expect_transaction_operations(make_static!([Operation::Transfer(
+            make_static!([0x00, 0x00, 16]),
+            &[0x80 | 0x2F, 0xD7, 0x00]
+        )]));
+
+        spi.expect_transaction_operations(make_static!([Operation::Transfer(
+            make_static!([
+                0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00
+            ]),
+            &[
+                0xC0 | 0x3F,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00
+            ]
+        )]));
+
+        // When
+        let mut driver: Driver<_, _> = Driver::new(spi, delay);
+        let discarded = driver.drain_fifo().await.unwrap();
+
+        // Then
+        assert_eq!(16, discarded);
+        assert_eq!(0x22, driver.last_status.unwrap().0);
+    }
+
+    #[tokio::test]
+    async fn drain_fifo_17() {
+        // Given
+        let mut spi = MockSpiDevice::new();
+        let delay = MockDelay::new();
+
+        spi.expect_transaction_operations(make_static!([Operation::Transfer(
+            make_static!([0x00, 0x00, 17]),
+            &[0x80 | 0x2F, 0xD7, 0x00]
+        )]));
+
+        spi.expect_transaction_operations(make_static!([Operation::Transfer(
+            make_static!([
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00
+            ]),
+            &[
+                0xC0 | 0x3F,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00
+            ]
+        )]));
+
+        spi.expect_transaction_operations(make_static!([Operation::Transfer(
+            make_static!([0x22, 0x00]),
+            &[0xC0 | 0x3F, 0x00]
+        )]));
+
+        // When
+        let mut driver: Driver<_, _> = Driver::new(spi, delay);
+        let discarded = driver.drain_fifo().await.unwrap();
+
+        // Then
+        assert_eq!(17, discarded);
+        assert_eq!(0x22, driver.last_status.unwrap().0);
     }
 }

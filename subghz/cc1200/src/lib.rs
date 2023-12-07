@@ -7,6 +7,7 @@
 #![feature(inherent_associated_types)]
 #![feature(let_chains)]
 #![cfg_attr(feature = "serial-controller", feature(coroutines))]
+#![cfg_attr(test, feature(type_alias_impl_trait))]
 
 extern crate bitfield;
 
