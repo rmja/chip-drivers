@@ -170,12 +170,17 @@ impl<
                     let timestamp = Instant::now();
 
                     let mut chunk_bytes = [0; CHUNK_SIZE];
-                    let rssi = unsafe {
-                        self.driver
-                            .read_rssi_and_fifo_raw(&mut chunk_bytes)
-                            .await
-                            .unwrap()
-                    };
+
+                    // This seems to randomly cause the chip to report some invalid status and make it change a few bytes in its configuration
+                    // let rssi = unsafe {
+                    //     self.driver
+                    //         .read_rssi_and_fifo_raw(&mut chunk_bytes)
+                    //         .await
+                    //         .unwrap()
+                    // };
+
+                    let rssi = self.driver.read_rssi().await.unwrap();
+                    unsafe { self.driver.read_fifo_raw(&mut chunk_bytes).await.unwrap() };
 
                     match self.driver.last_status().unwrap().state() {
                         State::RX => {
