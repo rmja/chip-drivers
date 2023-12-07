@@ -9,12 +9,12 @@ use crate::{
     cmd::Strobe,
     gpio::{Gpio, GpioOutput},
     regs::{
-        ext::{FreqoffCfg, Marc2pinStateValue, Marcstate},
+        ext::FreqoffCfg,
         pri::{
             AgcCfg3, AgcSyncBehaviourValue, FifoCfg, LengthConfigValue, Mdmcfg1, PktCfg0, PktCfg2,
             PktFormatValue, RfendCfg1, RxoffModeValue,
         },
-        Iocfg, MarcStateValue,
+        Iocfg,
     },
     ConfigPatch, Driver, Rssi, State,
 };
