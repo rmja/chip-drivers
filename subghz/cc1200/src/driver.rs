@@ -144,8 +144,7 @@ where
         }
     }
 
-    /// Get the spi status returned by the last register read or strobe.
-    /// Writing registers does not update status.
+    /// Get the spi status returned by the last spi operation.
     pub fn last_status(&self) -> Option<StatusByte> {
         self.last_status
     }
@@ -235,8 +234,8 @@ where
         if !ext.is_empty() {
             self.write_regs(ext.first_address, ext.values).await?;
 
-            if self.freq_off.is_some() && ext.get::<Freqoff1>().is_some()
-                || ext.get::<Freqoff0>().is_some()
+            if self.freq_off.is_some()
+                && (ext.get::<Freqoff1>().is_some() || ext.get::<Freqoff0>().is_some())
             {
                 self.write_freq_off().await?;
             }
