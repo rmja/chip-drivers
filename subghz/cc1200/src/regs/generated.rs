@@ -10,10 +10,6 @@ use core::mem::transmute;
 pub trait Register: Clone + Copy + Default + From<u8> {
     const ADDRESS: RegisterAddress;
 
-    fn is_extended() -> bool {
-        Self::ADDRESS.0 > 0x7F
-    }
-
     fn value(&self) -> u8;
 }
 

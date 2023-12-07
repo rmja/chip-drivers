@@ -10,6 +10,14 @@ impl RegisterAddress {
     pub const EXT_MIN: RegisterAddress = IfMixCfg::ADDRESS;
     pub const EXT_MAX: RegisterAddress = PaCfg3::ADDRESS;
 
+    pub const fn is_primary(&self) -> bool {
+        self.0 <= Self::PRI_MAX.0
+    }
+
+    pub const fn is_extended(&self) -> bool {
+        !self.is_primary()
+    }
+
     pub const fn idx(&self) -> usize {
         if self.0 <= Self::PRI_MAX.0 {
             (self.0 - Self::PRI_MIN.0) as usize
