@@ -17,10 +17,10 @@ mod config;
 mod driver;
 mod error;
 pub mod gpio;
-mod opcode;
 pub mod regs;
 mod statusbyte;
 
+mod cmd;
 pub mod configs;
 pub mod controllers;
 
@@ -39,6 +39,5 @@ pub use self::{
     config::{Config, ConfigPatch},
     driver::{CalibrationValue, Driver},
     error::DriverError,
-    opcode::Strobe,
     statusbyte::{State, StatusByte},
 };

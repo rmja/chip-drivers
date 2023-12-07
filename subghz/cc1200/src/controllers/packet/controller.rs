@@ -42,6 +42,7 @@
 use core::marker::PhantomData;
 
 use crate::{
+    cmd::Strobe,
     driver::lo_divider,
     gpio::{Gpio, GpioOutput},
     regs::{
@@ -52,7 +53,7 @@ use crate::{
         },
         Iocfg, Register,
     },
-    ConfigPatch, Driver, Rssi, State, Strobe, RX_FIFO_SIZE, TX_FIFO_SIZE,
+    ConfigPatch, Driver, Rssi, State, RX_FIFO_SIZE, TX_FIFO_SIZE,
 };
 use embassy_time::Instant;
 use embedded_hal_async::{delay::DelayNs, spi};

@@ -1,5 +1,5 @@
 use crate::{
-    opcode::{Opcode, Strobe, OPCODE_MAX},
+    cmd::{BurstHeader, Response, SingleCommand, Strobe, StrobeCommand},
     regs::{
         self,
         ext::{self, Freqoff0, Freqoff1},
@@ -77,7 +77,6 @@ where
     }
 
     /// Send a reset to chip and wait for it to become available.
-    /// This action _does_ update `last_status`.
     pub async fn reset(&mut self) -> Result<(), DriverError> {
         if let Some(reset_pin) = self.reset_pin.as_mut() {
             // Send reset chip sequence
@@ -98,9 +97,8 @@ where
                 Err(DriverError::Timeout)
             }
         } else {
-            self.spi
-                .write(&[Opcode::Strobe(Strobe::SRES).as_u8()])
-                .await?;
+            const CMD: StrobeCommand = StrobeCommand::new(Strobe::SRES);
+            self.spi.write(CMD.request.as_ref()).await?;
             let status = Self::wait_for_xtal(&mut self.spi, &mut self.delay).await?;
             self.last_status = status;
 
@@ -121,7 +119,6 @@ where
     }
 
     /// Read the chip part number.
-    /// This action _does_ update `last_status`.
     pub async fn read_part_number(&mut self) -> Result<PartNumber, DriverError> {
         let partnumber = self.read_reg::<regs::ext::Partnumber>().await?;
         match partnumber.partnum() {
@@ -132,83 +129,68 @@ where
     }
 
     /// Read a single register value from chip.
-    /// This action _does_ update `last_status`.
     pub async fn read_reg<R: Register>(&mut self) -> Result<R, DriverError> {
-        let mut tx_buffer = [0; OPCODE_MAX + 1];
-        let opcode_len = Opcode::ReadSingle(R::ADDRESS).assign(&mut tx_buffer);
-        let tx = &tx_buffer[..opcode_len + 1];
+        let mut cmd = SingleCommand::read(R::ADDRESS);
 
-        let mut rx_buffer = [0; OPCODE_MAX + 1];
-        let rx = &mut rx_buffer[..tx.len()];
+        self.spi
+            .transfer(cmd.response.as_mut(), cmd.request.as_ref())
+            .await?;
 
-        self.spi.transfer(rx, tx).await?;
-        self.last_status = Some(StatusByte(rx[0]));
-
-        Ok(R::from(rx[rx.len() - 1]))
+        self.last_status = Some(cmd.response.status_byte());
+        Ok(R::from(cmd.response.value()))
     }
 
     /// Read a sequence of register values from chip.
-    /// This action _does_ update `last_status`.
     pub async fn read_regs(
         &mut self,
         first: RegisterAddress,
         buffer: &mut [u8],
     ) -> Result<(), DriverError> {
-        let mut opcode_tx_buffer = [0; OPCODE_MAX];
-        let opcode_len = Opcode::read(first, buffer.len() > 1).assign(&mut opcode_tx_buffer);
-        let opcode_tx = &opcode_tx_buffer[..opcode_len];
-
-        let mut opcode_rx_buffer = [0; OPCODE_MAX];
-        let opcode_rx = &mut opcode_rx_buffer[..opcode_tx.len()];
+        let mut header = BurstHeader::read(first);
 
         self.spi
             .transaction(&mut [
-                Operation::Transfer(opcode_rx, &opcode_tx),
+                Operation::Transfer(header.response.as_mut(), header.request.as_ref()),
                 Operation::Read(buffer),
             ])
             .await?;
 
-        let status = StatusByte(opcode_rx[0]);
-        self.last_status = Some(status);
-
+        self.last_status = Some(header.response.status_byte());
         Ok(())
     }
 
     /// Write a single register value to chip.
-    /// This action _does not_ update `last_status`.
     pub async fn write_reg<R: Register>(&mut self, reg: R) -> Result<(), DriverError> {
-        let mut tx_buffer = [0; OPCODE_MAX + 1];
-        let opcode_len = Opcode::WriteSingle(R::ADDRESS).assign(&mut tx_buffer);
-        let tx = &mut tx_buffer[0..opcode_len + 1];
-        tx[opcode_len] = reg.value();
+        let mut cmd = SingleCommand::write(R::ADDRESS, reg.value());
 
-        self.spi.write(tx).await?;
+        self.spi
+            .transfer(cmd.response.as_mut(), cmd.request.as_ref())
+            .await?;
 
-        self.last_status = None;
+        self.last_status = Some(cmd.response.status_byte());
         Ok(())
     }
 
     /// Write a sequence of register values to chip.
-    /// This action _does not_ update `last_status`.
     pub async fn write_regs(
         &mut self,
         first: RegisterAddress,
         values: &[u8],
     ) -> Result<(), DriverError> {
-        let mut opcode_tx_buffer = [0; OPCODE_MAX];
-        let opcode_len = Opcode::write(first, values.len() > 1).assign(&mut opcode_tx_buffer);
-        let opcode_tx = &opcode_tx_buffer[..opcode_len];
+        let mut header = BurstHeader::write(first);
 
         self.spi
-            .transaction(&mut [Operation::Write(opcode_tx), Operation::Write(values)])
+            .transaction(&mut [
+                Operation::Transfer(header.response.as_mut(), header.request.as_ref()),
+                Operation::Write(values),
+            ])
             .await?;
 
-        self.last_status = None;
+        self.last_status = Some(header.response.status_byte());
         Ok(())
     }
 
     /// Write a configuration patch to chip.
-    /// This action _does not_ update `last_status`.
     pub async fn write_patch<'patch>(
         &mut self,
         patch: ConfigPatch<'patch>,
@@ -232,7 +214,6 @@ where
     }
 
     /// Read entire configuration from chip.
-    /// This action _does_ update `last_status`.
     pub async fn read_config(&mut self) -> Result<Config, DriverError> {
         let mut config = Config([0; 105]);
         let pri_len = RegisterAddress::PRI_MAX.0 - RegisterAddress::PRI_MIN.0 + 1;
@@ -243,14 +224,12 @@ where
     }
 
     /// Read the current RSSI level.
-    /// This action _does_ update `last_status`.
     pub async fn read_rssi(&mut self) -> Result<Option<Rssi>, DriverError> {
         let rssi = self.read_reg::<ext::Rssi1>().await?.rssi_11_4();
         Ok(self.map_rssi(rssi))
     }
 
     /// Read from the RX fifo by first reading the length and then read what is available.
-    /// This action _does_ update `last_status`.
     pub async fn read_fifo(&mut self, buffer: &mut [u8]) -> Result<usize, DriverError> {
         let available = self.read_reg::<ext::NumRxbytes>().await?.rxbytes() as usize;
         let len = core::cmp::min(core::cmp::min(available, buffer.len()), RX_FIFO_SIZE);
@@ -259,27 +238,23 @@ where
     }
 
     /// Read from the RX fifo by explicitly reading a pre-known amount corresponding to a known number of items in the buffer.
-    /// This action _does_ update `last_status`.
     pub async unsafe fn read_fifo_raw(&mut self, buffer: &mut [u8]) -> Result<(), DriverError> {
         assert!(buffer.len() <= RX_FIFO_SIZE);
 
-        const OPCODE_TX: [u8; 1] = [Opcode::ReadFifoBurst.as_u8()];
-        let mut opcode_rx = [0];
+        let mut header = BurstHeader::read_fifo();
 
         self.spi
             .transaction(&mut [
-                Operation::Transfer(&mut opcode_rx, &OPCODE_TX),
+                Operation::Transfer(&mut header.response.as_mut(), header.request.as_ref()),
                 Operation::Read(buffer),
             ])
             .await?;
 
-        let status = StatusByte(opcode_rx[0]);
-        self.last_status = Some(status);
+        self.last_status = Some(header.response.status_byte());
         Ok(())
     }
 
     /// Read from the RX fifo by explicitly reading a pre-known amount corresponding to a known number of items in the buffer.
-    /// This action _does_ update `last_status`.
     pub async unsafe fn read_rssi_and_fifo_raw(
         &mut self,
         buffer: &mut [u8],
@@ -290,58 +265,50 @@ where
         let mut tx_buf: [u8; 4 + RX_FIFO_SIZE] = [0; 4 + RX_FIFO_SIZE];
         let mut rx_buf = [0; 4 + RX_FIFO_SIZE];
 
-        assert_eq!(
-            2,
-            Opcode::ReadSingle(ext::Rssi1::ADDRESS).assign(&mut tx_buf)
-        );
-        tx_buf[3] = Opcode::ReadFifoBurst.as_u8();
+        tx_buf[0..3].copy_from_slice(SingleCommand::read(ext::Rssi1::ADDRESS).request.as_ref());
+        tx_buf[3..4].copy_from_slice(BurstHeader::read_fifo().request.as_ref());
 
         let tx = &tx_buf[..4 + len];
         let rx = &mut rx_buf[..4 + len];
 
         self.spi.transfer(rx, tx).await?;
 
-        // The status byte is emitted twice by the chip as we send two opcodes
-        let status = StatusByte(rx[3]);
-        self.last_status = Some(status);
+        // The status byte is emitted twice by the chip as we send two opcodes in the same transfer
+        self.last_status = Some(StatusByte(rx[3]));
         buffer.copy_from_slice(&rx[4..]);
         Ok(self.map_rssi(rx[2]))
     }
 
     /// Empty the RX fifo.
-    /// This action _does_ update `last_status`.
     pub async fn drain_fifo(&mut self) -> Result<(), DriverError> {
         let mut available = self.read_reg::<ext::NumRxbytes>().await?.rxbytes() as usize;
         if available > 0 {
-            let mut opcode = [0; 1 + 16];
-            opcode[0] = Opcode::ReadFifoBurst.as_u8();
-            while available > opcode.len() {
-                self.spi.write(&opcode).await?;
-                available -= opcode.len();
+            let mut tx_buf = [0; 1 + 16];
+            tx_buf[0..1].copy_from_slice(BurstHeader::read_fifo().request.as_ref());
+            while available > tx_buf.len() {
+                self.spi.write(&tx_buf).await?;
+                available -= tx_buf.len();
             }
 
-            self.spi.write(&opcode[..1 + available]).await?;
+            self.spi.write(&tx_buf[..1 + available]).await?;
         }
         Ok(())
     }
 
     /// Write to the TX fifo.
-    /// This action _does_ update `last_status`.
     pub async fn write_fifo(&mut self, buffer: &[u8]) -> Result<(), DriverError> {
         assert!(buffer.len() <= TX_FIFO_SIZE);
 
-        const OPCODE_TX: [u8; 1] = [Opcode::WriteFifoBurst.as_u8()];
-        let mut opcode_rx = [0];
+        let mut header = BurstHeader::write_fifo();
 
         self.spi
             .transaction(&mut [
-                Operation::Transfer(&mut opcode_rx, &OPCODE_TX),
+                Operation::Transfer(header.response.as_mut(), header.request.as_ref()),
                 Operation::Write(buffer),
             ])
             .await?;
 
-        let status = StatusByte(opcode_rx[0]);
-        self.last_status = Some(status);
+        self.last_status = Some(header.response.status_byte());
         Ok(())
     }
 
@@ -355,22 +322,20 @@ where
     }
 
     /// Strobe a command to the chip.
-    /// This action _does_ update `last_status`.
     pub async fn strobe(&mut self, strobe: Strobe) -> Result<(), DriverError> {
         assert_ne!(Strobe::SRES, strobe);
 
-        let opcode_tx = [Opcode::Strobe(strobe).as_u8()];
-        let mut opcode_rx = [0];
+        let mut cmd = StrobeCommand::new(strobe);
 
-        self.spi.transfer(&mut opcode_rx, &opcode_tx).await?;
+        self.spi
+            .transfer(cmd.response.as_mut(), cmd.request.as_ref())
+            .await?;
 
-        let status = StatusByte(opcode_rx[0]);
-        self.last_status = Some(status);
+        self.last_status = Some(cmd.response.status_byte());
         Ok(())
     }
 
     /// Strobe a command to the chip, and continue to do so until `pred` is satisfied.
-    /// This action _does_ update `last_status`.
     pub async fn strobe_until<Pred>(
         &mut self,
         strobe: Strobe,
@@ -381,12 +346,13 @@ where
     {
         assert_ne!(Strobe::SRES, strobe);
 
-        let opcode_tx = [Opcode::Strobe(strobe).as_u8()];
-        let mut opcode_rx = [0];
+        let mut cmd = StrobeCommand::new(strobe);
 
         loop {
-            self.spi.transfer(&mut opcode_rx, &opcode_tx).await?;
-            let status = StatusByte(opcode_rx[0]);
+            self.spi
+                .transfer(cmd.response.as_mut(), cmd.request.as_ref())
+                .await?;
+            let status = cmd.response.status_byte();
             if pred(status) {
                 self.last_status = Some(status);
                 return Ok(());
@@ -395,7 +361,6 @@ where
     }
 
     /// Strobe a command to the chip, and continue to do so until the chip enters the IDLE state.
-    /// This action _does_ update `last_status`.
     pub async fn strobe_until_idle(&mut self, strobe: Strobe) -> Result<(), DriverError> {
         self.strobe_until(strobe, |status| status.state() == State::IDLE)
             .await
@@ -425,12 +390,12 @@ where
     }
 
     async fn miso_wait_low(spi: &mut Spi) -> Result<StatusByte, Spi::Error> {
-        const OPCODE_TX: [u8; 1] = [Opcode::Strobe(Strobe::SNOP).as_u8()];
-        let mut opcode_rx = [0];
+        let mut cmd = StrobeCommand::new(Strobe::SNOP);
 
         loop {
-            spi.transfer(&mut opcode_rx, &OPCODE_TX).await?;
-            let status = StatusByte(opcode_rx[0]);
+            spi.transfer(cmd.response.as_mut(), cmd.request.as_ref())
+                .await?;
+            let status = cmd.response.status_byte();
             if status.chip_rdy() {
                 return Ok(status);
             }

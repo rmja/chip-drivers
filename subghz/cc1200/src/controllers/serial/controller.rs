@@ -6,6 +6,7 @@ use futures::Stream;
 use futures_async_stream::stream;
 
 use crate::{
+    cmd::Strobe,
     gpio::{Gpio, GpioOutput},
     regs::{
         ext::{FreqoffCfg, Marc2pinStateValue, Marcstate},
@@ -15,7 +16,7 @@ use crate::{
         },
         Iocfg, MarcStateValue,
     },
-    ConfigPatch, Driver, Rssi, State, Strobe,
+    ConfigPatch, Driver, Rssi, State,
 };
 
 use super::ControllerError;
