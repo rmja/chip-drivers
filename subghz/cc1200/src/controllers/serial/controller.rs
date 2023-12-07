@@ -226,42 +226,7 @@ impl<
                             .await;
                             yield result;
                         }
-                        state => {
-                            let result: Result<RxChunk<CHUNK_SIZE>, ControllerError> = async {
-                                // Poll the marcstate register to figure out what is wrong
-                                let marcstate = self.driver.read_reg::<Marcstate>().await?;
-                                if marcstate.marc_2pin_state() == Marc2pinStateValue::Rx
-                                    && marcstate.marc_state() == MarcStateValue::RX
-                                {
-                                    // Transient communication error: It seems that we first received some unknown state,
-                                    // but now it seems that we are back in the RX state
-
-                                    // TODO: REMOVE HARDWARE RESET, INIT, AND SETUP_RECEIVE...
-                                    // Hardware reset the chip
-                                    self.driver.reset().await?;
-
-                                    // Re-initialize and start the receiver
-                                    self.init().await?;
-                                    self.setup_receive().await?;
-
-                                    // No need to make an effort to reset the chip
-                                    Err(ControllerError::TransientChipError(state, marcstate))
-                                } else {
-                                    // It seems that we are not currently receiving
-
-                                    // Hardware reset the chip
-                                    self.driver.reset().await?;
-
-                                    // Re-initialize and start the receiver
-                                    self.init().await?;
-                                    self.setup_receive().await?;
-
-                                    Err(ControllerError::UnrecoverableChipState(state, marcstate))
-                                }
-                            }
-                            .await;
-                            yield result
-                        }
+                        state => yield Err(ControllerError::UnrecoverableChipState(state)),
                     }
                 }
                 Ok(_) => panic!("Unable to wait for high on transition pin"),
