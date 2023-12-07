@@ -812,4 +812,47 @@ mod tests {
         // Then
         assert_eq!(0x22, driver.last_status.unwrap().0);
     }
+
+    #[tokio::test]
+    async fn strobe() {
+        // Given
+        let mut spi = MockSpiDevice::new();
+        let delay = MockDelay::new();
+
+        spi.expect_transaction_operations(make_static!([Operation::Transfer(
+            make_static!([0x22]),
+            &[0x3D]
+        )]));
+
+        // When
+        let mut driver: Driver<_, _> = Driver::new(spi, delay);
+        driver.strobe(Strobe::SNOP).await.unwrap();
+
+        // Then
+        assert_eq!(0x22, driver.last_status.unwrap().0);
+    }
+
+    #[tokio::test]
+    async fn strobe_until_idle() {
+        // Given
+        let mut spi = MockSpiDevice::new();
+        let delay = MockDelay::new();
+
+        spi.expect_transaction_operations(make_static!([Operation::Transfer(
+            make_static!([0x10]), // RX
+            &[0x3D]
+        )]));
+
+        spi.expect_transaction_operations(make_static!([Operation::Transfer(
+            make_static!([0x00]), // IDLE
+            &[0x3D]
+        )]));
+
+        // When
+        let mut driver: Driver<_, _> = Driver::new(spi, delay);
+        driver.strobe_until_idle(Strobe::SNOP).await.unwrap();
+
+        // Then
+        assert_eq!(0x00, driver.last_status.unwrap().0);
+    }
 }

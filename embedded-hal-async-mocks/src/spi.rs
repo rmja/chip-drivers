@@ -43,7 +43,8 @@ impl MockSpiDevice<u8> {
                     Self::assign(dest, src);
                 }
                 Ok(())
-            });
+            })
+            .times(1);
     }
 
     fn is_match(x: &Operation<'_, u8>, y: &Operation<'_, u8>) -> bool {
