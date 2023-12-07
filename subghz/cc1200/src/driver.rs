@@ -280,19 +280,27 @@ where
     }
 
     /// Empty the RX fifo.
-    pub async fn drain_fifo(&mut self) -> Result<(), DriverError> {
+    pub async fn drain_fifo(&mut self) -> Result<usize, DriverError> {
         let mut available = self.read_reg::<ext::NumRxbytes>().await?.rxbytes() as usize;
+        let discarded = available;
         if available > 0 {
             let mut tx_buf = [0; 1 + 16];
+            let mut rx_buf = [0; 1 + 16];
             tx_buf[0..1].copy_from_slice(BurstHeader::read_fifo().request.as_ref());
-            while available > tx_buf.len() {
-                self.spi.write(&tx_buf).await?;
-                available -= tx_buf.len();
+            while available > 16 {
+                self.spi.transfer(&mut rx_buf, &tx_buf).await?;
+                available -= 16;
             }
 
-            self.spi.write(&tx_buf[..1 + available]).await?;
+            if available > 0 {
+                self.spi
+                    .transfer(&mut rx_buf[..1 + available], &tx_buf[..1 + available])
+                    .await?;
+            }
+
+            self.last_status = Some(StatusByte(rx_buf[0]));
         }
-        Ok(())
+        Ok(discarded)
     }
 
     /// Write to the TX fifo.
