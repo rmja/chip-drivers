@@ -793,4 +793,23 @@ mod tests {
         assert_eq!(17, discarded);
         assert_eq!(0x22, driver.last_status.unwrap().0);
     }
+
+    #[tokio::test]
+    async fn write_fifo() {
+        // Given
+        let mut spi = MockSpiDevice::new();
+        let delay = MockDelay::new();
+
+        spi.expect_transaction_operations(make_static!([
+            Operation::Transfer(make_static!([0x22]), &[0x40 | 0x3F]),
+            Operation::Write(make_static!([0x33, 0x44]))
+        ]));
+
+        // When
+        let mut driver: Driver<_, _> = Driver::new(spi, delay);
+        driver.write_fifo(&[0x33, 0x44]).await.unwrap();
+
+        // Then
+        assert_eq!(0x22, driver.last_status.unwrap().0);
+    }
 }
