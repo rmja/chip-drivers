@@ -13,11 +13,11 @@ sim900 = []
 # atat = { version = "0.20", features = ["async"] }
 atat = { version = "0.20", features = [
     "async",
-], git = "https://github.com/BlackbirdHQ/atat", rev = "38e0322" }
+], git = "https://github.com/BlackbirdHQ/atat", rev = "23d9c18" }
 defmt = { version = "0.3", optional = true }
 embassy-sync = "0.5"
 embassy-time = "0.2"
-embedded-hal = "1.0.0-rc.1"
+embedded-hal = "1.0.0-rc.2"
 embedded-io = "0.6"
 embedded-io-async = "0.6"
 embedded-nal-async = "0.7"
