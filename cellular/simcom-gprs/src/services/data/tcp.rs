@@ -1,6 +1,6 @@
 use core::sync::atomic::Ordering;
 
-use atat::{asynch::AtatClient, AtatCmd, AtatUrcChannel};
+use atat::{asynch::AtatClient, AtatCmd};
 use core::fmt::Write as _;
 use embassy_time::{with_timeout, Duration, Instant};
 use embedded_io_async::{Read, Write};
@@ -12,22 +12,18 @@ use crate::{
         tcpip::{ReadData, SendData, StartConnection, WriteData},
         urc::Urc,
     },
-    device::{Handle, URC_CAPACITY, URC_SUBSCRIBERS},
+    device::Handle,
+    SimcomUrcChannel,
 };
 
 use super::{DataService, SocketError, SOCKET_STATE_DROPPED, SOCKET_STATE_USED};
 
-impl<
-        'buf,
-        'dev,
-        'sub,
-        AtCl: AtatClient + 'static,
-        AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>,
-    > TcpConnect for DataService<'buf, 'dev, 'sub, AtCl, AtUrcCh>
+impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpConnect
+    for DataService<'buf, 'dev, 'sub, AtCl>
 {
     type Error = SocketError;
 
-    type Connection<'a> = TcpSocket<'buf, 'dev, 'sub, AtCl, AtUrcCh> where Self : 'a;
+    type Connection<'a> = TcpSocket<'buf, 'dev, 'sub, AtCl> where Self : 'a;
 
     async fn connect<'a>(
         &'a self,
@@ -52,29 +48,16 @@ impl<
     }
 }
 
-pub struct TcpSocket<
-    'buf,
-    'dev,
-    'sub,
-    AtCl: AtatClient,
-    AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>,
-> {
+pub struct TcpSocket<'buf, 'dev, 'sub, AtCl: AtatClient> {
     id: usize,
     handle: &'dev Handle<'sub, AtCl>,
-    urc_channel: &'buf AtUrcCh,
+    urc_channel: &'buf SimcomUrcChannel,
 }
 
-impl<
-        'buf,
-        'dev,
-        'sub,
-        AtCl: AtatClient + 'static,
-        AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>,
-    > TcpSocket<'buf, 'dev, 'sub, AtCl, AtUrcCh>
-{
+impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpSocket<'buf, 'dev, 'sub, AtCl> {
     pub(crate) fn try_new(
         handle: &'dev Handle<'sub, AtCl>,
-        urc_channel: &'buf AtUrcCh,
+        urc_channel: &'buf SimcomUrcChannel,
     ) -> Result<Self, SocketError> {
         let id = handle.take_unused()?;
         Ok(Self {
@@ -298,15 +281,11 @@ impl<
     }
 }
 
-impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>>
-    embedded_io::ErrorType for TcpSocket<'_, '_, '_, AtCl, AtUrcCh>
-{
+impl<AtCl: AtatClient> embedded_io::ErrorType for TcpSocket<'_, '_, '_, AtCl> {
     type Error = SocketError;
 }
 
-impl<AtCl: AtatClient + 'static, AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>> Read
-    for TcpSocket<'_, '_, '_, AtCl, AtUrcCh>
-{
+impl<AtCl: AtatClient + 'static> Read for TcpSocket<'_, '_, '_, AtCl> {
     async fn read(&mut self, buf: &mut [u8]) -> Result<usize, SocketError> {
         match self.read(buf).await {
             Ok(len) => Ok(len),
@@ -316,9 +295,7 @@ impl<AtCl: AtatClient + 'static, AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_
     }
 }
 
-impl<AtCl: AtatClient + 'static, AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>> Write
-    for TcpSocket<'_, '_, '_, AtCl, AtUrcCh>
-{
+impl<AtCl: AtatClient + 'static> Write for TcpSocket<'_, '_, '_, AtCl> {
     async fn write(&mut self, buf: &[u8]) -> Result<usize, SocketError> {
         self.write(buf).await
     }
@@ -331,9 +308,7 @@ impl<AtCl: AtatClient + 'static, AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_
     }
 }
 
-impl<AtCl: AtatClient, AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>> Drop
-    for TcpSocket<'_, '_, '_, AtCl, AtUrcCh>
-{
+impl<AtCl: AtatClient> Drop for TcpSocket<'_, '_, '_, AtCl> {
     fn drop(&mut self) {
         // Only set DROPPED state if the connection is not already closed
         if self.handle.socket_state[self.id]
@@ -359,9 +334,10 @@ mod tests {
     use embedded_nal_async::{IpAddr, Ipv4Addr, SocketAddr};
 
     use crate::{
-        device::{ModemConfig, SocketState, SOCKET_STATE_UNKNOWN, SOCKET_STATE_UNUSED},
+        device::{SocketState, SOCKET_STATE_UNKNOWN, SOCKET_STATE_UNUSED},
         services::serial_mock::{RxMock, SerialMock},
-        Device, SimcomBuffers, MAX_SOCKETS,
+        SimcomClient, SimcomConfig, SimcomDevice, SimcomIngress, SimcomResponseChannel,
+        MAX_SOCKETS,
     };
 
     use super::*;
@@ -369,7 +345,7 @@ mod tests {
     struct Config(ResetPin);
     struct ResetPin(bool);
 
-    impl ModemConfig for Config {
+    impl SimcomConfig for Config {
         type ResetPin = ResetPin;
 
         fn reset_pin(&mut self) -> &mut Self::ResetPin {
@@ -395,27 +371,49 @@ mod tests {
 
     macro_rules! setup_atat {
         () => {{
-            static BUFFERS: SimcomBuffers<128> = SimcomBuffers::new();
+            static RES_CHANNEL: SimcomResponseChannel<128> = SimcomResponseChannel::new();
+            static URC_CHANNEL: SimcomUrcChannel = SimcomUrcChannel::new();
             static SERIAL: SerialMock = SerialMock::new();
             let (tx, rx) = SERIAL.split();
-            let (ingress, device) = Device::from_buffers(&BUFFERS, tx, Config(ResetPin(true)));
+            let ingress = SimcomIngress::new(&RES_CHANNEL, &URC_CHANNEL);
+            let config = Config(ResetPin(true));
+            let client = SimcomClient::new(tx, &RES_CHANNEL, config.atat_config());
+            let device = SimcomDevice::new(client, &URC_CHANNEL, 128, config);
             (ingress, device, rx)
         }};
     }
 
-    async fn connect<
-        'buf,
-        'dev,
-        'sub,
-        AtCl: AtatClient + 'static,
-        AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS> + Send + 'static,
-        Config: ModemConfig,
-    >(
+    async fn _hello_world_example() {
+        const INGRESS_BUF_SIZE: usize = 128;
+        static RES_CHANNEL: SimcomResponseChannel<INGRESS_BUF_SIZE> = SimcomResponseChannel::new();
+        static URC_CHANNEL: SimcomUrcChannel = SimcomUrcChannel::new();
+        static SERIAL: SerialMock = SerialMock::new();
+        let (tx, _rx) = SERIAL.split();
+        let _ingress = SimcomIngress::new(&RES_CHANNEL, &URC_CHANNEL);
+        let config = Config(ResetPin(true));
+        let client = SimcomClient::new(tx, &RES_CHANNEL, config.atat_config());
+        let mut device = SimcomDevice::new(client, &URC_CHANNEL, INGRESS_BUF_SIZE, config);
+
+        // Run in a different task
+        // ingress.read_from(rx);
+
+        device.network().attach(None).await.unwrap();
+
+        device.reset().await.unwrap();
+        device.setup().await.unwrap();
+
+        let mut network = device.network();
+        network.attach(None).await.unwrap();
+
+        let _tcp = device.data("internet".into()).await.unwrap();
+    }
+
+    async fn connect<'buf, 'dev, 'sub, AtCl: AtatClient + 'static, Config: SimcomConfig>(
         ingress: &mut impl AtatIngress,
-        device: &'dev mut Device<'buf, 'sub, AtCl, AtUrcCh, Config>,
+        device: &'dev mut SimcomDevice<'buf, 'sub, AtCl, Config>,
         serial: &mut RxMock<'_>,
         id: usize,
-    ) -> TcpSocket<'buf, 'dev, 'sub, AtCl, AtUrcCh> {
+    ) -> TcpSocket<'buf, 'dev, 'sub, AtCl> {
         for _ in 0..MAX_SOCKETS {
             device
                 .handle

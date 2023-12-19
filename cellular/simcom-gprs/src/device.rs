@@ -1,21 +1,16 @@
 use core::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 
-use atat::{
-    asynch::{AtatClient, Client},
-    AtatUrcChannel, UrcSubscription,
-};
+use atat::{asynch::AtatClient, UrcSubscription};
 use embassy_sync::{blocking_mutex::raw::NoopRawMutex, mutex::Mutex};
-use embassy_time::{Duration, Instant, Timer};
+use embassy_time::{Duration, Timer};
 use embedded_hal::digital::OutputPin;
-use embedded_io_async::Write;
 use futures_intrusive::sync::LocalMutex;
 use heapless::Vec;
 
 use crate::{
     commands::{gsm, urc::Urc, v25ter, AT},
     services::data::SocketError,
-    DriverError, PartNumber, SimcomBuffers, SimcomDigester, SimcomIngress, SimcomUrcChannel,
-    MAX_SOCKETS,
+    DriverError, FlowControl, PartNumber, SimcomConfig, SimcomUrcChannel, MAX_SOCKETS,
 };
 
 pub(crate) const URC_CAPACITY: usize = 1 + 3 * (1 + MAX_SOCKETS); // A dns reply, and (SEND OK + RXGET + CLOSED) per socket + background subscription
@@ -27,37 +22,12 @@ pub(crate) const SOCKET_STATE_UNUSED: u8 = 1;
 pub(crate) const SOCKET_STATE_USED: u8 = 2;
 pub(crate) const SOCKET_STATE_DROPPED: u8 = 3;
 
-pub struct Device<
-    'buf,
-    'sub,
-    AtCl: AtatClient,
-    AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>,
-    Config: ModemConfig,
-> {
+pub struct SimcomDevice<'buf, 'sub, AtCl: AtatClient, Config: SimcomConfig> {
     pub handle: Handle<'sub, AtCl>,
-    pub(crate) urc_channel: &'buf AtUrcCh,
+    pub(crate) urc_channel: &'buf SimcomUrcChannel,
     pub(crate) part_number: Option<PartNumber>,
     pub(crate) data_service_taken: AtomicBool,
     config: Config,
-}
-
-pub trait ModemConfig {
-    type ResetPin: OutputPin;
-
-    const FLOW_CONTROL: FlowControl = FlowControl::None;
-
-    fn reset_pin(&mut self) -> &mut Self::ResetPin;
-
-    fn get_response_timeout(start: Instant, timeout: Duration) -> Instant {
-        start + timeout
-    }
-}
-
-pub enum FlowControl {
-    /// No flow control is being used
-    None,
-    /// Hardware flow control
-    RtsCts,
 }
 
 pub struct Handle<'sub, AtCl: AtatClient> {
@@ -70,46 +40,14 @@ pub struct Handle<'sub, AtCl: AtatClient> {
         Mutex<NoopRawMutex, UrcSubscription<'sub, Urc, URC_CAPACITY, URC_SUBSCRIBERS>>,
 }
 
-impl<'buf, 'sub, W: Write, Config: ModemConfig, const INGRESS_BUF_SIZE: usize>
-    Device<'buf, 'sub, Client<'buf, W, INGRESS_BUF_SIZE>, SimcomUrcChannel, Config>
-where
-    'buf: 'sub,
-{
-    pub fn from_buffers(
-        buffers: &'buf SimcomBuffers<INGRESS_BUF_SIZE>,
-        tx: W,
-        config: Config,
-    ) -> (
-        SimcomIngress<INGRESS_BUF_SIZE>,
-        Device<'buf, 'sub, Client<'buf, W, INGRESS_BUF_SIZE>, SimcomUrcChannel, Config>,
-    ) {
-        let (ingress, client) = buffers.split(
-            tx,
-            SimcomDigester::new(),
-            atat::Config::new().get_response_timeout(Config::get_response_timeout),
-        );
-
-        (
-            ingress,
-            Device::new(client, &buffers.urc_channel, INGRESS_BUF_SIZE, config),
-        )
-    }
-}
-
-impl<
-        'buf,
-        'sub,
-        AtCl: AtatClient,
-        AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>,
-        Config: ModemConfig,
-    > Device<'buf, 'sub, AtCl, AtUrcCh, Config>
+impl<'buf, 'sub, AtCl: AtatClient, Config: SimcomConfig> SimcomDevice<'buf, 'sub, AtCl, Config>
 where
     'buf: 'sub,
 {
     /// Create a new device given an AT client
     pub fn new(
         client: AtCl,
-        urc_channel: &'buf AtUrcCh,
+        urc_channel: &'buf SimcomUrcChannel,
         max_urc_len: usize,
         config: Config,
     ) -> Self {

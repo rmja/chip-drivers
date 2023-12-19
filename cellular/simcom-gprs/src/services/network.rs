@@ -1,4 +1,4 @@
-use atat::{asynch::AtatClient, AtatUrcChannel};
+use atat::asynch::AtatClient;
 use embassy_time::{with_timeout, Duration, Instant, Timer};
 
 use crate::{
@@ -7,8 +7,8 @@ use crate::{
         simcom::{CallReady, GetCallReady},
         urc::Urc,
     },
-    device::{Handle, ModemConfig, URC_CAPACITY, URC_SUBSCRIBERS},
-    Device,
+    device::Handle,
+    SimcomConfig, SimcomDevice, SimcomUrcChannel,
 };
 
 #[derive(Debug)]
@@ -32,25 +32,13 @@ impl From<atat::Error> for NetworkError {
     }
 }
 
-pub struct Network<
-    'dev,
-    'sub,
-    AtCl: AtatClient,
-    AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>,
-> {
+pub struct Network<'dev, 'sub, AtCl: AtatClient> {
     handle: &'dev Handle<'sub, AtCl>,
-    urc_channel: &'dev AtUrcCh,
+    urc_channel: &'dev SimcomUrcChannel,
 }
 
-impl<
-        'dev,
-        'sub,
-        AtCl: AtatClient,
-        AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>,
-        Config: ModemConfig,
-    > Device<'dev, 'sub, AtCl, AtUrcCh, Config>
-{
-    pub fn network(&'dev self) -> Network<'dev, 'sub, AtCl, AtUrcCh> {
+impl<'dev, 'sub, AtCl: AtatClient, Config: SimcomConfig> SimcomDevice<'dev, 'sub, AtCl, Config> {
+    pub fn network(&'dev self) -> Network<'dev, 'sub, AtCl> {
         Network {
             handle: &self.handle,
             urc_channel: self.urc_channel,
@@ -58,9 +46,7 @@ impl<
     }
 }
 
-impl<AtCl: AtatClient + 'static, AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>>
-    Network<'_, '_, AtCl, AtUrcCh>
-{
+impl<AtCl: AtatClient + 'static> Network<'_, '_, AtCl> {
     /// Attach the modem to the network
     pub async fn attach(&mut self, pin: Option<&str>) -> Result<(), NetworkError> {
         self.ensure_ready().await?;

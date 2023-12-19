@@ -2,7 +2,7 @@ mod apn;
 mod dns;
 mod tcp;
 
-use atat::{asynch::AtatClient, AtatCmd, AtatUrcChannel};
+use atat::{asynch::AtatClient, AtatCmd};
 use core::{str::from_utf8, sync::atomic::Ordering};
 use embassy_sync::{blocking_mutex::raw::NoopRawMutex, mutex::Mutex};
 use embassy_time::{with_timeout, Duration, Instant};
@@ -19,11 +19,8 @@ use crate::{
         },
         urc::Urc,
     },
-    device::{
-        Handle, ModemConfig, SOCKET_STATE_DROPPED, SOCKET_STATE_UNUSED, SOCKET_STATE_USED,
-        URC_CAPACITY, URC_SUBSCRIBERS,
-    },
-    ContextId, Device, DriverError,
+    device::{Handle, SOCKET_STATE_DROPPED, SOCKET_STATE_UNUSED, SOCKET_STATE_USED},
+    ContextId, DriverError, SimcomConfig, SimcomDevice, SimcomUrcChannel,
 };
 
 pub use apn::Apn;
@@ -67,32 +64,20 @@ impl From<atat::Error> for SocketError {
     }
 }
 
-pub struct DataService<
-    'buf,
-    'dev,
-    'sub,
-    AtCl: AtatClient,
-    AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>,
-> {
+pub struct DataService<'buf, 'dev, 'sub, AtCl: AtatClient> {
     handle: &'dev Handle<'sub, AtCl>,
-    urc_channel: &'buf AtUrcCh,
+    urc_channel: &'buf SimcomUrcChannel,
     dns_lock: Mutex<NoopRawMutex, ()>,
     pub local_ip: Option<Ipv4Addr>,
 }
 
-impl<
-        'buf,
-        'dev,
-        'sub,
-        AtCl: AtatClient + 'static,
-        AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>,
-        Config: ModemConfig,
-    > Device<'buf, 'sub, AtCl, AtUrcCh, Config>
+impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static, Config: SimcomConfig>
+    SimcomDevice<'buf, 'sub, AtCl, Config>
 {
     pub async fn data(
         &'dev self,
         apn: Apn<'_>,
-    ) -> Result<DataService<'buf, 'dev, 'sub, AtCl, AtUrcCh>, DriverError> {
+    ) -> Result<DataService<'buf, 'dev, 'sub, AtCl>, DriverError> {
         if self
             .data_service_taken
             .compare_exchange(false, true, Ordering::AcqRel, Ordering::Relaxed)
@@ -107,15 +92,8 @@ impl<
     }
 }
 
-impl<
-        'buf,
-        'dev,
-        'sub,
-        AtCl: AtatClient + 'static,
-        AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>,
-    > DataService<'buf, 'dev, 'sub, AtCl, AtUrcCh>
-{
-    fn new(handle: &'dev Handle<'sub, AtCl>, urc_channel: &'buf AtUrcCh) -> Self {
+impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> DataService<'buf, 'dev, 'sub, AtCl> {
+    fn new(handle: &'dev Handle<'sub, AtCl>, urc_channel: &'buf SimcomUrcChannel) -> Self {
         Self {
             handle,
             urc_channel,

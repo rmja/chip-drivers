@@ -1,17 +1,12 @@
-use atat::{asynch::AtatClient, AtatUrcChannel};
+use atat::asynch::AtatClient;
 use embassy_time::{with_timeout, Duration, Instant};
 use embedded_nal_async::{AddrType, Dns};
 
-use crate::{
-    commands::{tcpip::ResolveHostIp, urc::Urc},
-    device::{URC_CAPACITY, URC_SUBSCRIBERS},
-};
+use crate::commands::{tcpip::ResolveHostIp, urc::Urc};
 
 use super::{DataService, SocketError};
 
-impl<AtCl: AtatClient + 'static, AtUrcCh: AtatUrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>> Dns
-    for DataService<'_, '_, '_, AtCl, AtUrcCh>
-{
+impl<AtCl: AtatClient + 'static> Dns for DataService<'_, '_, '_, AtCl> {
     type Error = SocketError;
 
     async fn get_host_by_name(

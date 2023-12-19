@@ -13,9 +13,11 @@
 mod fmt;
 
 pub mod commands;
+mod config;
 mod device;
 mod digester;
 mod error;
+mod ingress;
 pub mod services;
 
 extern crate alloc;
@@ -28,20 +30,23 @@ pub struct ProfileId(pub u8);
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ContextId(pub u8);
 
-pub type SimcomBuffers<const INGRESS_BUF_SIZE: usize> =
-    atat::Buffers<Urc, INGRESS_BUF_SIZE, URC_CAPACITY, URC_SUBSCRIBERS>;
+pub type SimcomClient<'a, W, const INGRESS_BUF_SIZE: usize> =
+    atat::asynch::Client<'a, W, INGRESS_BUF_SIZE>;
 
-pub type SimcomIngress<'a, const INGRESS_BUF_SIZE: usize> =
-    atat::Ingress<'a, SimcomDigester, Urc, INGRESS_BUF_SIZE, URC_CAPACITY, URC_SUBSCRIBERS>;
+pub type SimcomResponseChannel<const INGRESS_BUF_SIZE: usize> =
+    atat::ResponseChannel<INGRESS_BUF_SIZE>;
 
 pub type SimcomUrcChannel = atat::UrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>;
+pub type SimcomUrcSubscription<'a> = atat::UrcSubscription<'a, Urc, URC_CAPACITY, URC_SUBSCRIBERS>;
 
 use atat::atat_derive::AtatLen;
 use commands::urc::Urc;
-pub use device::{Device, FlowControl, ModemConfig};
+pub use config::{FlowControl, SimcomConfig};
+pub use device::SimcomDevice;
 use device::{URC_CAPACITY, URC_SUBSCRIBERS};
 pub use digester::SimcomDigester;
 pub use error::DriverError;
+pub use ingress::SimcomIngress;
 use serde::{Deserialize, Serialize};
 
 pub use atat;
