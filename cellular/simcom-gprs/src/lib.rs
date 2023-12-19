@@ -30,6 +30,9 @@ pub struct ProfileId(pub u8);
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ContextId(pub u8);
 
+pub type SimcomClient<'a, W, const INGRESS_BUF_SIZE: usize> =
+    atat::asynch::Client<'a, W, INGRESS_BUF_SIZE>;
+
 pub type SimcomResponseChannel<const INGRESS_BUF_SIZE: usize> =
     atat::ResponseChannel<INGRESS_BUF_SIZE>;
 

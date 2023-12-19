@@ -11,8 +11,8 @@ use heapless::Vec;
 use crate::{
     commands::{gsm, urc::Urc, v25ter, AT},
     services::data::SocketError,
-    DriverError, FlowControl, PartNumber, SimcomConfig, SimcomResponseChannel, SimcomUrcChannel,
-    MAX_SOCKETS,
+    DriverError, FlowControl, PartNumber, SimcomClient, SimcomConfig, SimcomResponseChannel,
+    SimcomUrcChannel, MAX_SOCKETS,
 };
 
 pub(crate) const URC_CAPACITY: usize = 1 + 3 * (1 + MAX_SOCKETS); // A dns reply, and (SEND OK + RXGET + CLOSED) per socket + background subscription
@@ -43,7 +43,7 @@ pub struct Handle<'sub, AtCl: AtatClient> {
 }
 
 impl<'buf, 'sub, W: Write, Config: SimcomConfig, const INGRESS_BUF_SIZE: usize>
-    SimcomDevice<'buf, 'sub, atat::asynch::Client<'sub, W, INGRESS_BUF_SIZE>, Config>
+    SimcomDevice<'buf, 'sub, SimcomClient<'sub, W, INGRESS_BUF_SIZE>, Config>
 where
     'buf: 'sub,
 {
@@ -53,7 +53,7 @@ where
         urc_channel: &'buf SimcomUrcChannel,
         config: Config,
     ) -> Self {
-        let client = atat::asynch::Client::new(writer, res_channel, config.atat_config());
+        let client = SimcomClient::new(writer, res_channel, config.atat_config());
         Self::new_with_client(client, urc_channel, INGRESS_BUF_SIZE, config)
     }
 }
