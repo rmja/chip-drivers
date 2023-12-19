@@ -336,8 +336,7 @@ mod tests {
     use crate::{
         device::{SocketState, SOCKET_STATE_UNKNOWN, SOCKET_STATE_UNUSED},
         services::serial_mock::{RxMock, SerialMock},
-        SimcomClient, SimcomConfig, SimcomDevice, SimcomIngress, SimcomResponseChannel,
-        MAX_SOCKETS,
+        SimcomConfig, SimcomDevice, SimcomIngress, SimcomResponseChannel, MAX_SOCKETS,
     };
 
     use super::*;
@@ -377,8 +376,7 @@ mod tests {
             let (tx, rx) = SERIAL.split();
             let ingress = SimcomIngress::new(&RES_CHANNEL, &URC_CHANNEL);
             let config = Config(ResetPin(true));
-            let client = SimcomClient::new(tx, &RES_CHANNEL, config.atat_config());
-            let device = SimcomDevice::new(client, &URC_CHANNEL, 128, config);
+            let device = SimcomDevice::new(tx, &RES_CHANNEL, &URC_CHANNEL, config);
             (ingress, device, rx)
         }};
     }
@@ -391,8 +389,7 @@ mod tests {
         let (tx, _rx) = SERIAL.split();
         let _ingress = SimcomIngress::new(&RES_CHANNEL, &URC_CHANNEL);
         let config = Config(ResetPin(true));
-        let client = SimcomClient::new(tx, &RES_CHANNEL, config.atat_config());
-        let mut device = SimcomDevice::new(client, &URC_CHANNEL, INGRESS_BUF_SIZE, config);
+        let mut device = SimcomDevice::new(tx, &RES_CHANNEL, &URC_CHANNEL, config);
 
         // Run in a different task
         // ingress.read_from(rx);

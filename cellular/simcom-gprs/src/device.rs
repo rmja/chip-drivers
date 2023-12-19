@@ -4,13 +4,15 @@ use atat::{asynch::AtatClient, UrcSubscription};
 use embassy_sync::{blocking_mutex::raw::NoopRawMutex, mutex::Mutex};
 use embassy_time::{Duration, Timer};
 use embedded_hal::digital::OutputPin;
+use embedded_io_async::Write;
 use futures_intrusive::sync::LocalMutex;
 use heapless::Vec;
 
 use crate::{
     commands::{gsm, urc::Urc, v25ter, AT},
     services::data::SocketError,
-    DriverError, FlowControl, PartNumber, SimcomConfig, SimcomUrcChannel, MAX_SOCKETS,
+    DriverError, FlowControl, PartNumber, SimcomConfig, SimcomResponseChannel, SimcomUrcChannel,
+    MAX_SOCKETS,
 };
 
 pub(crate) const URC_CAPACITY: usize = 1 + 3 * (1 + MAX_SOCKETS); // A dns reply, and (SEND OK + RXGET + CLOSED) per socket + background subscription
@@ -40,12 +42,28 @@ pub struct Handle<'sub, AtCl: AtatClient> {
         Mutex<NoopRawMutex, UrcSubscription<'sub, Urc, URC_CAPACITY, URC_SUBSCRIBERS>>,
 }
 
+impl<'buf, 'sub, W: Write, Config: SimcomConfig, const INGRESS_BUF_SIZE: usize>
+    SimcomDevice<'buf, 'sub, atat::asynch::Client<'sub, W, INGRESS_BUF_SIZE>, Config>
+where
+    'buf: 'sub,
+{
+    pub fn new(
+        writer: W,
+        res_channel: &'buf SimcomResponseChannel<INGRESS_BUF_SIZE>,
+        urc_channel: &'buf SimcomUrcChannel,
+        config: Config,
+    ) -> Self {
+        let client = atat::asynch::Client::new(writer, res_channel, config.atat_config());
+        Self::new_with_client(client, urc_channel, INGRESS_BUF_SIZE, config)
+    }
+}
+
 impl<'buf, 'sub, AtCl: AtatClient, Config: SimcomConfig> SimcomDevice<'buf, 'sub, AtCl, Config>
 where
     'buf: 'sub,
 {
     /// Create a new device given an AT client
-    pub fn new(
+    pub fn new_with_client(
         client: AtCl,
         urc_channel: &'buf SimcomUrcChannel,
         max_urc_len: usize,
