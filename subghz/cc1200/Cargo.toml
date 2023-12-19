@@ -12,8 +12,8 @@ serial-controller = ["embassy-time", "futures-async-stream"]
 bitfield = "0.14"
 defmt = { version = "0.3", optional = true }
 embassy-time = { version = "0.2", optional = true }
-embedded-hal = "1.0.0-rc.2"
-embedded-hal-async = "1.0.0-rc.2"
+embedded-hal = "1.0.0-rc.3"
+embedded-hal-async = "1.0.0-rc.3"
 futures = { version = "0.3", default-features = false }
 futures-async-stream = { version = "0.2", optional = true }
 heapless = { version = "0.8", optional = true }

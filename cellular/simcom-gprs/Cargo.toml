@@ -17,7 +17,7 @@ atat = { version = "0.20", features = [
 defmt = { version = "0.3", optional = true }
 embassy-sync = "0.5"
 embassy-time = "0.2"
-embedded-hal = "1.0.0-rc.2"
+embedded-hal = "1.0.0-rc.3"
 embedded-io = "0.6"
 embedded-io-async = "0.6"
 embedded-nal-async = "0.7"
