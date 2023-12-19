@@ -387,11 +387,11 @@ mod tests {
         static URC_CHANNEL: SimcomUrcChannel = SimcomUrcChannel::new();
         static SERIAL: SerialMock = SerialMock::new();
         let (tx, _rx) = SERIAL.split();
-        let _ingress = SimcomIngress::new(&RES_CHANNEL, &URC_CHANNEL);
         let config = Config(ResetPin(true));
         let mut device = SimcomDevice::new(tx, &RES_CHANNEL, &URC_CHANNEL, config);
 
         // Run in a different task
+        // let ingress = SimcomIngress::new(&RES_CHANNEL, &URC_CHANNEL);
         // ingress.read_from(rx);
 
         device.network().attach(None).await.unwrap();
