@@ -35,6 +35,9 @@ pub struct SendData {
     pub len: Option<usize>,
 }
 
+pub const MAX_WRITE: usize = 1024; // This is the value reported by AT+CIPSEND?
+pub const WRITE_DATA_MAX_LEN: usize = MAX_WRITE;
+
 pub struct WriteData<'a> {
     pub buf: &'a [u8],
 }
@@ -147,7 +150,8 @@ mod tests {
     use atat::{AtatCmd, AtatIngress, DigestResult, Digester, Response};
 
     use crate::{
-        commands::urc::Urc, SimcomDigester, SimcomIngress, SimcomResponseChannel, SimcomUrcChannel,
+        commands::{urc::Urc, AtatCmdEx},
+        SimcomDigester, SimcomIngress, SimcomResponseChannel, SimcomUrcChannel,
     };
 
     use super::*;
@@ -170,7 +174,7 @@ mod tests {
         let cmd = StartMultiIpConnection {
             n: MultiIpValue::MultiIpConnection,
         };
-        assert_eq_hex!(b"AT+CIPMUX=1\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CIPMUX=1\r", cmd.to_vec().as_slice());
     }
 
     #[test]
@@ -183,7 +187,7 @@ mod tests {
         };
         assert_eq_hex!(
             b"AT+CIPSTART=2,\"TCP\",\"google.com\",\"80\"\r",
-            cmd.as_bytes()
+            cmd.to_vec().as_slice()
         );
     }
 
@@ -193,13 +197,13 @@ mod tests {
             id: 2,
             len: Some(10),
         };
-        assert_eq_hex!(b"AT+CIPSEND=2,10\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CIPSEND=2,10\r", cmd.to_vec().as_slice());
     }
 
     #[test]
     fn can_close_connection() {
         let cmd = CloseConnection { id: 2 };
-        assert_eq_hex!(b"AT+CIPCLOSE=2\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CIPCLOSE=2\r", cmd.to_vec().as_slice());
 
         let mut digester = SimcomDigester::new();
         assert_eq!(
@@ -211,7 +215,7 @@ mod tests {
     #[test]
     fn can_deactivate_gprs_pdp_context() {
         let cmd = DeactivateGprsPdpContext;
-        assert_eq_hex!(b"AT+CIPSHUT\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CIPSHUT\r", cmd.to_vec().as_slice());
 
         let mut digester = SimcomDigester::new();
         assert_eq!(
@@ -227,19 +231,19 @@ mod tests {
             username: &"",
             password: &"",
         };
-        assert_eq_hex!(b"AT+CSTT=\"internet\",\"\",\"\"\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CSTT=\"internet\",\"\",\"\"\r", cmd.to_vec().as_slice());
     }
 
     #[test]
     fn can_bring_up_wireless() {
         let cmd = BringUpWireless;
-        assert_eq_hex!(b"AT+CIICR\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CIICR\r", cmd.to_vec().as_slice());
     }
 
     #[test]
     fn can_get_local_ip() {
         let cmd = GetLocalIP;
-        assert_eq_hex!(b"AT+CIFSR\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CIFSR\r", cmd.to_vec().as_slice());
 
         let (mut ingress, mut res_sub, _) = setup_atat!();
         ingress.try_write(b"\r\n10.0.109.44\r\n").unwrap();
@@ -255,7 +259,7 @@ mod tests {
     #[test]
     fn can_get_connection_status_initial() {
         let cmd = GetConnectionStatus { id: 2 };
-        assert_eq_hex!(b"AT+CIPSTATUS=2\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CIPSTATUS=2\r", cmd.to_vec().as_slice());
 
         let (mut ingress, mut res_sub, _) = setup_atat!();
         ingress
@@ -277,7 +281,7 @@ mod tests {
     #[test]
     fn can_get_connection_status_connected() {
         let cmd = GetConnectionStatus { id: 2 };
-        assert_eq_hex!(b"AT+CIPSTATUS=2\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CIPSTATUS=2\r", cmd.to_vec().as_slice());
 
         let (mut ingress, mut res_sub, _) = setup_atat!();
         ingress.try_write(
@@ -304,7 +308,7 @@ mod tests {
         };
         assert_eq_hex!(
             b"AT+CDNSCFG=\"111.222.333.444\",\"555.666.777.888\"\r",
-            cmd.as_bytes()
+            cmd.to_vec().as_slice()
         );
     }
 
@@ -313,7 +317,7 @@ mod tests {
         let cmd = ResolveHostIp {
             host: "utiliread.dk",
         };
-        assert_eq_hex!(b"AT+CDNSGIP=\"utiliread.dk\"\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CDNSGIP=\"utiliread.dk\"\r", cmd.to_vec().as_slice());
 
         let (mut ingress, mut res_sub, mut urc_sub) = setup_atat!();
         ingress.try_write(b"\r\nOK\r\n").unwrap();
@@ -342,7 +346,7 @@ mod tests {
         let cmd = ResolveHostIp {
             host: "utiliread.dk",
         };
-        assert_eq_hex!(b"AT+CDNSGIP=\"utiliread.dk\"\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CDNSGIP=\"utiliread.dk\"\r", cmd.to_vec().as_slice());
 
         let (mut ingress, mut res_sub, mut urc_sub) = setup_atat!();
         ingress.try_write(b"\r\nOK\r\n").unwrap();
@@ -382,13 +386,13 @@ mod tests {
     #[test]
     fn can_set_manual_rx_get_mode() {
         let cmd = SetManualRxGetMode;
-        assert_eq_hex!(b"AT+CIPRXGET=1\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CIPRXGET=1\r", cmd.to_vec().as_slice());
     }
 
     #[test]
     fn can_read_data() {
         let cmd = ReadData { id: 5, max_len: 16 };
-        assert_eq_hex!(b"AT+CIPRXGET=2,5,16\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CIPRXGET=2,5,16\r", cmd.to_vec().as_slice());
 
         let (mut ingress, mut res_sub, mut urc_sub) = setup_atat!();
         ingress

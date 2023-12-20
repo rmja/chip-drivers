@@ -51,9 +51,10 @@ where
         writer: W,
         res_channel: &'buf SimcomResponseChannel<INGRESS_BUF_SIZE>,
         urc_channel: &'buf SimcomUrcChannel,
+        buf: &'buf mut [u8],
         config: Config,
     ) -> Self {
-        let client = SimcomClient::new(writer, res_channel, config.atat_config());
+        let client = SimcomClient::new(writer, res_channel, buf, config.atat_config());
         Self::new_with_client(client, urc_channel, INGRESS_BUF_SIZE, config)
     }
 }

@@ -9,17 +9,19 @@ use crate::commands::{
     NoResponse,
 };
 
-impl AtatCmd<35> for CloseConnection {
+impl AtatCmd for CloseConnection {
     type Response = CloseOk;
+
+    const MAX_LEN: usize = "AT+CIPCLOSE=X\r".len();
 
     // There is no timeout documentation for sim900
     // It has been observed that e.g. "0, CLOSE" arrives up to 10 seconds after "AT+CIPCLOSE=0"
     #[cfg(feature = "sim900")]
     const MAX_TIMEOUT_MS: u32 = 10_000;
 
-    fn as_bytes(&self) -> heapless::Vec<u8, 35> {
+    fn write(&self, buf: &mut [u8]) -> usize {
         let inner = CloseConnectionInner { id: self.id };
-        inner.as_bytes()
+        inner.write(buf)
     }
 
     fn parse(
@@ -29,7 +31,8 @@ impl AtatCmd<35> for CloseConnection {
         if let Ok((reminder, (id, _))) = sequence::tuple::<_, _, (), _>((
             character::complete::u8,
             bytes::complete::tag(", CLOSE OK"),
-        ))(resp?) && reminder.is_empty()
+        ))(resp?)
+            && reminder.is_empty()
         {
             Ok(CloseOk { id: id as usize })
         } else {

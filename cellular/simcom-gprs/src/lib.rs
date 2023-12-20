@@ -8,6 +8,7 @@
 #![feature(let_chains)]
 #![feature(exclusive_range_pattern)]
 #![feature(assert_matches)]
+#![cfg_attr(test, feature(type_alias_impl_trait))]
 
 #[macro_use]
 mod fmt;
@@ -38,6 +39,8 @@ pub type SimcomResponseChannel<const INGRESS_BUF_SIZE: usize> =
 
 pub type SimcomUrcChannel = atat::UrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>;
 pub type SimcomUrcSubscription<'a> = atat::UrcSubscription<'a, Urc, URC_CAPACITY, URC_SUBSCRIBERS>;
+
+pub const CLIENT_BUF_SIZE: usize = <commands::tcpip::WriteData as atat::AtatCmd>::MAX_LEN;
 
 use atat::atat_derive::AtatLen;
 use commands::urc::Urc;

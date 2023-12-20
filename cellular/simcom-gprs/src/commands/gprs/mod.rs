@@ -67,14 +67,14 @@ mod tests {
     use assert_hex::assert_eq_hex;
     use atat::{AtatCmd, DigestResult, Digester, InternalError};
 
-    use crate::SimcomDigester;
+    use crate::{commands::AtatCmdEx, SimcomDigester};
 
     use super::*;
 
     #[test]
     fn can_get_gprs_attached() {
         let cmd = GetGPRSAttached {};
-        assert_eq_hex!(b"AT+CGATT?\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CGATT?\r", cmd.to_vec().as_slice());
 
         let response = cmd.parse(Ok(b"+CGATT: 0")).unwrap();
         assert_eq!(GPRSAttachedState::Detached, response.state);
@@ -85,7 +85,7 @@ mod tests {
         let cmd = SetGPRSAttached {
             state: GPRSAttachedState::Attached,
         };
-        assert_eq_hex!(b"AT+CGATT=1\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CGATT=1\r", cmd.to_vec().as_slice());
 
         // sim800 timeout response
         // sim900 simply times out and does not send this error
@@ -107,7 +107,10 @@ mod tests {
             apn: "internet",
         };
 
-        assert_eq_hex!(b"AT+CGDCONT=1,\"IP\",\"internet\"\r", cmd.as_bytes());
+        assert_eq_hex!(
+            b"AT+CGDCONT=1,\"IP\",\"internet\"\r",
+            cmd.to_vec().as_slice()
+        );
     }
 
     #[test]
@@ -117,14 +120,17 @@ mod tests {
             cid: ContextId(1),
         };
 
-        println!("{:?}", core::str::from_utf8(&cmd.as_bytes()).unwrap());
-        assert_eq_hex!(b"AT+CGACT=0,1\r", cmd.as_bytes());
+        println!(
+            "{:?}",
+            core::str::from_utf8(&cmd.to_vec().as_slice()).unwrap()
+        );
+        assert_eq_hex!(b"AT+CGACT=0,1\r", cmd.to_vec().as_slice());
     }
 
     #[test]
     fn can_get_gprs_network_registration_status() {
         let cmd = GetGPRSNetworkRegistrationStatus;
-        assert_eq_hex!(b"AT+CGREG?\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CGREG?\r", cmd.to_vec().as_slice());
 
         let response = cmd.parse(Ok(b"+CGREG: 0,2")).unwrap();
         assert_eq!(GPRSNetworkRegistrationUrcConfig::Disabled, response.n);

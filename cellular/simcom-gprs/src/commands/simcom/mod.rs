@@ -11,13 +11,14 @@ pub struct GetCallReady;
 #[cfg(test)]
 mod tests {
     use assert_hex::assert_eq_hex;
-    use atat::AtatCmd;
+
+    use crate::commands::AtatCmdEx;
 
     use super::*;
 
     #[test]
     fn can_get_call_ready() {
         let cmd = GetCallReady {};
-        assert_eq_hex!(b"AT+CCALR?\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CCALR?\r", cmd.to_vec().as_slice());
     }
 }

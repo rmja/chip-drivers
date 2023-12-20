@@ -66,7 +66,8 @@ pub enum FlowControl {
 #[cfg(test)]
 mod tests {
     use assert_hex::assert_eq_hex;
-    use atat::AtatCmd;
+
+    use crate::commands::AtatCmdEx;
 
     use super::*;
 
@@ -75,19 +76,19 @@ mod tests {
         let cmd = SetCommandEchoMode {
             mode: CommandEchoMode::Disable,
         };
-        assert_eq_hex!(b"ATE0\r", cmd.as_bytes());
+        assert_eq_hex!(b"ATE0\r", cmd.to_vec().as_slice());
     }
 
     #[test]
     fn can_reset() {
         let cmd = Reset {};
-        assert_eq_hex!(b"ATZ\r", cmd.as_bytes());
+        assert_eq_hex!(b"ATZ\r", cmd.to_vec().as_slice());
     }
 
     #[test]
     fn can_set_factory_default_configuration() {
         let cmd = SetFactoryDefinedConfiguration {};
-        assert_eq_hex!(b"AT&F0\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT&F0\r", cmd.to_vec().as_slice());
     }
 
     #[test]
@@ -96,12 +97,12 @@ mod tests {
             from_modem: FlowControl::Disabled,
             to_modem: None,
         };
-        assert_eq_hex!(b"AT+IFC=0\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+IFC=0\r", cmd.to_vec().as_slice());
 
         let cmd = SetFlowControl {
             from_modem: FlowControl::Disabled,
             to_modem: Some(FlowControl::Disabled),
         };
-        assert_eq_hex!(b"AT+IFC=0,0\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+IFC=0,0\r", cmd.to_vec().as_slice());
     }
 }

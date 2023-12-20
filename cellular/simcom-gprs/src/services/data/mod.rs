@@ -167,10 +167,7 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> DataService<'buf, 'dev, 'sub,
         Ok(())
     }
 
-    async fn send<CMD: AtatCmd<LEN>, const LEN: usize>(
-        &mut self,
-        cmd: &CMD,
-    ) -> Result<CMD::Response, atat::Error> {
+    async fn send<CMD: AtatCmd>(&mut self, cmd: &CMD) -> Result<CMD::Response, atat::Error> {
         let mut client = self.handle.client.lock().await;
 
         client.send(cmd).await

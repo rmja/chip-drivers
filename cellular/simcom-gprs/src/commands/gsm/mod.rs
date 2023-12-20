@@ -89,16 +89,16 @@ pub struct GetSignalQuality;
 #[cfg(test)]
 mod tests {
     use assert_hex::assert_eq_hex;
-    use atat::{AtatCmd, DigestResult, Digester};
+    use atat::{nom::AsBytes, AtatCmd, DigestResult, Digester};
 
-    use crate::SimcomDigester;
+    use crate::{commands::AtatCmdEx, SimcomDigester};
 
     use super::*;
 
     #[test]
     fn can_get_manufacturer_id() {
         let cmd = GetManufacturerId;
-        assert_eq_hex!(b"AT+CGMI\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CGMI\r", cmd.to_vec().as_bytes());
 
         let response = cmd.parse(Ok(b"SIMCOM_Ltd\r\n")).unwrap();
         assert_eq!(b"SIMCOM_Ltd", response.manufacturer.as_ref());
@@ -117,7 +117,7 @@ mod tests {
     #[test]
     fn can_get_model_id() {
         let cmd = GetModelId;
-        assert_eq_hex!(b"AT+CGMM\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CGMM\r", cmd.to_vec().as_bytes());
 
         let response = cmd.parse(Ok(b"SIMCOM_SIM800\r\n")).unwrap();
         assert_eq!(b"SIMCOM_SIM800", response.model.as_ref());
@@ -126,7 +126,7 @@ mod tests {
     #[test]
     fn can_get_software_version() {
         let cmd = GetSoftwareVersion;
-        assert_eq_hex!(b"AT+CGMR\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CGMR\r", cmd.to_vec().as_bytes());
 
         let response = cmd.parse(Ok(b"Revision:1308B04SIM800M32\r\n")).unwrap();
         assert_eq!(b"Revision:1308B04SIM800M32", response.version.as_ref());
@@ -139,7 +139,7 @@ mod tests {
             mode: FacilityMode::Unlock,
             password: Some("1234"),
         };
-        assert_eq_hex!(b"AT+CLCK=\"SC\",0,\"1234\"\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CLCK=\"SC\",0,\"1234\"\r", cmd.to_vec().as_bytes());
     }
 
     #[test]
@@ -149,7 +149,7 @@ mod tests {
             mode: FacilityMode::Lock,
             password: None,
         };
-        assert_eq_hex!(b"AT+CLCK=\"SC\",1\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CLCK=\"SC\",1\r", cmd.to_vec().as_bytes());
     }
 
     #[test]
@@ -157,19 +157,19 @@ mod tests {
         let cmd = SetMobileEquipmentError {
             value: MobileEquipmentError::EnableNumeric,
         };
-        assert_eq_hex!(b"AT+CMEE=1\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CMEE=1\r", cmd.to_vec().as_bytes());
     }
 
     #[test]
     fn can_get_pin_status() {
         let cmd = GetPinStatus;
-        assert_eq_hex!(b"AT+CPIN?\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CPIN?\r", cmd.to_vec().as_bytes());
     }
 
     #[test]
     fn can_enter_pin() {
         let cmd = EnterPin { pin: "1234" };
-        assert_eq_hex!(b"AT+CPIN=\"1234\"\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CPIN=\"1234\"\r", cmd.to_vec().as_bytes());
     }
 
     #[test]
@@ -178,7 +178,7 @@ mod tests {
             password: "11223344",
             new_pin: "1234",
         };
-        assert_eq_hex!(b"AT+CPIN=\"11223344\",\"1234\"\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CPIN=\"11223344\",\"1234\"\r", cmd.to_vec().as_bytes());
     }
 
     #[test]
@@ -188,13 +188,16 @@ mod tests {
             old_password: "1234",
             new_password: "4321",
         };
-        assert_eq_hex!(b"AT+CPWD=\"SC\",\"1234\",\"4321\"\r", cmd.as_bytes());
+        assert_eq_hex!(
+            b"AT+CPWD=\"SC\",\"1234\",\"4321\"\r",
+            cmd.to_vec().as_bytes()
+        );
     }
 
     #[test]
     fn can_get_network_registration_status() {
         let cmd = GetNetworkRegistrationStatus;
-        assert_eq_hex!(b"AT+CREG?\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CREG?\r", cmd.to_vec().as_bytes());
 
         let response = cmd.parse(Ok(b"+CREG: 0,0")).unwrap();
         assert_eq!(NetworkRegistrationUrcConfig::Disabled, response.n);
@@ -204,7 +207,7 @@ mod tests {
     #[test]
     fn can_get_signal_quality() {
         let cmd = GetSignalQuality;
-        assert_eq_hex!(b"AT+CSQ?\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CSQ?\r", cmd.to_vec().as_bytes());
 
         let response = cmd.parse(Ok(b"+CSQ: 20,0")).unwrap();
         assert_eq!(-74, response.rssi().unwrap());
