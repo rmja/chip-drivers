@@ -11,10 +11,10 @@ sim900 = []
 
 [dependencies]
 # atat = { version = "0.20", features = ["async"] }
-# atat = { version = "0.20", features = [
-#     "async",
-# ], git = "https://github.com/BlackbirdHQ/atat", rev = "94eb974" }
-atat = { version = "0.20", features = ["async"], path = "../../../atat/atat" }
+atat = { version = "0.20", features = [
+    "async",
+], git = "https://github.com/BlackbirdHQ/atat", rev = "fe971a4" }
+# atat = { version = "0.20", features = ["async"], path = "../../../atat/atat" }
 defmt = { version = "0.3", optional = true }
 embassy-sync = "0.5"
 embassy-time = "0.2"
@@ -33,4 +33,5 @@ assert_hex = "0.4"
 critical-section = { version = "1", features = ["std"] }
 embassy-time = { version = "0.2", features = ["std", "generic-queue"] }
 embedded-io-async = { version = "0.6", features = ["std"] }
+static_cell = { version = "2", features = ["nightly"] }
 tokio = { version = "1", features = ["macros", "rt"] }

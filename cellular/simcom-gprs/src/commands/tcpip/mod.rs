@@ -35,6 +35,9 @@ pub struct SendData {
     pub len: Option<usize>,
 }
 
+pub const MAX_WRITE: usize = 1024; // This is the value reported by AT+CIPSEND?
+pub const WRITE_DATA_MAX_LEN: usize = MAX_WRITE;
+
 pub struct WriteData<'a> {
     pub buf: &'a [u8],
 }
@@ -147,21 +150,21 @@ mod tests {
     use atat::{AtatCmd, AtatIngress, DigestResult, Digester, Response};
 
     use crate::{
-        commands::urc::Urc, SimcomDigester, SimcomIngress, SimcomResponseChannel, SimcomUrcChannel,
+        commands::{urc::Urc, AtatCmdEx},
+        SimcomDigester, SimcomIngress, SimcomResponseSlot, SimcomUrcChannel,
     };
 
     use super::*;
 
     macro_rules! setup_atat {
         () => {{
-            static RES_CHANNEL: SimcomResponseChannel<100> = SimcomResponseChannel::new();
+            static RES_SLOT: SimcomResponseSlot<100> = SimcomResponseSlot::new();
             static URC_CHANNEL: SimcomUrcChannel = SimcomUrcChannel::new();
-            let ingress = SimcomIngress::<100>::new(&RES_CHANNEL, &URC_CHANNEL);
+            let ingress = SimcomIngress::<100>::new(&RES_SLOT, &URC_CHANNEL);
 
-            let res_sub = RES_CHANNEL.subscriber().unwrap();
             let urc_sub = URC_CHANNEL.subscribe().unwrap();
 
-            (ingress, res_sub, urc_sub)
+            (ingress, &RES_SLOT, urc_sub)
         }};
     }
 
@@ -170,7 +173,7 @@ mod tests {
         let cmd = StartMultiIpConnection {
             n: MultiIpValue::MultiIpConnection,
         };
-        assert_eq_hex!(b"AT+CIPMUX=1\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CIPMUX=1\r", cmd.to_vec().as_slice());
     }
 
     #[test]
@@ -183,7 +186,7 @@ mod tests {
         };
         assert_eq_hex!(
             b"AT+CIPSTART=2,\"TCP\",\"google.com\",\"80\"\r",
-            cmd.as_bytes()
+            cmd.to_vec().as_slice()
         );
     }
 
@@ -193,13 +196,13 @@ mod tests {
             id: 2,
             len: Some(10),
         };
-        assert_eq_hex!(b"AT+CIPSEND=2,10\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CIPSEND=2,10\r", cmd.to_vec().as_slice());
     }
 
     #[test]
     fn can_close_connection() {
         let cmd = CloseConnection { id: 2 };
-        assert_eq_hex!(b"AT+CIPCLOSE=2\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CIPCLOSE=2\r", cmd.to_vec().as_slice());
 
         let mut digester = SimcomDigester::new();
         assert_eq!(
@@ -211,7 +214,7 @@ mod tests {
     #[test]
     fn can_deactivate_gprs_pdp_context() {
         let cmd = DeactivateGprsPdpContext;
-        assert_eq_hex!(b"AT+CIPSHUT\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CIPSHUT\r", cmd.to_vec().as_slice());
 
         let mut digester = SimcomDigester::new();
         assert_eq!(
@@ -227,24 +230,26 @@ mod tests {
             username: &"",
             password: &"",
         };
-        assert_eq_hex!(b"AT+CSTT=\"internet\",\"\",\"\"\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CSTT=\"internet\",\"\",\"\"\r", cmd.to_vec().as_slice());
     }
 
     #[test]
     fn can_bring_up_wireless() {
         let cmd = BringUpWireless;
-        assert_eq_hex!(b"AT+CIICR\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CIICR\r", cmd.to_vec().as_slice());
     }
 
     #[test]
     fn can_get_local_ip() {
         let cmd = GetLocalIP;
-        assert_eq_hex!(b"AT+CIFSR\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CIFSR\r", cmd.to_vec().as_slice());
 
-        let (mut ingress, mut res_sub, _) = setup_atat!();
+        let (mut ingress, res_sub, _) = setup_atat!();
         ingress.try_write(b"\r\n10.0.109.44\r\n").unwrap();
 
-        if let Response::Ok(message) = res_sub.try_next_message_pure().unwrap() {
+        let response = res_sub.try_get().unwrap();
+        let response: &Response<100> = &response.borrow();
+        if let Response::Ok(message) = response {
             let response = cmd.parse(Ok(&message)).unwrap();
             assert_eq!(b"10.0.109.44", response.ip.as_ref());
         } else {
@@ -255,14 +260,16 @@ mod tests {
     #[test]
     fn can_get_connection_status_initial() {
         let cmd = GetConnectionStatus { id: 2 };
-        assert_eq_hex!(b"AT+CIPSTATUS=2\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CIPSTATUS=2\r", cmd.to_vec().as_slice());
 
-        let (mut ingress, mut res_sub, _) = setup_atat!();
+        let (mut ingress, res_sub, _) = setup_atat!();
         ingress
             .try_write(b"\r\n+CIPSTATUS: 2,,\"\",\"\",\"\",\"INITIAL\"\r\n\r\nOK\r\n")
             .unwrap();
 
-        if let Response::Ok(message) = res_sub.try_next_message_pure().unwrap() {
+        let response = res_sub.try_get().unwrap();
+        let response: &Response<100> = &response.borrow();
+        if let Response::Ok(message) = response {
             let response = cmd.parse(Ok(&message)).unwrap();
             assert_eq!(2, response.id);
             assert_eq!("", response.mode);
@@ -277,14 +284,16 @@ mod tests {
     #[test]
     fn can_get_connection_status_connected() {
         let cmd = GetConnectionStatus { id: 2 };
-        assert_eq_hex!(b"AT+CIPSTATUS=2\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CIPSTATUS=2\r", cmd.to_vec().as_slice());
 
-        let (mut ingress, mut res_sub, _) = setup_atat!();
+        let (mut ingress, res_sub, _) = setup_atat!();
         ingress.try_write(
             b"\r\n+CIPSTATUS: 2,0,\"TCP\",\"123.123.123.123\",\"80\",\"CONNECTED\"\r\n\r\nOK\r\n",
         ).unwrap();
 
-        if let Response::Ok(message) = res_sub.try_next_message_pure().unwrap() {
+        let response = res_sub.try_get().unwrap();
+        let response: &Response<100> = &response.borrow();
+        if let Response::Ok(message) = response {
             let response = cmd.parse(Ok(&message)).unwrap();
             assert_eq!(2, response.id);
             assert_eq!("TCP", response.mode);
@@ -304,7 +313,7 @@ mod tests {
         };
         assert_eq_hex!(
             b"AT+CDNSCFG=\"111.222.333.444\",\"555.666.777.888\"\r",
-            cmd.as_bytes()
+            cmd.to_vec().as_slice()
         );
     }
 
@@ -313,15 +322,17 @@ mod tests {
         let cmd = ResolveHostIp {
             host: "utiliread.dk",
         };
-        assert_eq_hex!(b"AT+CDNSGIP=\"utiliread.dk\"\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CDNSGIP=\"utiliread.dk\"\r", cmd.to_vec().as_slice());
 
-        let (mut ingress, mut res_sub, mut urc_sub) = setup_atat!();
+        let (mut ingress, res_sub, mut urc_sub) = setup_atat!();
         ingress.try_write(b"\r\nOK\r\n").unwrap();
         ingress
             .try_write(b"\r\n+CDNSGIP: 1,\"utiliread.dk\",\"1.2.3.4\"\r\n")
             .unwrap();
 
-        if let Response::Ok(message) = res_sub.try_next_message_pure().unwrap() {
+        let response = res_sub.try_get().unwrap();
+        let response: &Response<100> = &response.borrow();
+        if let Response::Ok(message) = response {
             assert!(message.is_empty());
         } else {
             panic!("Invalid response");
@@ -342,13 +353,15 @@ mod tests {
         let cmd = ResolveHostIp {
             host: "utiliread.dk",
         };
-        assert_eq_hex!(b"AT+CDNSGIP=\"utiliread.dk\"\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CDNSGIP=\"utiliread.dk\"\r", cmd.to_vec().as_slice());
 
-        let (mut ingress, mut res_sub, mut urc_sub) = setup_atat!();
+        let (mut ingress, res_sub, mut urc_sub) = setup_atat!();
         ingress.try_write(b"\r\nOK\r\n").unwrap();
         ingress.try_write(b"\r\n+CDNSGIP: 0,8\r\n").unwrap();
 
-        if let Response::Ok(message) = res_sub.try_next_message_pure().unwrap() {
+        let response = res_sub.try_get().unwrap();
+        let response: &Response<100> = &response.borrow();
+        if let Response::Ok(message) = response {
             assert!(message.is_empty());
         } else {
             panic!("Invalid response");
@@ -366,15 +379,14 @@ mod tests {
     #[test]
     fn can_handle_resolve_host_ip_immediate_error() {
         // This error is echo'ed
-        let (mut ingress, mut res_sub, urc_sub) = setup_atat!();
+        let (mut ingress, res_sub, urc_sub) = setup_atat!();
         ingress
             .try_write(b"AT+CDNSGIP=\"utiliread.com\"\r\r\nERROR\r\n")
             .unwrap();
 
-        assert_eq!(
-            Response::OtherError,
-            res_sub.try_next_message_pure().unwrap()
-        );
+        let response = res_sub.try_get().unwrap();
+        let response: &Response<100> = &response.borrow();
+        assert_eq!(&Response::OtherError, response);
 
         assert_eq!(0, urc_sub.available());
     }
@@ -382,21 +394,23 @@ mod tests {
     #[test]
     fn can_set_manual_rx_get_mode() {
         let cmd = SetManualRxGetMode;
-        assert_eq_hex!(b"AT+CIPRXGET=1\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CIPRXGET=1\r", cmd.to_vec().as_slice());
     }
 
     #[test]
     fn can_read_data() {
         let cmd = ReadData { id: 5, max_len: 16 };
-        assert_eq_hex!(b"AT+CIPRXGET=2,5,16\r", cmd.as_bytes());
+        assert_eq_hex!(b"AT+CIPRXGET=2,5,16\r", cmd.to_vec().as_slice());
 
-        let (mut ingress, mut res_sub, mut urc_sub) = setup_atat!();
+        let (mut ingress, res_sub, mut urc_sub) = setup_atat!();
         ingress
             .try_write(b"\r\n+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n")
             .unwrap();
         ingress.try_write(b"\r\nOK\r\n").unwrap();
 
-        if let Response::Ok(message) = res_sub.try_next_message_pure().unwrap() {
+        let response = res_sub.try_get().unwrap();
+        let response: &Response<100> = &response.borrow();
+        if let Response::Ok(message) = response {
             assert!(message.is_empty());
         } else {
             panic!("Invalid response");
@@ -416,12 +430,14 @@ mod tests {
 
     #[test]
     fn can_read_data_after_prompt() {
-        let (mut ingress, mut res_sub, mut urc_sub) = setup_atat!();
+        let (mut ingress, res_sub, mut urc_sub) = setup_atat!();
 
         ingress.try_write(b"\r\n>").unwrap();
 
-        if let Response::Prompt(prompt) = res_sub.try_next_message_pure().unwrap() {
-            assert_eq!(b'>', prompt);
+        let response = res_sub.try_get().unwrap();
+        let response: &Response<100> = &response.borrow();
+        if let Response::Prompt(prompt) = response {
+            assert_eq!(b'>', *prompt);
         } else {
             panic!("Invalid prompt");
         }

@@ -29,10 +29,7 @@ impl Serialize for Facility {
 
 #[cfg(test)]
 mod tests {
-    use core::str::FromStr;
-
-    use atat::serde_at::{to_string, SerializeOptions};
-    use heapless::String;
+    use atat::serde_at::{to_slice, SerializeOptions};
 
     use crate::commands::gsm::Facility;
 
@@ -42,7 +39,8 @@ mod tests {
             value_sep: false,
             ..SerializeOptions::default()
         };
-        let str: String<32> = to_string(&Facility::SC, "", options).unwrap();
-        assert_eq!(String::<32>::from_str("\"SC\"").unwrap(), str);
+        let mut buf = [0; 32];
+        let len = to_slice(&Facility::SC, "", &mut buf, options).unwrap();
+        assert_eq!(b"\"SC\"", &buf[..len]);
     }
 }
