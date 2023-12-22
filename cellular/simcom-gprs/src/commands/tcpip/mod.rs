@@ -151,21 +151,20 @@ mod tests {
 
     use crate::{
         commands::{urc::Urc, AtatCmdEx},
-        SimcomDigester, SimcomIngress, SimcomResponseChannel, SimcomUrcChannel,
+        SimcomDigester, SimcomIngress, SimcomResponseSlot, SimcomUrcChannel,
     };
 
     use super::*;
 
     macro_rules! setup_atat {
         () => {{
-            static RES_CHANNEL: SimcomResponseChannel<100> = SimcomResponseChannel::new();
+            static RES_SLOT: SimcomResponseSlot<100> = SimcomResponseSlot::new();
             static URC_CHANNEL: SimcomUrcChannel = SimcomUrcChannel::new();
-            let ingress = SimcomIngress::<100>::new(&RES_CHANNEL, &URC_CHANNEL);
+            let ingress = SimcomIngress::<100>::new(&RES_SLOT, &URC_CHANNEL);
 
-            let res_sub = RES_CHANNEL.subscriber().unwrap();
             let urc_sub = URC_CHANNEL.subscribe().unwrap();
 
-            (ingress, res_sub, urc_sub)
+            (ingress, &RES_SLOT, urc_sub)
         }};
     }
 
@@ -245,10 +244,12 @@ mod tests {
         let cmd = GetLocalIP;
         assert_eq_hex!(b"AT+CIFSR\r", cmd.to_vec().as_slice());
 
-        let (mut ingress, mut res_sub, _) = setup_atat!();
+        let (mut ingress, res_sub, _) = setup_atat!();
         ingress.try_write(b"\r\n10.0.109.44\r\n").unwrap();
 
-        if let Response::Ok(message) = res_sub.try_next_message_pure().unwrap() {
+        let response = res_sub.try_get().unwrap();
+        let response: &Response<100> = &response.borrow();
+        if let Response::Ok(message) = response {
             let response = cmd.parse(Ok(&message)).unwrap();
             assert_eq!(b"10.0.109.44", response.ip.as_ref());
         } else {
@@ -261,12 +262,14 @@ mod tests {
         let cmd = GetConnectionStatus { id: 2 };
         assert_eq_hex!(b"AT+CIPSTATUS=2\r", cmd.to_vec().as_slice());
 
-        let (mut ingress, mut res_sub, _) = setup_atat!();
+        let (mut ingress, res_sub, _) = setup_atat!();
         ingress
             .try_write(b"\r\n+CIPSTATUS: 2,,\"\",\"\",\"\",\"INITIAL\"\r\n\r\nOK\r\n")
             .unwrap();
 
-        if let Response::Ok(message) = res_sub.try_next_message_pure().unwrap() {
+        let response = res_sub.try_get().unwrap();
+        let response: &Response<100> = &response.borrow();
+        if let Response::Ok(message) = response {
             let response = cmd.parse(Ok(&message)).unwrap();
             assert_eq!(2, response.id);
             assert_eq!("", response.mode);
@@ -283,12 +286,14 @@ mod tests {
         let cmd = GetConnectionStatus { id: 2 };
         assert_eq_hex!(b"AT+CIPSTATUS=2\r", cmd.to_vec().as_slice());
 
-        let (mut ingress, mut res_sub, _) = setup_atat!();
+        let (mut ingress, res_sub, _) = setup_atat!();
         ingress.try_write(
             b"\r\n+CIPSTATUS: 2,0,\"TCP\",\"123.123.123.123\",\"80\",\"CONNECTED\"\r\n\r\nOK\r\n",
         ).unwrap();
 
-        if let Response::Ok(message) = res_sub.try_next_message_pure().unwrap() {
+        let response = res_sub.try_get().unwrap();
+        let response: &Response<100> = &response.borrow();
+        if let Response::Ok(message) = response {
             let response = cmd.parse(Ok(&message)).unwrap();
             assert_eq!(2, response.id);
             assert_eq!("TCP", response.mode);
@@ -319,13 +324,15 @@ mod tests {
         };
         assert_eq_hex!(b"AT+CDNSGIP=\"utiliread.dk\"\r", cmd.to_vec().as_slice());
 
-        let (mut ingress, mut res_sub, mut urc_sub) = setup_atat!();
+        let (mut ingress, res_sub, mut urc_sub) = setup_atat!();
         ingress.try_write(b"\r\nOK\r\n").unwrap();
         ingress
             .try_write(b"\r\n+CDNSGIP: 1,\"utiliread.dk\",\"1.2.3.4\"\r\n")
             .unwrap();
 
-        if let Response::Ok(message) = res_sub.try_next_message_pure().unwrap() {
+        let response = res_sub.try_get().unwrap();
+        let response: &Response<100> = &response.borrow();
+        if let Response::Ok(message) = response {
             assert!(message.is_empty());
         } else {
             panic!("Invalid response");
@@ -348,11 +355,13 @@ mod tests {
         };
         assert_eq_hex!(b"AT+CDNSGIP=\"utiliread.dk\"\r", cmd.to_vec().as_slice());
 
-        let (mut ingress, mut res_sub, mut urc_sub) = setup_atat!();
+        let (mut ingress, res_sub, mut urc_sub) = setup_atat!();
         ingress.try_write(b"\r\nOK\r\n").unwrap();
         ingress.try_write(b"\r\n+CDNSGIP: 0,8\r\n").unwrap();
 
-        if let Response::Ok(message) = res_sub.try_next_message_pure().unwrap() {
+        let response = res_sub.try_get().unwrap();
+        let response: &Response<100> = &response.borrow();
+        if let Response::Ok(message) = response {
             assert!(message.is_empty());
         } else {
             panic!("Invalid response");
@@ -370,15 +379,14 @@ mod tests {
     #[test]
     fn can_handle_resolve_host_ip_immediate_error() {
         // This error is echo'ed
-        let (mut ingress, mut res_sub, urc_sub) = setup_atat!();
+        let (mut ingress, res_sub, urc_sub) = setup_atat!();
         ingress
             .try_write(b"AT+CDNSGIP=\"utiliread.com\"\r\r\nERROR\r\n")
             .unwrap();
 
-        assert_eq!(
-            Response::OtherError,
-            res_sub.try_next_message_pure().unwrap()
-        );
+        let response = res_sub.try_get().unwrap();
+        let response: &Response<100> = &response.borrow();
+        assert_eq!(&Response::OtherError, response);
 
         assert_eq!(0, urc_sub.available());
     }
@@ -394,13 +402,15 @@ mod tests {
         let cmd = ReadData { id: 5, max_len: 16 };
         assert_eq_hex!(b"AT+CIPRXGET=2,5,16\r", cmd.to_vec().as_slice());
 
-        let (mut ingress, mut res_sub, mut urc_sub) = setup_atat!();
+        let (mut ingress, res_sub, mut urc_sub) = setup_atat!();
         ingress
             .try_write(b"\r\n+CIPRXGET: 2,5,8,0\r\nHTTP\r\n\r\n")
             .unwrap();
         ingress.try_write(b"\r\nOK\r\n").unwrap();
 
-        if let Response::Ok(message) = res_sub.try_next_message_pure().unwrap() {
+        let response = res_sub.try_get().unwrap();
+        let response: &Response<100> = &response.borrow();
+        if let Response::Ok(message) = response {
             assert!(message.is_empty());
         } else {
             panic!("Invalid response");
@@ -420,12 +430,14 @@ mod tests {
 
     #[test]
     fn can_read_data_after_prompt() {
-        let (mut ingress, mut res_sub, mut urc_sub) = setup_atat!();
+        let (mut ingress, res_sub, mut urc_sub) = setup_atat!();
 
         ingress.try_write(b"\r\n>").unwrap();
 
-        if let Response::Prompt(prompt) = res_sub.try_next_message_pure().unwrap() {
-            assert_eq!(b'>', prompt);
+        let response = res_sub.try_get().unwrap();
+        let response: &Response<100> = &response.borrow();
+        if let Response::Prompt(prompt) = response {
+            assert_eq!(b'>', *prompt);
         } else {
             panic!("Invalid prompt");
         }

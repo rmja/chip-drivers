@@ -3,7 +3,7 @@ use atat::{AtatIngress, Ingress, IngressError};
 use crate::{
     commands::urc::Urc,
     device::{URC_CAPACITY, URC_SUBSCRIBERS},
-    SimcomDigester, SimcomResponseChannel, SimcomUrcChannel,
+    SimcomDigester, SimcomResponseSlot, SimcomUrcChannel,
 };
 
 pub struct SimcomIngress<'a, const INGRESS_BUF_SIZE: usize>(
@@ -12,14 +12,10 @@ pub struct SimcomIngress<'a, const INGRESS_BUF_SIZE: usize>(
 
 impl<'a, const INGRESS_BUF_SIZE: usize> SimcomIngress<'a, INGRESS_BUF_SIZE> {
     pub fn new(
-        res_channel: &'a SimcomResponseChannel<INGRESS_BUF_SIZE>,
+        res_slot: &'a SimcomResponseSlot<INGRESS_BUF_SIZE>,
         urc_channel: &'a SimcomUrcChannel,
     ) -> Self {
-        Self(Ingress::new(
-            SimcomDigester::new(),
-            res_channel,
-            urc_channel,
-        ))
+        Self(Ingress::new(SimcomDigester::new(), res_slot, urc_channel))
     }
 }
 
