@@ -1,6 +1,4 @@
 #![cfg_attr(not(test), no_std)]
-#![allow(incomplete_features)]
-#![feature(inherent_associated_types)]
 
 mod driver;
 mod error;

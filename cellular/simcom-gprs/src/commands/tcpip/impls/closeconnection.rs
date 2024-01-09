@@ -32,12 +32,13 @@ impl AtatCmd for CloseConnection {
             character::complete::u8,
             bytes::complete::tag(", CLOSE OK"),
         ))(resp?)
-            && reminder.is_empty()
         {
-            Ok(CloseOk { id: id as usize })
-        } else {
-            Err(atat::Error::Parse)
+            if reminder.is_empty() {
+                return Ok(CloseOk { id: id as usize });
+            }
         }
+
+        Err(atat::Error::Parse)
     }
 }
 
