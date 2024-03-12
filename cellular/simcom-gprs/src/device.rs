@@ -49,12 +49,12 @@ where
 {
     pub fn new(
         writer: W,
+        buf: &'buf mut [u8],
         res_slot: &'buf SimcomResponseSlot<INGRESS_BUF_SIZE>,
         urc_channel: &'buf SimcomUrcChannel,
-        buf: &'buf mut [u8],
         config: Config,
     ) -> Self {
-        let client = SimcomClient::new(writer, res_slot, buf, config.atat_config());
+        let client = SimcomClient::new(writer, buf, res_slot, config.atat_config());
         Self::new_with_client(client, urc_channel, INGRESS_BUF_SIZE, config)
     }
 }

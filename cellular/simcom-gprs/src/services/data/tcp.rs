@@ -378,7 +378,7 @@ mod tests {
             let (tx, rx) = SERIAL.split();
             let ingress = SimcomIngress::new(ingress_buf, &RES_SLOT, &URC_CHANNEL);
             let config = Config(ResetPin(true));
-            let device = SimcomDevice::new(tx, &RES_SLOT, &URC_CHANNEL, device_buf, config);
+            let device = SimcomDevice::new(tx, device_buf, &RES_SLOT, &URC_CHANNEL, config);
             (ingress, device, rx)
         }};
     }
@@ -391,7 +391,7 @@ mod tests {
         static SERIAL: SerialMock = SerialMock::new();
         let (tx, _rx) = SERIAL.split();
         let config = Config(ResetPin(true));
-        let mut device = SimcomDevice::new(tx, &RES_SLOT, &URC_CHANNEL, device_buf, config);
+        let mut device = SimcomDevice::new(tx, device_buf, &RES_SLOT, &URC_CHANNEL, config);
 
         // Run in a different task
         // let ingress = SimcomIngress::new(&RES_SLOT, &URC_CHANNEL);
