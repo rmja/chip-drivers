@@ -12,6 +12,7 @@ const FIFO: u8 = 0x3F;
 const EXTENDED_ADDRESS: u8 = 0x2F;
 
 pub trait Command {
+    #[allow(dead_code)]
     fn len(&self) -> usize;
 }
 
