@@ -7,7 +7,7 @@ description = "AT25010, AT25020, and AT25040 (and B series) Serial EEPROM driver
 [dependencies]
 bitfield = "0.14"
 defmt = { version = "0.3", optional = true }
-embedded-hal-async = "1.0.0-rc.3"
+embedded-hal-async = "1"
 embedded-storage = "0.3.0"
 embedded-storage-async = "0.4.0"
 futures = { version = "0.3", default-features = false }

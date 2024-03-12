@@ -370,14 +370,15 @@ mod tests {
 
     macro_rules! setup_atat {
         () => {{
+            let ingress_buf = make_static!([0; 128]);
             static RES_SLOT: SimcomResponseSlot<128> = SimcomResponseSlot::new();
             static URC_CHANNEL: SimcomUrcChannel = SimcomUrcChannel::new();
-            let buf = make_static!([0; 128]);
+            let device_buf = make_static!([0; 128]);
             static SERIAL: SerialMock = SerialMock::new();
             let (tx, rx) = SERIAL.split();
-            let ingress = SimcomIngress::new(&RES_SLOT, &URC_CHANNEL);
+            let ingress = SimcomIngress::new(ingress_buf, &RES_SLOT, &URC_CHANNEL);
             let config = Config(ResetPin(true));
-            let device = SimcomDevice::new(tx, &RES_SLOT, &URC_CHANNEL, buf, config);
+            let device = SimcomDevice::new(tx, &RES_SLOT, &URC_CHANNEL, device_buf, config);
             (ingress, device, rx)
         }};
     }
@@ -386,11 +387,11 @@ mod tests {
         const INGRESS_BUF_SIZE: usize = 128;
         static RES_SLOT: SimcomResponseSlot<INGRESS_BUF_SIZE> = SimcomResponseSlot::new();
         static URC_CHANNEL: SimcomUrcChannel = SimcomUrcChannel::new();
-        let buf = make_static!([0u8; 128]);
+        let device_buf = make_static!([0u8; 128]);
         static SERIAL: SerialMock = SerialMock::new();
         let (tx, _rx) = SERIAL.split();
         let config = Config(ResetPin(true));
-        let mut device = SimcomDevice::new(tx, &RES_SLOT, &URC_CHANNEL, buf, config);
+        let mut device = SimcomDevice::new(tx, &RES_SLOT, &URC_CHANNEL, device_buf, config);
 
         // Run in a different task
         // let ingress = SimcomIngress::new(&RES_SLOT, &URC_CHANNEL);

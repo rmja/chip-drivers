@@ -12,10 +12,16 @@ pub struct SimcomIngress<'a, const INGRESS_BUF_SIZE: usize>(
 
 impl<'a, const INGRESS_BUF_SIZE: usize> SimcomIngress<'a, INGRESS_BUF_SIZE> {
     pub fn new(
+        buf: &'a mut [u8],
         res_slot: &'a SimcomResponseSlot<INGRESS_BUF_SIZE>,
         urc_channel: &'a SimcomUrcChannel,
     ) -> Self {
-        Self(Ingress::new(SimcomDigester::new(), res_slot, urc_channel))
+        Self(Ingress::new(
+            SimcomDigester::new(),
+            buf,
+            res_slot,
+            urc_channel,
+        ))
     }
 }
 
