@@ -23,11 +23,8 @@ pub struct ProfileId(pub u8);
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ContextId(pub u8);
 
-pub type SimcomClient<'a, W, const INGRESS_BUF_SIZE: usize> =
-    atat::asynch::Client<'a, W, INGRESS_BUF_SIZE>;
-
-pub type SimcomResponseSlot<const INGRESS_BUF_SIZE: usize> = atat::ResponseSlot<INGRESS_BUF_SIZE>;
-
+pub type SimcomClient<'a, W, const N: usize> = atat::asynch::Client<'a, W, N>;
+pub type SimcomResponseSlot<const N: usize> = atat::ResponseSlot<N>;
 pub type SimcomUrcChannel = atat::UrcChannel<Urc, URC_CAPACITY, URC_SUBSCRIBERS>;
 pub type SimcomUrcSubscription<'a> = atat::UrcSubscription<'a, Urc, URC_CAPACITY, URC_SUBSCRIBERS>;
 
