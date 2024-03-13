@@ -151,8 +151,12 @@ mod tests {
     use static_cell::make_static;
 
     use crate::{
-        commands::{urc::Urc, AtatCmdEx},
-        SimcomDigester, SimcomIngress, SimcomResponseSlot, SimcomUrcChannel,
+        commands::{
+            gprs::{GetPDPContextStates, PdpState},
+            urc::Urc,
+            AtatCmdEx,
+        },
+        ContextId, SimcomDigester, SimcomIngress, SimcomResponseSlot, SimcomUrcChannel,
     };
 
     use super::*;
@@ -305,6 +309,39 @@ mod tests {
         } else {
             panic!("Invalid response");
         }
+    }
+
+    #[test]
+    fn can_get_pdp_context_states() {
+        let cmd = GetPDPContextStates;
+        assert_eq_hex!(b"AT+CGACT?\r", cmd.to_vec().as_slice());
+
+        // Note that we consider e.g. "\r\n+CGACT: 1,0" to be a URC without terminating \r\n
+        // This effectively gives us a final "\r\n\r\nOK\r\n" (with an additional leading "\r\n")
+        // This however is discarded whitespace by the digester so it does not really matter.
+        let (mut ingress, res_sub, mut urc_sub) = setup_atat!();
+        ingress
+            .try_write(b"\r\n+CGACT: 1,0\r\n+CGACT: 2,0\r\n+CGACT: 3,0\r\n\r\nOK\r\n")
+            .unwrap();
+
+        let response = res_sub.try_get().unwrap();
+        let response: &Response<100> = &response.borrow();
+        if let Response::Ok(message) = response {
+            assert!(message.is_empty());
+        } else {
+            panic!("Invalid response");
+        }
+
+        for cid in 1..=3 {
+            if let Urc::PdbState(res) = urc_sub.try_next_message_pure().unwrap() {
+                assert_eq!(ContextId(cid), res.cid);
+                assert_eq!(PdpState::Deactivated, res.state);
+            } else {
+                panic!("Invalid URC");
+            }
+        }
+
+        assert_eq!(0, urc_sub.available());
     }
 
     #[test]

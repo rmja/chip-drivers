@@ -1,5 +1,22 @@
 use atat::nom::{branch, bytes, character, combinator, error::ParseError, sequence, IResult};
 
+/// Matches the equivalent of regex: \r\n+CGACT: [0-9],[0-9]
+pub fn parse_pdp_state<'a, Error: ParseError<&'a [u8]>>(
+    buf: &'a [u8],
+) -> IResult<&'a [u8], (&'a [u8], usize), Error> {
+    let (reminder, (_, frame)) = sequence::tuple((
+        bytes::streaming::tag("\r\n"),
+        combinator::recognize(sequence::tuple((
+            bytes::streaming::tag("+CGACT: "),
+            character::streaming::u8,
+            bytes::streaming::tag(","),
+            character::streaming::u8,
+        ))),
+    ))(buf)?;
+
+    Ok((reminder, (frame, 2 + frame.len())))
+}
+
 /// Matches the equivalent of regex: \r\n[0-9], <tag>\r\n
 pub fn parse_connection_status<'a, Error: ParseError<&'a [u8]>>(
     buf: &'a [u8],
@@ -89,6 +106,14 @@ pub fn parse_receive<'a, Error: ParseError<&'a [u8]>>(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn can_parse_pdp_state() {
+        let (reminder, result) = parse_pdp_state::<()>(b"\r\n+CGACT: 1,0TAIL").unwrap();
+        assert_eq!(b"TAIL", reminder);
+        assert_eq!(b"+CGACT: 1,0", result.0);
+        assert_eq!(13, result.1);
+    }
 
     #[test]
     fn can_parse_connection_status() {

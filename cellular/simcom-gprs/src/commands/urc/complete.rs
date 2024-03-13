@@ -1,5 +1,28 @@
+use crate::{commands::gprs::PdpState, ContextId};
+
 use super::{Data, ReadResult, Urc};
 use atat::nom::{branch, bytes, character, combinator, sequence};
+
+pub(super) fn parse_pdp_state(resp: &[u8]) -> Option<Urc> {
+    if let Ok((reminder, (_, id, _, state))) = sequence::tuple::<_, _, (), _>((
+        bytes::complete::tag("+CGACT: "),
+        character::complete::u8,
+        bytes::complete::tag(","),
+        character::complete::u8,
+    ))(resp)
+    {
+        if reminder.is_empty() {
+            if reminder.is_empty() {
+                return Some(Urc::PdbState(super::PdpContextState {
+                    cid: ContextId(id),
+                    state: PdpState::try_from(state).unwrap(),
+                }));
+            }
+        }
+    }
+
+    None
+}
 
 pub(super) fn parse_connection_status(resp: &[u8]) -> Option<Urc> {
     if let Ok((reminder, (id, _, status))) = sequence::tuple::<_, _, (), _>((

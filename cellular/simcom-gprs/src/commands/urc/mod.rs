@@ -50,8 +50,6 @@ enum UrcInner {
     SmsReady,
     #[at_urc("+CPIN")]
     PinStatus(PinStatus),
-    #[at_urc("+CGACT")]
-    PdbState(PdpContextState),
     #[at_urc("+CDNSGIP")]
     DnsOk(DnsLookup),
 }
@@ -93,7 +91,6 @@ impl From<UrcInner> for Urc {
             UrcInner::CallReady => Urc::CallReady,
             UrcInner::SmsReady => Urc::SmsReady,
             UrcInner::PinStatus(x) => Urc::PinStatus(x),
-            UrcInner::PdbState(x) => Urc::PdbState(x),
             UrcInner::DnsOk(x) => Urc::DnsResult(Ok(x)),
         }
     }
@@ -103,7 +100,9 @@ impl AtatUrc for Urc {
     type Response = Urc;
 
     fn parse(resp: &[u8]) -> Option<Self::Response> {
-        if let Some(urc) = complete::parse_connection_status(resp) {
+        if let Some(urc) = complete::parse_pdp_state(resp) {
+            Some(urc)
+        } else if let Some(urc) = complete::parse_connection_status(resp) {
             Some(urc)
         } else if let Some(urc) = complete::parse_data_available(resp) {
             Some(urc)
@@ -120,6 +119,7 @@ impl AtatUrc for Urc {
 impl atat::Parser for Urc {
     fn parse(buf: &[u8]) -> Result<(&[u8], usize), atat::digest::ParseError> {
         let (_, r) = branch::alt((
+            streaming::parse_pdp_state,
             streaming::parse_connection_status,
             streaming::parse_data_available,
             streaming::parse_read_data,
@@ -202,7 +202,7 @@ mod tests {
         let mut digester = SimcomDigester::new();
 
         assert_eq!(
-            (DigestResult::Urc(b"+CGACT: 1,0"), 15),
+            (DigestResult::Urc(b"+CGACT: 1,0"), 13),
             digester.digest(b"\r\n+CGACT: 1,0\r\n")
         );
         let urc = Urc::parse(b"+CGACT: 1,0").unwrap();
