@@ -185,7 +185,7 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> DataService<'buf, 'dev, 'sub,
                 // as a "<id>, CLOSE OK" URC is sent when the connection is closed.
                 match client.send(&CloseConnection { id }).await {
                     Ok(_) => {}
-                    Err(atat::Error::CmeError(e)) if e == 3.into() => {
+                    Err(atat::Error::CmeError(e)) if e == 3.into() || e == 100.into() => {
                         // CME Error seems to be returned if the connection is already closed
                         // Verify that it is actually the case
                         if let Ok(status) = client.send(&GetConnectionStatus { id }).await {
