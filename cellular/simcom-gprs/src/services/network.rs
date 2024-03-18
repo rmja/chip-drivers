@@ -49,8 +49,10 @@ impl<'dev, 'sub, AtCl: AtatClient, Config: SimcomConfig> SimcomDevice<'dev, 'sub
 impl<AtCl: AtatClient + 'static> Network<'_, '_, AtCl> {
     /// Attach the modem to the network
     pub async fn attach(&mut self, pin: Option<&str>) -> Result<(), NetworkError> {
+        // AT+CCALR?
         self.ensure_ready().await?;
 
+        // AT+CPIN?
         let status = self.get_pin_status().await?;
         match status {
             gsm::PinStatusCode::Ready => {}
@@ -61,6 +63,7 @@ impl<AtCl: AtatClient + 'static> Network<'_, '_, AtCl> {
             _ => return Err(NetworkError::UnexpectedPinStatus(status)),
         }
 
+        // AT+CREG?
         let mut client = self.handle.client.lock().await;
         let mut is_registered = false;
         for _ in 0..60 {
@@ -76,10 +79,12 @@ impl<AtCl: AtatClient + 'static> Network<'_, '_, AtCl> {
             return Err(NetworkError::NotRegistered);
         }
 
+        // AT+CGATT
         if client.send(&gprs::GetGPRSAttached).await?.state == gprs::GPRSAttachedState::Detached {
             Self::attach_inner(&mut client).await?;
         }
 
+        // AT+CGREG?
         let mut is_registered = false;
         for _ in 0..60 {
             let response = client.send(&gprs::GetGPRSNetworkRegistrationStatus).await?;

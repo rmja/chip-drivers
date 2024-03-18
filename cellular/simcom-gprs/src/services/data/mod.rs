@@ -5,29 +5,25 @@ mod tcp;
 use atat::{asynch::AtatClient, AtatCmd};
 use core::{str::from_utf8, sync::atomic::Ordering};
 use embassy_sync::{blocking_mutex::raw::NoopRawMutex, mutex::Mutex};
-use embassy_time::{with_timeout, Duration, Instant};
 use embedded_io::ErrorKind;
 use embedded_nal_async::Ipv4Addr;
 
 use crate::{
     commands::{
-        gprs::{self, ActivateOrDeactivatePDPContext},
+        gsm::SetMobileEquipmentError,
         tcpip::{
             BringUpWireless, ClientState, CloseConnection, ConfigureDomainNameServer,
             DeactivateGprsPdpContext, GetConnectionStatus, GetLocalIP, MultiIpValue,
             SetManualRxGetMode, StartMultiIpConnection, StartTaskAndSetApn,
         },
-        urc::Urc,
     },
     device::{Handle, SOCKET_STATE_DROPPED, SOCKET_STATE_UNUSED, SOCKET_STATE_USED},
-    ContextId, DriverError, SimcomConfig, SimcomDevice, SimcomUrcChannel,
+    DriverError, SimcomConfig, SimcomDevice, SimcomUrcChannel,
 };
 
 pub use apn::Apn;
 
 use super::network::NetworkError;
-
-const CONTEXT_ID: ContextId = ContextId(1);
 
 #[derive(Debug)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
@@ -108,27 +104,27 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> DataService<'buf, 'dev, 'sub,
     }
 
     async fn setup(&mut self, apn: Apn<'_>) -> Result<(), NetworkError> {
-        let state = self.get_pdp_context_state().await?;
-        if state != gprs::PdpState::Deactivated {
-            self.ensure_deactivated_pdp_context().await?;
-        }
+        // According to the sim800 tcpip application note one should use the command group:
+        // AT+CSTT, AT+CIICR and AT+CIFSR to start the task and activate the wireless connection.
+        // See §2.1.1 in https://www.waveshare.com/w/upload/6/65/SIM800_Series_TCPIP_Application_Note_V1.02.pdf
 
-        self.send(&gprs::SetPDPContextDefinition {
-            cid: CONTEXT_ID,
-            pdp_type: "IP",
-            apn: apn.apn,
-        })
-        .await?;
-
+        // AT+CIPSHUT
         self.send(&DeactivateGprsPdpContext).await?;
 
+        // AT+CIPRXGET
         self.send(&SetManualRxGetMode).await?;
 
+        // AT+CIPMUX
         self.send(&StartMultiIpConnection {
             n: MultiIpValue::MultiIpConnection,
         })
         .await?;
 
+        // AT+CSTT
+        // This implicitly activates the pdp context
+        // so we should not manually call AT+CGACT
+        // See git rev 3aa2787 for a version that connected using both.
+        // It worked with tdc and telia, but not with onomondo.
         self.send(&StartTaskAndSetApn {
             apn: apn.apn,
             username: apn.username,
@@ -136,17 +132,20 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> DataService<'buf, 'dev, 'sub,
         })
         .await?;
 
+        // AT+CIICR
         self.send(&BringUpWireless).await?;
 
-        let state = self.get_pdp_context_state().await?;
-        if state == gprs::PdpState::Deactivated {
-            self.send(&ActivateOrDeactivatePDPContext {
-                cid: CONTEXT_ID,
-                state: gprs::PdpState::Activated,
-            })
-            .await?;
-        }
+        // AT+CMEE
+        self.send(&SetMobileEquipmentError {
+            value: crate::commands::gsm::MobileEquipmentError::EnableVerbose,
+        })
+        .await?;
 
+        // AT+CIFSR
+        let ip = self.send(&GetLocalIP).await?.ip;
+        self.local_ip = Some(from_utf8(ip.as_slice()).unwrap().parse().unwrap());
+
+        // AT+CIPSTATUS
         for (id, state) in self.handle.socket_state.iter().enumerate() {
             let response = self.send(&GetConnectionStatus { id }).await?;
             let new_state = match response.state {
@@ -160,9 +159,7 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> DataService<'buf, 'dev, 'sub,
             state.store(new_state, Ordering::Release);
         }
 
-        let ip = self.send(&GetLocalIP).await?.ip;
-        self.local_ip = Some(from_utf8(ip.as_slice()).unwrap().parse().unwrap());
-
+        // AT+CDNSCFG
         self.send(&ConfigureDomainNameServer {
             pri_dns: "1.1.1.1",
             sec_dns: Some("1.0.0.1"),
@@ -176,71 +173,6 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> DataService<'buf, 'dev, 'sub,
         let mut client = self.handle.client.lock().await;
 
         client.send(cmd).await
-    }
-
-    async fn get_pdp_context_state(&mut self) -> Result<gprs::PdpState, NetworkError> {
-        let mut urc_subscription = {
-            let mut client = self.handle.client.lock().await;
-            let subscription = self.urc_channel.subscribe().unwrap();
-
-            client.send(&gprs::GetPDPContextStates).await?;
-
-            subscription
-        };
-
-        let timeout_instant = Instant::now() + Duration::from_secs(20);
-        while let Some(remaining) = timeout_instant.checked_duration_since(Instant::now()) {
-            let urc = with_timeout(remaining, urc_subscription.next_message_pure())
-                .await
-                .map_err(|_| NetworkError::PdpStateTimeout)?;
-            self.handle.drain_background_urcs();
-
-            if let Urc::PdbState(state) = urc {
-                if state.cid == CONTEXT_ID {
-                    return Ok(state.state);
-                }
-            }
-        }
-
-        Err(NetworkError::PdpStateTimeout)
-    }
-    async fn ensure_deactivated_pdp_context(&mut self) -> Result<(), NetworkError> {
-        let mut urc_subscription = {
-            let mut client = self.handle.client.lock().await;
-            let subscription = self.urc_channel.subscribe().unwrap();
-
-            client.send(&gprs::GetPDPContextStates).await?;
-
-            subscription
-        };
-
-        let timeout_instant = Instant::now() + Duration::from_secs(20);
-        while let Some(remaining) = timeout_instant.checked_duration_since(Instant::now()) {
-            let urc = with_timeout(remaining, urc_subscription.next_message_pure())
-                .await
-                .map_err(|_| NetworkError::PdpStateTimeout)?;
-            self.handle.drain_background_urcs();
-
-            if let Urc::PdbState(state) = urc {
-                if state.cid == CONTEXT_ID {
-                    if state.state == gprs::PdpState::Deactivated {
-                        return Ok(());
-                    } else {
-                        warn!("PDP context was found to be activated, deactivating...");
-
-                        let mut client = self.handle.client.lock().await;
-                        client
-                            .send(&gprs::ActivateOrDeactivatePDPContext {
-                                cid: CONTEXT_ID,
-                                state: gprs::PdpState::Deactivated,
-                            })
-                            .await?;
-                    }
-                }
-            }
-        }
-
-        Err(NetworkError::PdpStateTimeout)
     }
 
     async fn close_dropped_sockets(&self) {

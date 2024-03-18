@@ -72,7 +72,6 @@ pub struct BringUpWireless;
 /// 8.2.11 AT+CIFSR Get Local IP Address
 ///
 /// AT+CIFSR replies with the local IP without a terminating OK.
-/// We therefore append an AT command to ensure that OK is sent.
 #[derive(AtatCmd)]
 #[at_cmd("+CIFSR", LocalIP, termination = "\r")]
 pub struct GetLocalIP;
