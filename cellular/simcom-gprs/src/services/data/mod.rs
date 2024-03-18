@@ -84,8 +84,13 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static, Config: SimcomConfig>
             .is_ok()
         {
             let mut service = DataService::new(&self.handle, self.urc_channel);
-            service.setup(apn).await?;
-            Ok(service)
+            match service.setup(apn).await {
+                Ok(_) => Ok(service),
+                Err(e) => {
+                    self.data_service_taken.store(false, Ordering::Relaxed);
+                    Err(DriverError::Network(e))
+                }
+            }
         } else {
             Err(DriverError::AlreadyTaken)
         }
