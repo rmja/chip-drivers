@@ -9,7 +9,7 @@ use futures_intrusive::sync::LocalMutex;
 use heapless::Vec;
 
 use crate::{
-    commands::{gsm, urc::Urc, v25ter, AT},
+    commands::{gsm, simcom::GetCcid, urc::Urc, v25ter, AT},
     services::data::SocketError,
     DriverError, FlowControl, PartNumber, SimcomClient, SimcomConfig, SimcomResponseSlot,
     SimcomUrcChannel, MAX_SOCKETS,
@@ -170,6 +170,14 @@ where
         }
 
         Ok(())
+    }
+
+    pub async fn iccid(&mut self) -> Result<u128, DriverError> {
+        let mut client = self.handle.client.lock().await;
+        let response = client.send(&GetCcid).await?;
+        let iccid = core::str::from_utf8(&response.iccid).map_err(|_| atat::Error::Parse)?;
+        let iccid = iccid.parse::<u128>().map_err(|_| atat::Error::Parse)?;
+        Ok(iccid)
     }
 
     /// Check that the cellular module is alive.
