@@ -9,7 +9,7 @@ packet-controller = ["embassy-time", "heapless"]
 serial-controller = ["embassy-time", "futures-async-stream"]
 
 [dependencies]
-bitfield = "0.14"
+bitfield = "0.15"
 defmt = { version = "0.3", optional = true }
 embassy-time = { version = "0.3", optional = true }
 embedded-hal = "1"
