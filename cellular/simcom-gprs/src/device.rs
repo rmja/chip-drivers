@@ -172,14 +172,6 @@ where
         Ok(())
     }
 
-    pub async fn iccid(&mut self) -> Result<u128, DriverError> {
-        let mut client = self.handle.client.lock().await;
-        let response = client.send(&GetCcid).await?;
-        let iccid = core::str::from_utf8(&response.iccid).map_err(|_| atat::Error::Parse)?;
-        let iccid = iccid.parse::<u128>().map_err(|_| atat::Error::Parse)?;
-        Ok(iccid)
-    }
-
     /// Check that the cellular module is alive.
     ///
     /// See if the cellular module is responding at the AT interface by poking
@@ -196,6 +188,29 @@ where
             };
         }
         Err(error)
+    }
+
+    /// Get the sim card iccid
+    pub async fn iccid(&self) -> Result<u128, DriverError> {
+        let mut client = self.handle.client.lock().await;
+        for _ in 0..10 {
+            match client.send(&GetCcid).await {
+                Ok(response) => {
+                    let iccid =
+                        core::str::from_utf8(&response.iccid).map_err(|_| atat::Error::Parse)?;
+                    let iccid = iccid.parse::<u128>().map_err(|_| atat::Error::Parse)?;
+                    return Ok(iccid);
+                }
+                Err(atat::Error::CmeError(atat::CmeError::SimNotInserted)) => {
+                    // For Dandial (TDC) simcards it seems as if SimNotInserted may be returned several times when first requesting iccid
+                }
+                Err(e) => return Err(e.into()),
+            }
+            Timer::after_millis(500).await;
+        }
+        Err(DriverError::Atat(atat::Error::CmeError(
+            atat::CmeError::SimNotInserted,
+        )))
     }
 }
 
