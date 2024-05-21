@@ -1,4 +1,4 @@
-use atat::asynch::AtatClient;
+use atat::{asynch::AtatClient, CmeError};
 use embassy_time::{with_timeout, Duration, Instant, Timer};
 
 use crate::{
@@ -110,7 +110,7 @@ impl<AtCl: AtatClient + 'static> Network<'_, '_, AtCl> {
             {
                 Ok(_) => break,
                 // sim800 (not sim900) reports CME ERROR 100 if it was unable to attach
-                Err(atat::Error::CmeError(err)) if err as u16 == 100 => {}
+                Err(atat::Error::CmeError(CmeError::Unknown)) => {}
                 Err(err) => return Err(err.into()),
             }
 

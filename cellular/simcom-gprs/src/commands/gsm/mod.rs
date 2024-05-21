@@ -83,7 +83,7 @@ pub struct GetNetworkRegistrationStatus;
 
 // 3.2.35 AT+CSQ Signal Quality Report
 #[derive(AtatCmd)]
-#[at_cmd("+CSQ?", SignalQuality, termination = "\r")]
+#[at_cmd("+CSQ", SignalQuality, termination = "\r")]
 pub struct GetSignalQuality;
 
 #[cfg(test)]
@@ -207,7 +207,7 @@ mod tests {
     #[test]
     fn can_get_signal_quality() {
         let cmd = GetSignalQuality;
-        assert_eq_hex!(b"AT+CSQ?\r", cmd.to_vec().as_bytes());
+        assert_eq_hex!(b"AT+CSQ\r", cmd.to_vec().as_bytes());
 
         let response = cmd.parse(Ok(b"+CSQ: 20,0")).unwrap();
         assert_eq!(-74, response.rssi().unwrap());
