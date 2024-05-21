@@ -268,6 +268,7 @@ impl<AtCl: AtatClient + 'static> Handle<'_, AtCl> {
                 warn!("[{}] Socket closed", id);
                 self.socket_state[id].store(SOCKET_STATE_UNUSED, Ordering::Release);
             }
+            Urc::PdpDeact => info!("GPRS is disconnected by network"),
             Urc::PdbState(state) => {
                 debug!("PDP state for context {} is {:?}", state.cid, state.state);
             }

@@ -29,6 +29,7 @@ pub enum Urc {
     AlreadyConnect(usize),
     SendOk(usize),
     Closed(usize),
+    PdpDeact,
 
     PdbState(PdpContextState),
 
@@ -110,6 +111,8 @@ impl AtatUrc for Urc {
             Some(urc)
         } else if let Some(urc) = complete::parse_dns_error(resp) {
             Some(urc)
+        } else if resp == b"+PDP: DEACT" {
+            Some(Urc::PdpDeact)
         } else {
             UrcInner::parse(resp).map(|x| x.into())
         }
@@ -126,6 +129,7 @@ impl atat::Parser for Urc {
             streaming::parse_receive,
             urc_helper("Call Ready"),
             urc_helper("SMS Ready"),
+            urc_helper("+PDP: DEACT"),
             urc_helper("+CPIN"),
             urc_helper("+CGACT"),
             urc_helper("+CDNSGIP"),
@@ -166,6 +170,18 @@ mod tests {
         );
         let urc = Urc::parse(b"SMS Ready").unwrap();
         assert_matches!(urc, Urc::SmsReady);
+    }
+
+    #[test]
+    fn can_parse_pdp_deact() {
+        let mut digester = SimcomDigester::new();
+
+        assert_eq!(
+            (DigestResult::Urc(b"+PDP: DEACT"), 15),
+            digester.digest(b"\r\n+PDP: DEACT\r\n")
+        );
+        let urc = Urc::parse(b"+PDP: DEACT").unwrap();
+        assert_matches!(urc, Urc::PdpDeact);
     }
 
     #[test]
