@@ -37,6 +37,38 @@ pub enum FacilityMode {
 
 #[derive(AtatEnum, PartialEq)]
 #[at_enum(u8)]
+pub enum OperatorSelectionMode {
+    #[at_arg(value = 0)]
+    Automatic,
+    #[at_arg(value = 1)]
+    Manual,
+    #[at_arg(value = 2)]
+    Deregister,
+    #[at_arg(value = 3)]
+    SetOnly,
+    #[at_arg(value = 4)]
+    ManualAutomatic,
+}
+
+#[derive(AtatEnum, PartialEq)]
+#[at_enum(u8)]
+pub enum RestrictedSimAccessCommand {
+    #[at_arg(value = 176)]
+    ReadBinary,
+    #[at_arg(value = 178)]
+    ReadRecord,
+    #[at_arg(value = 192)]
+    GetResponse,
+    #[at_arg(value = 214)]
+    UpdateBinary,
+    #[at_arg(value = 220)]
+    UpdateRecord,
+    #[at_arg(value = 242)]
+    Status,
+}
+
+#[derive(AtatEnum, PartialEq)]
+#[at_enum(u8)]
 pub enum MobileEquipmentError {
     #[at_arg(value = 0)]
     Disable,

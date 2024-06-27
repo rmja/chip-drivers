@@ -63,8 +63,22 @@ impl<AtCl: AtatClient + 'static> Network<'_, '_, AtCl> {
             _ => return Err(NetworkError::UnexpectedPinStatus(status)),
         }
 
-        // AT+CREG?
         let mut client = self.handle.client.lock().await;
+
+        // AT+COPS? - Ensure that we are using automatic operator selection
+        // See https://onomondo.com/blog/at-command-attach-detach-modems-tips/
+        let response = client.send(&gsm::GetOperatorSelection).await?;
+        if response.mode != gsm::OperatorSelectionMode::Automatic {
+            client
+                .send(&gsm::SetOperatorSelection {
+                    mode: gsm::OperatorSelectionMode::Automatic,
+                    format: None,
+                    operator: None,
+                })
+                .await?;
+        }
+
+        // AT+CREG?
         let mut is_registered = false;
         for _ in 0..60 {
             let response = client.send(&gsm::GetNetworkRegistrationStatus).await?;
@@ -135,6 +149,23 @@ impl<AtCl: AtatClient + 'static> Network<'_, '_, AtCl> {
             Timer::after(Duration::from_millis(1_000)).await;
         }
         Err(NetworkError::NotReady)
+    }
+
+    /// Clear the FPLMN (forbidden network) list
+    /// See e.g. https://onomondo.com/blog/how-to-clear-the-fplmn-list-on-a-sim/
+    pub async fn clear_fplmn_list(&mut self) -> Result<(), NetworkError> {
+        let mut client = self.handle.client.lock().await;
+        client
+            .send(&gsm::SetRestrictedSimAccess {
+                command: gsm::RestrictedSimAccessCommand::UpdateBinary,
+                file_id: 28539,
+                p0: 0,
+                p1: 0,
+                p2: 12,
+                data: "FFFFFFFFFFFFFFFFFFFFFFFF",
+            })
+            .await?;
+        Ok(())
     }
 
     /// Get the current signal quality from modem

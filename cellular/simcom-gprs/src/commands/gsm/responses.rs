@@ -2,7 +2,7 @@ use atat::atat_derive::AtatResp;
 use heapless::String;
 use heapless_bytes::Bytes;
 
-use super::{NetworkRegistrationStat, NetworkRegistrationUrcConfig};
+use super::{NetworkRegistrationStat, NetworkRegistrationUrcConfig, OperatorSelectionMode};
 
 /// 3.2.8 Manufacturer Identification
 #[derive(AtatResp)]
@@ -22,6 +22,17 @@ pub struct SoftwareVersionResponse {
     pub version: Bytes<32>,
 }
 
+// 3.2.22 AT+COPS Operator Selection
+#[derive(AtatResp)]
+pub struct OperatorSelection {
+    #[at_arg(position = 0)]
+    pub mode: OperatorSelectionMode,
+    #[at_arg(position = 1)]
+    pub format: Option<u8>,
+    #[at_arg(position = 2)]
+    pub operator: Option<String<16>>,
+}
+
 // 3.2.32 AT+CREG Network Registration
 #[derive(AtatResp)]
 pub struct NetworkRegistrationStatus {
@@ -35,6 +46,17 @@ pub struct NetworkRegistrationStatus {
     pub ci: Option<String<8>>,
     #[at_arg(position = 4)]
     pub act_status: Option<u8>,
+}
+
+// 3.2.22 AT+CRSM Restricted SIM Access
+#[derive(AtatResp)]
+pub struct RestrictedSimAccessResponse {
+    #[at_arg(position = 0)]
+    pub sw1: u8,
+    #[at_arg(position = 1)]
+    pub sw2: u8,
+    #[at_arg(position = 2)]
+    pub response: Option<String<24>>,
 }
 
 // 3.2.35 AT+CSQ Signal Quality Report

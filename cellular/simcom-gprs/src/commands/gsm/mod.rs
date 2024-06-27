@@ -43,6 +43,20 @@ pub struct SetMobileEquipmentError {
     pub value: MobileEquipmentError,
 }
 
+// 3.2.22 Operator Selection
+#[derive(AtatCmd)]
+#[at_cmd("+COPS?", OperatorSelection, timeout_ms = 45_000, termination = "\r")]
+pub struct GetOperatorSelection;
+
+#[derive(AtatCmd)]
+#[at_cmd("+COPS", NoResponse, timeout_ms = 120_000, termination = "\r")]
+pub struct SetOperatorSelection<'a> {
+    pub mode: OperatorSelectionMode,
+    pub format: Option<u8>,
+    #[at_arg(len = 16)]
+    pub operator: Option<&'a str>,
+}
+
 /// 3.2.28 AT+CPIN Enter PIN
 #[derive(AtatCmd)]
 #[at_cmd("+CPIN?", NoResponse, timeout_ms = 5_000, termination = "\r")]
@@ -80,6 +94,39 @@ pub struct ChangePassword<'a> {
 #[derive(AtatCmd)]
 #[at_cmd("+CREG?", NetworkRegistrationStatus, termination = "\r")]
 pub struct GetNetworkRegistrationStatus;
+
+// 3.2.34 AT+CRSM Restricted SIM Access
+#[derive(AtatCmd)]
+#[at_cmd("+CRSM", RestrictedSimAccessResponse, termination = "\r")]
+pub struct GetRestrictedSimAccess {
+    #[at_arg(position = 0)]
+    pub command: RestrictedSimAccessCommand,
+    #[at_arg(position = 1)]
+    pub file_id: u16,
+    #[at_arg(position = 2)]
+    pub p0: Option<u8>,
+    #[at_arg(position = 3)]
+    pub p1: Option<u8>,
+    #[at_arg(position = 4)]
+    pub p2: Option<u8>,
+}
+
+#[derive(AtatCmd)]
+#[at_cmd("+CRSM", NoResponse, termination = "\r")]
+pub struct SetRestrictedSimAccess<'a> {
+    #[at_arg(position = 0)]
+    pub command: RestrictedSimAccessCommand,
+    #[at_arg(position = 1)]
+    pub file_id: u16,
+    #[at_arg(position = 2)]
+    pub p0: u8,
+    #[at_arg(position = 3)]
+    pub p1: u8,
+    #[at_arg(position = 4)]
+    pub p2: u8,
+    #[at_arg(position = 5, len = 24)]
+    pub data: &'a str,
+}
 
 // 3.2.35 AT+CSQ Signal Quality Report
 #[derive(AtatCmd)]
@@ -161,6 +208,27 @@ mod tests {
     }
 
     #[test]
+    fn can_get_operator_selection() {
+        let cmd = GetOperatorSelection;
+        assert_eq_hex!(b"AT+COPS?\r", cmd.to_vec().as_bytes());
+
+        let response = cmd.parse(Ok(b"+COPS: 0,0,\"T-Mobile USA\"")).unwrap();
+        assert_eq!(0, response.mode);
+        assert_eq!(0, response.format.unwrap());
+        assert_eq!("T-Mobile USA", response.operator.unwrap());
+    }
+
+    #[test]
+    fn can_set_operator_selection() {
+        let cmd = SetOperatorSelection {
+            mode: 0,
+            format: None,
+            operator: None,
+        };
+        assert_eq_hex!(b"AT+COPS=0\r", cmd.to_vec().as_bytes());
+    }
+
+    #[test]
     fn can_get_pin_status() {
         let cmd = GetPinStatus;
         assert_eq_hex!(b"AT+CPIN?\r", cmd.to_vec().as_bytes());
@@ -202,6 +270,43 @@ mod tests {
         let response = cmd.parse(Ok(b"+CREG: 0,0")).unwrap();
         assert_eq!(NetworkRegistrationUrcConfig::Disabled, response.n);
         assert_eq!(NetworkRegistrationStat::NotRegistered, response.stat);
+    }
+
+    #[test]
+    fn can_get_restricted_sim_access() {
+        // See https://onomondo.com/blog/how-to-clear-the-fplmn-list-on-a-sim/
+        let cmd = GetRestrictedSimAccess {
+            command: RestrictedSimAccessCommand::ReadBinary,
+            file_id: 28539,
+            p0: Some(0),
+            p1: Some(0),
+            p2: Some(12),
+        };
+        assert_eq_hex!(b"AT+CRSM=176,28539,0,0,12\r", cmd.to_vec().as_bytes());
+
+        let response = cmd
+            .parse(Ok(b"+CRSM: 144,0,\"FFFFFFFFFFFFFFFFFFFFFFFF\""))
+            .unwrap();
+        assert_eq!(144, response.sw1);
+        assert_eq!(0, response.sw2);
+        assert_eq!("FFFFFFFFFFFFFFFFFFFFFFFF", response.response.unwrap());
+    }
+
+    #[test]
+    fn can_set_restricted_sim_access() {
+        // See https://onomondo.com/blog/how-to-clear-the-fplmn-list-on-a-sim/
+        let cmd = SetRestrictedSimAccess {
+            command: RestrictedSimAccessCommand::UpdateBinary,
+            file_id: 28539,
+            p0: 0,
+            p1: 0,
+            p2: 12,
+            data: "FFFFFFFFFFFFFFFFFFFFFFFF",
+        };
+        assert_eq_hex!(
+            b"AT+CRSM=214,28539,0,0,12,\"FFFFFFFFFFFFFFFFFFFFFFFF\"\r",
+            cmd.to_vec().as_bytes()
+        );
     }
 
     #[test]
