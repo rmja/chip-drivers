@@ -10,7 +10,10 @@ pub trait SimcomConfig {
     fn reset_pin(&mut self) -> &mut Self::ResetPin;
 
     fn atat_config(&self) -> Config {
-        Config::new().get_response_timeout(Self::get_response_timeout)
+        Config::new()
+            // Not a value specified by simcom but it seems reasonable
+            .cmd_cooldown(Duration::from_millis(50))
+            .get_response_timeout(Self::get_response_timeout)
     }
 
     fn get_response_timeout(start: Instant, timeout: Duration) -> Instant {
