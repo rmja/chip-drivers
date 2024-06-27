@@ -18,6 +18,7 @@ pub enum NetworkError {
     PdpStateTimeout,
     NotReady,
     NotRegistered,
+    GprsNotRegistered,
     NotAttached,
     PinRequired,
     PukRequired,
@@ -108,7 +109,7 @@ impl<AtCl: AtatClient + 'static> Network<'_, '_, AtCl> {
             }
         }
         if !is_registered {
-            return Err(NetworkError::NotRegistered);
+            return Err(NetworkError::GprsNotRegistered);
         }
 
         Ok(())
