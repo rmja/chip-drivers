@@ -152,6 +152,28 @@ impl<AtCl: AtatClient + 'static> Network<'_, '_, AtCl> {
         Err(NetworkError::NotReady)
     }
 
+    /// Read the FPLMN (forbidden network) list
+    /// See e.g. https://onomondo.com/blog/how-to-clear-the-fplmn-list-on-a-sim/
+    pub async fn get_fplmn_list(&mut self) -> Result<[u8; 12], NetworkError> {
+        let mut client = self.handle.client.lock().await;
+        let response = client
+            .send(&gsm::RestrictedSimAccess {
+                command: gsm::RestrictedSimAccessCommand::ReadBinary,
+                file_id: 28539,
+                p0: Some(0),
+                p1: Some(0),
+                p2: Some(12),
+                data: None,
+            })
+            .await?;
+        let mut list = [0; 12];
+        let hex = response
+            .response
+            .ok_or(NetworkError::Atat(atat::Error::Parse))?;
+        hex::decode_to_slice(hex, &mut list).map_err(|_| NetworkError::Atat(atat::Error::Parse))?;
+        Ok(list)
+    }
+
     /// Clear the FPLMN (forbidden network) list
     /// See e.g. https://onomondo.com/blog/how-to-clear-the-fplmn-list-on-a-sim/
     pub async fn clear_fplmn_list(&mut self) -> Result<(), NetworkError> {
