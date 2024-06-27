@@ -101,7 +101,7 @@ impl<AtCl: AtatClient + 'static> Network<'_, '_, AtCl> {
     }
 
     async fn attach_inner(client: &mut AtCl) -> Result<(), NetworkError> {
-        for _ in 0..20 {
+        for _ in 0..30 {
             match client
                 .send(&gprs::SetGPRSAttached {
                     state: gprs::GPRSAttachedState::Attached,
