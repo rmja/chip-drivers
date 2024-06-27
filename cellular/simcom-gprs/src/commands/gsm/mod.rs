@@ -98,7 +98,7 @@ pub struct GetNetworkRegistrationStatus;
 // 3.2.34 AT+CRSM Restricted SIM Access
 #[derive(AtatCmd)]
 #[at_cmd("+CRSM", RestrictedSimAccessResponse, termination = "\r")]
-pub struct GetRestrictedSimAccess {
+pub struct RestrictedSimAccess<'a> {
     #[at_arg(position = 0)]
     pub command: RestrictedSimAccessCommand,
     #[at_arg(position = 1)]
@@ -109,23 +109,8 @@ pub struct GetRestrictedSimAccess {
     pub p1: Option<u8>,
     #[at_arg(position = 4)]
     pub p2: Option<u8>,
-}
-
-#[derive(AtatCmd)]
-#[at_cmd("+CRSM", NoResponse, termination = "\r")]
-pub struct SetRestrictedSimAccess<'a> {
-    #[at_arg(position = 0)]
-    pub command: RestrictedSimAccessCommand,
-    #[at_arg(position = 1)]
-    pub file_id: u16,
-    #[at_arg(position = 2)]
-    pub p0: u8,
-    #[at_arg(position = 3)]
-    pub p1: u8,
-    #[at_arg(position = 4)]
-    pub p2: u8,
     #[at_arg(position = 5, len = 24)]
-    pub data: &'a str,
+    pub data: Option<&'a str>,
 }
 
 // 3.2.35 AT+CSQ Signal Quality Report
@@ -213,7 +198,7 @@ mod tests {
         assert_eq_hex!(b"AT+COPS?\r", cmd.to_vec().as_bytes());
 
         let response = cmd.parse(Ok(b"+COPS: 0,0,\"T-Mobile USA\"")).unwrap();
-        assert_eq!(0, response.mode);
+        assert_eq!(OperatorSelectionMode::Automatic, response.mode);
         assert_eq!(0, response.format.unwrap());
         assert_eq!("T-Mobile USA", response.operator.unwrap());
     }
@@ -221,7 +206,7 @@ mod tests {
     #[test]
     fn can_set_operator_selection() {
         let cmd = SetOperatorSelection {
-            mode: 0,
+            mode: OperatorSelectionMode::Automatic,
             format: None,
             operator: None,
         };
@@ -275,12 +260,13 @@ mod tests {
     #[test]
     fn can_get_restricted_sim_access() {
         // See https://onomondo.com/blog/how-to-clear-the-fplmn-list-on-a-sim/
-        let cmd = GetRestrictedSimAccess {
+        let cmd = RestrictedSimAccess {
             command: RestrictedSimAccessCommand::ReadBinary,
             file_id: 28539,
             p0: Some(0),
             p1: Some(0),
             p2: Some(12),
+            data: None,
         };
         assert_eq_hex!(b"AT+CRSM=176,28539,0,0,12\r", cmd.to_vec().as_bytes());
 
@@ -295,18 +281,23 @@ mod tests {
     #[test]
     fn can_set_restricted_sim_access() {
         // See https://onomondo.com/blog/how-to-clear-the-fplmn-list-on-a-sim/
-        let cmd = SetRestrictedSimAccess {
+        let cmd = RestrictedSimAccess {
             command: RestrictedSimAccessCommand::UpdateBinary,
             file_id: 28539,
-            p0: 0,
-            p1: 0,
-            p2: 12,
-            data: "FFFFFFFFFFFFFFFFFFFFFFFF",
+            p0: Some(0),
+            p1: Some(0),
+            p2: Some(12),
+            data: Some("FFFFFFFFFFFFFFFFFFFFFFFF"),
         };
         assert_eq_hex!(
             b"AT+CRSM=214,28539,0,0,12,\"FFFFFFFFFFFFFFFFFFFFFFFF\"\r",
             cmd.to_vec().as_bytes()
         );
+
+        let response = cmd.parse(Ok(b"+CRSM: 144,0")).unwrap();
+        assert_eq!(144, response.sw1);
+        assert_eq!(0, response.sw2);
+        assert!(response.response.is_none());
     }
 
     #[test]

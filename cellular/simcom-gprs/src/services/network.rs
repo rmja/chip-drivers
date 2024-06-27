@@ -157,13 +157,13 @@ impl<AtCl: AtatClient + 'static> Network<'_, '_, AtCl> {
     pub async fn clear_fplmn_list(&mut self) -> Result<(), NetworkError> {
         let mut client = self.handle.client.lock().await;
         client
-            .send(&gsm::SetRestrictedSimAccess {
+            .send(&gsm::RestrictedSimAccess {
                 command: gsm::RestrictedSimAccessCommand::UpdateBinary,
                 file_id: 28539,
-                p0: 0,
-                p1: 0,
-                p2: 12,
-                data: "FFFFFFFFFFFFFFFFFFFFFFFF",
+                p0: Some(0),
+                p1: Some(0),
+                p2: Some(12),
+                data: Some("FFFFFFFFFFFFFFFFFFFFFFFF"),
             })
             .await?;
         Ok(())

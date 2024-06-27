@@ -35,7 +35,7 @@ pub enum FacilityMode {
     QueryStatus,
 }
 
-#[derive(AtatEnum, PartialEq)]
+#[derive(AtatEnum, Debug, PartialEq)]
 #[at_enum(u8)]
 pub enum OperatorSelectionMode {
     #[at_arg(value = 0)]
