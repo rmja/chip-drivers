@@ -222,6 +222,10 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpSocket<'buf, 'dev, 'sub, A
     }
 
     async fn write(&mut self, buf: &[u8]) -> Result<usize, SocketError> {
+        if buf.is_empty() {
+            return Ok(0);
+        }
+
         self.wait_ongoing_write().await?;
 
         let len = usize::min(buf.len(), MAX_WRITE);
