@@ -1,7 +1,7 @@
 use core::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 
 use atat::{asynch::AtatClient, UrcSubscription};
-use embassy_sync::{blocking_mutex::raw::NoopRawMutex, mutex::Mutex};
+use embassy_sync::{blocking_mutex::raw::NoopRawMutex, mutex::Mutex, pubsub::WaitResult};
 use embassy_time::{Duration, Timer};
 use embedded_hal::digital::OutputPin;
 use embedded_io_async::Write;
@@ -244,8 +244,11 @@ impl<AtCl: AtatClient + 'static> Handle<'_, AtCl> {
 
     pub(crate) fn drain_background_urcs(&self) {
         if let Ok(mut subscription) = self.background_subscription.try_lock() {
-            while let Some(urc) = subscription.try_next_message_pure() {
-                self.handle_urc(urc);
+            while let Some(urc) = subscription.try_next_message() {
+                match urc {
+                    WaitResult::Message(urc) => self.handle_urc(urc),
+                    WaitResult::Lagged(count) => error!("Lagged {} URC messages", count),
+                }
             }
         }
     }
