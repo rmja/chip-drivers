@@ -223,6 +223,7 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpSocket<'buf, 'dev, 'sub, A
 
     async fn write(&mut self, buf: &[u8]) -> Result<usize, SocketError> {
         if buf.is_empty() {
+            self.drain_background_urcs_and_ensure_in_use()?;
             return Ok(0);
         }
 
