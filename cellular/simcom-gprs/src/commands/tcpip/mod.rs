@@ -42,6 +42,13 @@ pub struct WriteData<'a> {
     pub buf: &'a [u8],
 }
 
+/// 8.2.4 AT+CIPQSEND Select Data Transmitting Mode
+#[derive(AtatCmd)]
+#[at_cmd("+CIPQSEND", NoResponse, termination = "\r")]
+pub struct SelectDataTransmittingMode {
+    pub mode: DataTransmittingMode,
+}
+
 /// 8.2.6 AT+CIPCLOSE Close TCP or UDP Connection.
 pub struct CloseConnection {
     pub id: usize,
@@ -202,6 +209,14 @@ mod tests {
             len: Some(10),
         };
         assert_eq_hex!(b"AT+CIPSEND=2,10\r", cmd.to_vec().as_slice());
+    }
+
+    #[test]
+    fn can_select_data_transmitting_mode() {
+        let cmd = SelectDataTransmittingMode {
+            mode: DataTransmittingMode::QuickSendMode,
+        };
+        assert_eq_hex!(b"AT+CIPQSEND=1\r", cmd.to_vec().as_slice());
     }
 
     #[test]

@@ -14,7 +14,8 @@ use crate::{
         tcpip::{
             BringUpWireless, ClientState, CloseConnection, ConfigureDomainNameServer,
             DeactivateGprsPdpContext, GetConnectionStatus, GetLocalIP, MultiIpValue,
-            SetManualRxGetMode, StartMultiIpConnection, StartTaskAndSetApn,
+            SelectDataTransmittingMode, SetManualRxGetMode, StartMultiIpConnection,
+            StartTaskAndSetApn,
         },
     },
     device::{Handle, SOCKET_STATE_DROPPED, SOCKET_STATE_UNUSED, SOCKET_STATE_USED},
@@ -170,6 +171,14 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> DataService<'buf, 'dev, 'sub,
             };
             state.store(new_state, Ordering::Release);
         }
+
+        // AT+CIPQSEND
+        // Enter quick send mode so that we get an URC when written data is buffered
+        // instead of when it is received by the server
+        self.send(&SelectDataTransmittingMode {
+            mode: crate::commands::tcpip::DataTransmittingMode::QuickSendMode,
+        })
+        .await?;
 
         // AT+CDNSCFG
         self.send(&ConfigureDomainNameServer {

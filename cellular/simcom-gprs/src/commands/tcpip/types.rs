@@ -7,6 +7,12 @@ pub enum MultiIpValue {
     MultiIpConnection = 1,
 }
 
+#[derive(Debug, AtatEnum, PartialEq)]
+pub enum DataTransmittingMode {
+    NormalMode = 0,
+    QuickSendMode = 1,
+}
+
 #[derive(Debug, Deserialize, PartialEq)]
 pub enum ClientState {
     #[serde(rename = "INITIAL")]

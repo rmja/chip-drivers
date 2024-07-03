@@ -263,8 +263,12 @@ impl<AtCl: AtatClient + 'static> Handle<'_, AtCl> {
             Urc::AlreadyConnect(id) => {
                 error!("[{}] Already connected", id);
             }
+            Urc::DataAccept(id, length) => {
+                debug!("[{}] Written data accepted ({} bytes)", id, length);
+                self.busy_writing[id].store(false, Ordering::Release);
+            }
             Urc::SendOk(id) => {
-                debug!("[{}] Data written", id);
+                debug!("[{}] Data sent", id);
                 self.busy_writing[id].store(false, Ordering::Release);
             }
             Urc::Closed(id) => {
