@@ -2,14 +2,17 @@ use core::sync::atomic::Ordering;
 
 use atat::{asynch::AtatClient, AtatCmd};
 use core::fmt::Write as _;
-use embassy_time::{with_timeout, Duration, Instant};
+use embassy_time::{with_timeout, Duration, Instant, Timer};
 use embedded_io_async::{Read, Write};
 use embedded_nal_async::{SocketAddr, TcpConnect};
 use heapless::String;
 
 use crate::{
     commands::{
-        tcpip::{ReadData, SendData, StartConnection, WriteData, MAX_WRITE},
+        tcpip::{
+            QueryPreviousConnectionDataTransmittingState, ReadData, SendData, StartConnection,
+            WriteData, MAX_WRITE,
+        },
         urc::Urc,
     },
     device::Handle,
@@ -229,28 +232,58 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpSocket<'buf, 'dev, 'sub, A
             return Ok(0);
         }
 
-        self.wait_ongoing_write().await?;
-
         let len = usize::min(buf.len(), MAX_WRITE);
 
-        let mut client = self.handle.client.lock().await;
-        // Hold client all the way from request prompt to actually writing data
-        client
-            .send(&SendData {
-                id: self.id,
-                len: Some(len),
-            })
-            .await?;
+        if super::USE_QUICK_SEND_MODE {
+            loop {
+                self.drain_background_urcs_and_ensure_in_use()?;
 
-        // We have received prompt and are ready to write data
+                {
+                    let mut client = self.handle.client.lock().await;
+                    let response = client
+                        .send(&QueryPreviousConnectionDataTransmittingState { id: self.id })
+                        .await?;
 
-        // Indicate that we are currently writing
-        self.handle.busy_writing[self.id].store(true, Ordering::Release);
+                    // 8192 is some random number that seems to work??
+                    // If we exceed this then the modem start to reply with "SEND FAIL"
+                    if response.nacklen + len <= 8192 {
+                        break;
+                    }
+                }
 
-        // Write the data buffer
-        client.send(&WriteData { buf: &buf[..len] }).await?;
+                Timer::after_millis(100).await;
+            }
+        } else {
+            // Wait for the previous (if any) "SEND OK" to arrive
+            self.wait_ongoing_write().await?;
+        }
 
-        debug!("[{}] Wrote {} bytes", self.id, len);
+        {
+            let mut client = self.handle.client.lock().await;
+            // Hold client all the way from request prompt to actually writing data
+
+            client
+                .send(&SendData {
+                    id: self.id,
+                    len: Some(len),
+                })
+                .await?;
+
+            // We have received prompt and are ready to write data
+
+            // Indicate that we are currently writing
+            self.handle.busy_writing[self.id].store(true, Ordering::Release);
+
+            // Write the data buffer
+            client.send(&WriteData { buf: &buf[..len] }).await?;
+
+            debug!("[{}] Wrote {} bytes", self.id, len);
+        }
+
+        if super::USE_QUICK_SEND_MODE {
+            // Wait for "DATA ACCEPT" to arrive
+            self.wait_ongoing_write().await?
+        }
 
         Ok(len)
     }
@@ -312,8 +345,8 @@ impl<AtCl: AtatClient + 'static> Write for TcpSocket<'_, '_, '_, AtCl> {
 
     async fn flush(&mut self) -> Result<(), Self::Error> {
         if USE_QUICK_SEND_MODE {
-            // Wait for modem to confirm that it has received all written bytes
-            self.wait_ongoing_write().await
+            // All written data is already accepted
+            Ok(())
         } else {
             // We do not do any buffering in the data so all writes are sent to the uart immediately
             // We cannot wait for the modem to reply "SEND OK" using wait_ongoing_write()
