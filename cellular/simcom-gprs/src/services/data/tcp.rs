@@ -306,7 +306,7 @@ impl<AtCl: AtatClient + 'static> Write for TcpSocket<'_, '_, '_, AtCl> {
 
     async fn flush(&mut self) -> Result<(), Self::Error> {
         // We do not do any buffering in the data so all writes are sent to the uart immediately
-        // We cannot wait for the modem to reply "SENT OK" using wait_data_written()
+        // We cannot wait for the modem to reply "SEND OK" using wait_ongoing_write()
         // as this can cause deadlocks if the application does flush().await before it starts read().await.
         Ok(())
     }
