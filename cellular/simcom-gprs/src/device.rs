@@ -35,7 +35,7 @@ pub struct SimcomDevice<'buf, 'sub, AtCl: AtatClient, Config: SimcomConfig> {
 pub struct Handle<'sub, AtCl: AtatClient> {
     pub(crate) client: LocalMutex<AtCl>,
     pub(crate) socket_state: Vec<SocketState, MAX_SOCKETS>,
-    pub(crate) data_written: [AtomicBool; MAX_SOCKETS],
+    pub(crate) busy_writing: [AtomicBool; MAX_SOCKETS],
     pub(crate) data_available: [AtomicBool; MAX_SOCKETS],
     pub(crate) max_urc_len: usize,
     background_subscription:
@@ -76,7 +76,7 @@ where
             handle: Handle {
                 client: LocalMutex::new(client, true),
                 socket_state: Vec::new(),
-                data_written: Default::default(),
+                busy_writing: Default::default(),
                 data_available: Default::default(),
                 max_urc_len,
                 background_subscription: Mutex::new(urc_channel.subscribe().unwrap()),
@@ -234,7 +234,7 @@ impl<AtCl: AtatClient + 'static> Handle<'_, AtCl> {
             )
             .is_ok()
         {
-            self.data_written[id].store(true, Ordering::Relaxed);
+            self.busy_writing[id].store(false, Ordering::Relaxed);
             self.data_available[id].store(false, Ordering::Relaxed);
             true
         } else {
@@ -265,7 +265,7 @@ impl<AtCl: AtatClient + 'static> Handle<'_, AtCl> {
             }
             Urc::SendOk(id) => {
                 debug!("[{}] Data written", id);
-                self.data_written[id].store(true, Ordering::Release);
+                self.busy_writing[id].store(false, Ordering::Release);
             }
             Urc::Closed(id) => {
                 warn!("[{}] Socket closed", id);

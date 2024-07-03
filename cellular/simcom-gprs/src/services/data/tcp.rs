@@ -242,8 +242,8 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpSocket<'buf, 'dev, 'sub, A
 
         // We have received prompt and are ready to write data
 
-        // Clear the flushed flag
-        self.handle.data_written[self.id].store(false, Ordering::Release);
+        // Indicate that we are currently writing
+        self.handle.busy_writing[self.id].store(true, Ordering::Release);
 
         // Write the data buffer
         client.send(&WriteData { buf: &buf[..len] }).await?;
@@ -258,7 +258,7 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpSocket<'buf, 'dev, 'sub, A
 
         self.drain_background_urcs_and_ensure_in_use()?;
 
-        if self.handle.data_written[self.id].load(Ordering::Acquire) {
+        if !self.handle.busy_writing[self.id].load(Ordering::Acquire) {
             trace!("[{}] Data already written", self.id);
             return Ok(());
         }
@@ -273,7 +273,7 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpSocket<'buf, 'dev, 'sub, A
 
             self.drain_background_urcs_and_ensure_in_use()?;
 
-            if self.handle.data_written[self.id].load(Ordering::Acquire) {
+            if !self.handle.busy_writing[self.id].load(Ordering::Acquire) {
                 trace!("[{}] Data is now written", self.id);
                 return Ok(());
             } else {
