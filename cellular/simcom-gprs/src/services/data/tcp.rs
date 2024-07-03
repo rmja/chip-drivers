@@ -253,6 +253,10 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpSocket<'buf, 'dev, 'sub, A
         Ok(len)
     }
 
+    // Wait for an ongoing write to complete.
+    // This completion depends on the selection in AT+CIPQSEND
+    // * Normal mode: This completes when the server receives the data
+    // * Quick Send mode: This completes when the modem has received the data
     async fn wait_ongoing_write(&mut self) -> Result<(), SocketError> {
         let mut urc_subscription = self.urc_channel.subscribe().unwrap();
 
