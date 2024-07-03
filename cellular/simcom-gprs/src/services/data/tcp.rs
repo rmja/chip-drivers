@@ -118,7 +118,8 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpSocket<'buf, 'dev, 'sub, A
     }
 
     async fn read(&mut self, buf: &mut [u8]) -> Result<usize, SocketError> {
-        self.drain_background_urcs_and_ensure_in_use()?;
+        self.drain_background_urcs_and_ensure_in_use()
+            .map_err(|_| SocketError::Test1)?;
         if buf.is_empty() {
             return Ok(0);
         }
@@ -162,7 +163,8 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpSocket<'buf, 'dev, 'sub, A
                 }
             };
 
-            self.drain_background_urcs_and_ensure_in_use()?;
+            self.drain_background_urcs_and_ensure_in_use()
+                .map_err(|_| SocketError::Test2)?;
 
             match urc {
                 Urc::ReadData(r) if r.id == self.id => {
@@ -223,7 +225,8 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpSocket<'buf, 'dev, 'sub, A
 
     async fn write(&mut self, buf: &[u8]) -> Result<usize, SocketError> {
         if buf.is_empty() {
-            self.drain_background_urcs_and_ensure_in_use()?;
+            self.drain_background_urcs_and_ensure_in_use()
+                .map_err(|_| SocketError::Test3)?;
             return Ok(0);
         }
 
@@ -256,7 +259,8 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpSocket<'buf, 'dev, 'sub, A
     async fn wait_ongoing_write(&mut self) -> Result<(), SocketError> {
         let mut urc_subscription = self.urc_channel.subscribe().unwrap();
 
-        self.drain_background_urcs_and_ensure_in_use()?;
+        self.drain_background_urcs_and_ensure_in_use()
+            .map_err(|_| SocketError::Test4)?;
 
         if !self.handle.busy_writing[self.id].load(Ordering::Acquire) {
             trace!("[{}] Data already written", self.id);
@@ -271,7 +275,8 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpSocket<'buf, 'dev, 'sub, A
                 .await
                 .map_err(|_| SocketError::WriteTimeout)?;
 
-            self.drain_background_urcs_and_ensure_in_use()?;
+            self.drain_background_urcs_and_ensure_in_use()
+                .map_err(|_| SocketError::Test5)?;
 
             if !self.handle.busy_writing[self.id].load(Ordering::Acquire) {
                 trace!("[{}] Data is now written", self.id);

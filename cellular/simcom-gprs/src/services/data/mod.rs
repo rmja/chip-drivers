@@ -39,6 +39,12 @@ pub enum SocketError {
     UnableToRead,
     ReadTimeout,
     WriteTimeout,
+
+    Test1,
+    Test2,
+    Test3,
+    Test4,
+    Test5,
 }
 
 impl embedded_io::Error for SocketError {
@@ -49,6 +55,12 @@ impl embedded_io::Error for SocketError {
             SocketError::UnableToConnect => ErrorKind::ConnectionRefused,
             SocketError::ConnectTimeout => ErrorKind::TimedOut,
             SocketError::Closed => ErrorKind::ConnectionAborted,
+
+            SocketError::Test1 => ErrorKind::InvalidInput,
+            SocketError::Test2 => ErrorKind::InvalidData,
+            SocketError::Test3 => ErrorKind::Unsupported,
+            SocketError::Test4 => ErrorKind::OutOfMemory,
+            SocketError::Test5 => ErrorKind::WriteZero,
             _ => ErrorKind::Other,
         }
     }
