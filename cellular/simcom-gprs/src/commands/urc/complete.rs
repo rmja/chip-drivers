@@ -53,6 +53,25 @@ pub(super) fn parse_connection_status(resp: &[u8]) -> Option<Urc> {
     None
 }
 
+pub(super) fn parse_data_accept(resp: &[u8]) -> Option<Urc> {
+    if let Ok((reminder, (_, id, _, length))) = sequence::tuple::<_, _, (), _>((
+        combinator::recognize(sequence::tuple((
+            bytes::complete::tag("DATA ACCEPT:"),
+            combinator::opt(bytes::complete::tag(b" ")),
+        ))),
+        character::complete::u8,
+        bytes::complete::tag(","),
+        character::complete::u16,
+    ))(resp)
+    {
+        if reminder.is_empty() {
+            return Some(Urc::DataAccept(id as usize, length as usize));
+        }
+    }
+
+    None
+}
+
 pub(super) fn parse_data_available(resp: &[u8]) -> Option<Urc> {
     if let Ok((reminder, (_, id))) = sequence::tuple::<_, _, (), _>((
         combinator::recognize(sequence::tuple((
