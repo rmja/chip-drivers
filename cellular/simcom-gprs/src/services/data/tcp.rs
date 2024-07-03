@@ -16,7 +16,9 @@ use crate::{
     SimcomUrcChannel,
 };
 
-use super::{DataService, SocketError, SOCKET_STATE_DROPPED, SOCKET_STATE_USED};
+use super::{
+    DataService, SocketError, SOCKET_STATE_DROPPED, SOCKET_STATE_USED, USE_QUICK_SEND_MODE,
+};
 
 impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpConnect
     for DataService<'buf, 'dev, 'sub, AtCl>
@@ -253,10 +255,10 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpSocket<'buf, 'dev, 'sub, A
         Ok(len)
     }
 
-    // Wait for an ongoing write to complete.
-    // This completion depends on the selection in AT+CIPQSEND
-    // * Normal mode: This completes when the server receives the data
-    // * Quick Send mode: This completes when the modem has received the data
+    /// Wait for an ongoing write to complete.
+    /// This completion depends on `super::USE_QUICK_SEND_MODE`
+    /// * Normal mode: This completes when the server receives the data
+    /// * Quick Send mode: This completes when the modem has received the data
     async fn wait_ongoing_write(&mut self) -> Result<(), SocketError> {
         let mut urc_subscription = self.urc_channel.subscribe().unwrap();
 
@@ -309,10 +311,15 @@ impl<AtCl: AtatClient + 'static> Write for TcpSocket<'_, '_, '_, AtCl> {
     }
 
     async fn flush(&mut self) -> Result<(), Self::Error> {
-        // We do not do any buffering in the data so all writes are sent to the uart immediately
-        // We cannot wait for the modem to reply "SEND OK" using wait_ongoing_write()
-        // as this can cause deadlocks if the application does flush().await before it starts read().await.
-        Ok(())
+        if USE_QUICK_SEND_MODE {
+            // Wait for modem to confirm that it has received all written bytes
+            self.wait_ongoing_write().await
+        } else {
+            // We do not do any buffering in the data so all writes are sent to the uart immediately
+            // We cannot wait for the modem to reply "SEND OK" using wait_ongoing_write()
+            // as this can cause deadlocks if the application does flush().await before it starts read().await.
+            Ok(())
+        }
     }
 }
 
