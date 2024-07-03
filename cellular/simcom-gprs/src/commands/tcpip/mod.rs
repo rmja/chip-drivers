@@ -49,7 +49,14 @@ pub struct SelectDataTransmittingMode {
     pub mode: DataTransmittingMode,
 }
 
-/// 8.2.6 AT+CIPCLOSE Close TCP or UDP Connection.
+/// 8.2.5 AT+CIPACK Query Previous Connection Data Transmitting State
+#[derive(AtatCmd)]
+#[at_cmd("+CIPACK", DataTransmittingState, termination = "\r")]
+pub struct QueryPreviousConnectionDataTransmittingState {
+    pub id: usize,
+}
+
+/// 8.2.6 AT+CIPCLOSE Close TCP or UDP Connection
 pub struct CloseConnection {
     pub id: usize,
 }
@@ -217,6 +224,28 @@ mod tests {
             mode: DataTransmittingMode::QuickSendMode,
         };
         assert_eq_hex!(b"AT+CIPQSEND=1\r", cmd.to_vec().as_slice());
+    }
+
+    #[test]
+    fn can_query_connection_transmitting_state() {
+        let cmd = QueryPreviousConnectionDataTransmittingState { id: 2 };
+        assert_eq_hex!(b"AT+CIPACK=2\r", cmd.to_vec().as_slice());
+
+        let (mut ingress, res_sub, _) = setup_atat!();
+        ingress
+            .try_write(b"\r\n+CIPACK: 3,2,1\r\n\r\nOK\r\n")
+            .unwrap();
+
+        let response = res_sub.try_get().unwrap();
+        let response: &Response<100> = &response.borrow();
+        if let Response::Ok(message) = response {
+            let response = cmd.parse(Ok(&message)).unwrap();
+            assert_eq!(3, response.txlen);
+            assert_eq!(2, response.acklen);
+            assert_eq!(1, response.nacklen);
+        } else {
+            panic!("Invalid response");
+        }
     }
 
     #[test]

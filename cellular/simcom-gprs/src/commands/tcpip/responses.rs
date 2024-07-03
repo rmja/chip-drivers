@@ -4,6 +4,17 @@ use heapless_bytes::Bytes;
 
 use super::types::*;
 
+/// 8.2.5 AT+CIPACK Query Previous Connection Data Transmitting State
+#[derive(AtatResp)]
+pub struct DataTransmittingState {
+    /// The data amount which has been sent
+    pub txlen: usize,
+    /// The data amount confirmed successfully by the server
+    pub acklen: usize,
+    /// The data amount without confirmation by the server
+    pub nacklen: usize,
+}
+
 /// 8.2.6 AT+CIPCLOSE Close TCP or UDP Connection.
 #[derive(AtatResp)]
 pub struct CloseOk {
