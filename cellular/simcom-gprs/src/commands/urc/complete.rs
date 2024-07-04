@@ -32,7 +32,6 @@ pub(super) fn parse_connection_status(resp: &[u8]) -> Option<Urc> {
             bytes::complete::tag("CONNECT OK"),
             bytes::complete::tag("CONNECT FAIL"),
             bytes::complete::tag("ALREADY CONNECT"),
-            bytes::complete::tag("SEND OK"),
             bytes::complete::tag("CLOSED"),
         )),
     ))(resp)
@@ -43,29 +42,9 @@ pub(super) fn parse_connection_status(resp: &[u8]) -> Option<Urc> {
                 b"CONNECT OK" => Urc::ConnectOk(id),
                 b"CONNECT FAIL" => Urc::ConnectFail(id),
                 b"ALREADY CONNECT" => Urc::AlreadyConnect(id),
-                b"SEND OK" => Urc::SendOk(id),
                 b"CLOSED" => Urc::Closed(id),
                 _ => return None,
             });
-        }
-    }
-
-    None
-}
-
-pub(super) fn parse_data_accept(resp: &[u8]) -> Option<Urc> {
-    if let Ok((reminder, (_, id, _, length))) = sequence::tuple::<_, _, (), _>((
-        combinator::recognize(sequence::tuple((
-            bytes::complete::tag("DATA ACCEPT:"),
-            combinator::opt(bytes::complete::tag(b" ")),
-        ))),
-        character::complete::u8,
-        bytes::complete::tag(","),
-        character::complete::u16,
-    ))(resp)
-    {
-        if reminder.is_empty() {
-            return Some(Urc::DataAccept(id as usize, length as usize));
         }
     }
 

@@ -15,7 +15,7 @@ use crate::{
     SimcomUrcChannel, MAX_SOCKETS,
 };
 
-pub(crate) const URC_CAPACITY: usize = 1 + 3 * (1 + MAX_SOCKETS); // A dns reply, and (SEND OK + RXGET + CLOSED) per socket + background subscription
+pub(crate) const URC_CAPACITY: usize = 1 + 2 * (1 + MAX_SOCKETS); // A dns reply, and (RXGET + CLOSED) per socket + background subscription
 pub(crate) const URC_SUBSCRIBERS: usize = 2 + MAX_SOCKETS; // One for dns, one for background subscription, and one for each socket reply subscription
 
 pub(crate) type SocketState = AtomicU8;
@@ -35,7 +35,6 @@ pub struct SimcomDevice<'buf, 'sub, AtCl: AtatClient, Config: SimcomConfig> {
 pub struct Handle<'sub, AtCl: AtatClient> {
     pub(crate) client: LocalMutex<AtCl>,
     pub(crate) socket_state: Vec<SocketState, MAX_SOCKETS>,
-    pub(crate) busy_writing: [AtomicBool; MAX_SOCKETS],
     pub(crate) data_available: [AtomicBool; MAX_SOCKETS],
     pub(crate) max_urc_len: usize,
     background_subscription:
@@ -76,7 +75,6 @@ where
             handle: Handle {
                 client: LocalMutex::new(client, true),
                 socket_state: Vec::new(),
-                busy_writing: Default::default(),
                 data_available: Default::default(),
                 max_urc_len,
                 background_subscription: Mutex::new(urc_channel.subscribe().unwrap()),
@@ -234,7 +232,6 @@ impl<AtCl: AtatClient + 'static> Handle<'_, AtCl> {
             )
             .is_ok()
         {
-            self.busy_writing[id].store(false, Ordering::Relaxed);
             self.data_available[id].store(false, Ordering::Relaxed);
             true
         } else {
@@ -262,14 +259,6 @@ impl<AtCl: AtatClient + 'static> Handle<'_, AtCl> {
             Urc::ConnectFail(_id) => {}
             Urc::AlreadyConnect(id) => {
                 error!("[{}] Already connected", id);
-            }
-            Urc::DataAccept(id, length) => {
-                debug!("[{}] Written data accepted ({} bytes)", id, length);
-                self.busy_writing[id].store(false, Ordering::Release);
-            }
-            Urc::SendOk(id) => {
-                debug!("[{}] Data sent", id);
-                self.busy_writing[id].store(false, Ordering::Release);
             }
             Urc::Closed(id) => {
                 warn!("[{}] Socket closed", id);

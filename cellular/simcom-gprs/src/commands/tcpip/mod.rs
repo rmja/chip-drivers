@@ -219,6 +219,44 @@ mod tests {
     }
 
     #[test]
+    fn can_write_data_sim800() {
+        let cmd = WriteData { buf: b"HELLO" };
+        assert_eq_hex!(b"HELLO", cmd.to_vec().as_slice());
+
+        let (mut ingress, res_sub, _) = setup_atat!();
+        ingress.try_write(b"\r\nDATA ACCEPT: 1,2\r\n").unwrap();
+
+        let response = res_sub.try_get().unwrap();
+        let response: &Response<100> = &response.borrow();
+        if let Response::Ok(message) = response {
+            let response = cmd.parse(Ok(&message)).unwrap();
+            assert_eq!(1, response.id);
+            assert_eq!(2, response.accepted);
+        } else {
+            panic!("Invalid response");
+        }
+    }
+
+    #[test]
+    fn can_write_data_sim900() {
+        let cmd = WriteData { buf: b"HELLO" };
+        assert_eq_hex!(b"HELLO", cmd.to_vec().as_slice());
+
+        let (mut ingress, res_sub, _) = setup_atat!();
+        ingress.try_write(b"\r\nDATA ACCEPT:1,2\r\n").unwrap();
+
+        let response = res_sub.try_get().unwrap();
+        let response: &Response<100> = &response.borrow();
+        if let Response::Ok(message) = response {
+            let response = cmd.parse(Ok(&message)).unwrap();
+            assert_eq!(1, response.id);
+            assert_eq!(2, response.accepted);
+        } else {
+            panic!("Invalid response");
+        }
+    }
+
+    #[test]
     fn can_select_data_transmitting_mode() {
         let cmd = SelectDataTransmittingMode {
             mode: DataTransmittingMode::QuickSendMode,

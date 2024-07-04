@@ -30,28 +30,8 @@ pub fn parse_connection_status<'a, Error: ParseError<&'a [u8]>>(
                 bytes::streaming::tag("CONNECT OK"),
                 bytes::streaming::tag("CONNECT FAIL"),
                 bytes::streaming::tag("ALREADY CONNECT"),
-                bytes::streaming::tag("SEND OK"),
                 bytes::streaming::tag("CLOSED"),
             )),
-        ))),
-        bytes::streaming::tag("\r\n"),
-    ))(buf)?;
-
-    Ok((reminder, (frame, 2 + frame.len() + 2)))
-}
-
-/// Matches the equivalent of regex: \r\nDATA ACCEPT: ?[0-9],[0-9]+\r\n
-pub fn parse_data_accept<'a, Error: ParseError<&'a [u8]>>(
-    buf: &'a [u8],
-) -> IResult<&'a [u8], (&'a [u8], usize), Error> {
-    let (reminder, (_, frame, _)) = sequence::tuple((
-        bytes::streaming::tag("\r\n"),
-        combinator::recognize(sequence::tuple((
-            bytes::streaming::tag("DATA ACCEPT:"),
-            combinator::opt(bytes::streaming::tag(b" ")),
-            character::streaming::u8,
-            bytes::streaming::tag(","),
-            character::streaming::u16,
         ))),
         bytes::streaming::tag("\r\n"),
     ))(buf)?;
@@ -141,22 +121,6 @@ mod tests {
         assert_eq!(b"TAIL", reminder);
         assert_eq!(b"2, CONNECT OK", result.0);
         assert_eq!(17, result.1);
-    }
-
-    #[test]
-    fn can_parse_data_accept_sim800() {
-        let (reminder, result) = parse_data_accept::<()>(b"\r\nDATA ACCEPT: 1,2\r\nTAIL").unwrap();
-        assert_eq!(b"TAIL", reminder);
-        assert_eq!(b"DATA ACCEPT: 1,2", result.0);
-        assert_eq!(20, result.1);
-    }
-
-    #[test]
-    fn can_parse_data_accept_sim900() {
-        let (reminder, result) = parse_data_accept::<()>(b"\r\nDATA ACCEPT:1,2\r\nTAIL").unwrap();
-        assert_eq!(b"TAIL", reminder);
-        assert_eq!(b"DATA ACCEPT:1,2", result.0);
-        assert_eq!(19, result.1);
     }
 
     #[test]

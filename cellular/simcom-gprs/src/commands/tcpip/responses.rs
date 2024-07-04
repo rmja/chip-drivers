@@ -4,6 +4,13 @@ use heapless_bytes::Bytes;
 
 use super::types::*;
 
+/// 8.2.3 AT+CIPSEND Send Data Through TCP or UDP Connection
+#[derive(AtatResp)]
+pub struct DataAccept {
+    pub id: usize,
+    pub accepted: usize,
+}
+
 /// 8.2.5 AT+CIPACK Query Previous Connection Data Transmitting State
 #[derive(AtatResp)]
 pub struct DataTransmittingState {

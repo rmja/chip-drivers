@@ -27,8 +27,6 @@ pub enum Urc {
     ConnectOk(usize),
     ConnectFail(usize),
     AlreadyConnect(usize),
-    DataAccept(usize, usize),
-    SendOk(usize),
     Closed(usize),
     PdpDeact,
 
@@ -106,8 +104,6 @@ impl AtatUrc for Urc {
             Some(urc)
         } else if let Some(urc) = complete::parse_connection_status(resp) {
             Some(urc)
-        } else if let Some(urc) = complete::parse_data_accept(resp) {
-            Some(urc)
         } else if let Some(urc) = complete::parse_data_available(resp) {
             Some(urc)
         } else if let Some(urc) = complete::parse_read_data(resp) {
@@ -127,7 +123,6 @@ impl atat::Parser for Urc {
         let (_, r) = branch::alt((
             streaming::parse_pdp_state,
             streaming::parse_connection_status,
-            streaming::parse_data_accept,
             streaming::parse_data_available,
             streaming::parse_read_data,
             streaming::parse_receive,
@@ -273,30 +268,6 @@ mod tests {
         } else {
             panic!("Invalid URC");
         }
-    }
-
-    #[test]
-    fn can_parse_data_accept_sim800() {
-        let mut digester = SimcomDigester::new();
-
-        assert_eq!(
-            (DigestResult::Urc(b"DATA ACCEPT: 1,2"), 20),
-            digester.digest(b"\r\nDATA ACCEPT: 1,2\r\n")
-        );
-        let urc = Urc::parse(b"DATA ACCEPT: 1,2").unwrap();
-        assert_matches!(urc, Urc::DataAccept(1, 2));
-    }
-
-    #[test]
-    fn can_parse_data_accept_sim900() {
-        let mut digester = SimcomDigester::new();
-
-        assert_eq!(
-            (DigestResult::Urc(b"DATA ACCEPT:1,2"), 19),
-            digester.digest(b"\r\nDATA ACCEPT:1,2\r\n")
-        );
-        let urc = Urc::parse(b"DATA ACCEPT:1,2").unwrap();
-        assert_matches!(urc, Urc::DataAccept(1, 2));
     }
 
     #[test]

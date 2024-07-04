@@ -2,26 +2,21 @@ use core::sync::atomic::Ordering;
 
 use atat::{asynch::AtatClient, AtatCmd};
 use core::fmt::Write as _;
-use embassy_time::{with_timeout, Duration, Instant, Timer};
+use embassy_time::{with_timeout, Duration, Instant};
 use embedded_io_async::{Read, Write};
 use embedded_nal_async::{SocketAddr, TcpConnect};
 use heapless::String;
 
 use crate::{
     commands::{
-        tcpip::{
-            QueryPreviousConnectionDataTransmittingState, ReadData, SendData, StartConnection,
-            WriteData, MAX_WRITE,
-        },
+        tcpip::{ReadData, SendData, StartConnection, WriteData, MAX_WRITE},
         urc::Urc,
     },
     device::Handle,
     SimcomUrcChannel,
 };
 
-use super::{
-    DataService, SocketError, SOCKET_STATE_DROPPED, SOCKET_STATE_USED, USE_QUICK_SEND_MODE,
-};
+use super::{DataService, SocketError, SOCKET_STATE_DROPPED, SOCKET_STATE_USED};
 
 impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpConnect
     for DataService<'buf, 'dev, 'sub, AtCl>
@@ -234,93 +229,27 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpSocket<'buf, 'dev, 'sub, A
 
         let len = usize::min(buf.len(), MAX_WRITE);
 
-        if super::USE_QUICK_SEND_MODE {
-            loop {
-                self.drain_background_urcs_and_ensure_in_use()?;
+        let mut client = self.handle.client.lock().await;
+        // Hold client all the way from request prompt until DATA ACCEPT is received
 
-                {
-                    let mut client = self.handle.client.lock().await;
-                    let response = client
-                        .send(&QueryPreviousConnectionDataTransmittingState { id: self.id })
-                        .await?;
+        client
+            .send(&SendData {
+                id: self.id,
+                len: Some(len),
+            })
+            .await?;
 
-                    // 8192 is some random number that seems to work??
-                    // If we exceed this then the modem start to reply with "SEND FAIL"
-                    if response.nacklen + len <= 8192 {
-                        break;
-                    }
-                }
+        // We have received prompt and are ready to write data
 
-                Timer::after_millis(100).await;
-            }
-        } else {
-            // Wait for the previous (if any) "SEND OK" to arrive
-            self.wait_ongoing_write().await?;
-        }
+        // Write the data buffer
+        let response = client.send(&WriteData { buf: &buf[..len] }).await?;
 
-        {
-            let mut client = self.handle.client.lock().await;
-            // Hold client all the way from request prompt to actually writing data
+        debug!(
+            "[{}] Accepted {} out of {} written bytes",
+            self.id, response.accepted, len
+        );
 
-            client
-                .send(&SendData {
-                    id: self.id,
-                    len: Some(len),
-                })
-                .await?;
-
-            // We have received prompt and are ready to write data
-
-            // Indicate that we are currently writing
-            self.handle.busy_writing[self.id].store(true, Ordering::Release);
-
-            // Write the data buffer
-            client.send(&WriteData { buf: &buf[..len] }).await?;
-
-            debug!("[{}] Wrote {} bytes", self.id, len);
-        }
-
-        if super::USE_QUICK_SEND_MODE {
-            // Wait for "DATA ACCEPT" to arrive
-            self.wait_ongoing_write().await?
-        }
-
-        Ok(len)
-    }
-
-    /// Wait for an ongoing write to complete.
-    /// This completion depends on `super::USE_QUICK_SEND_MODE`
-    /// * Normal mode: This completes when the server receives the data
-    /// * Quick Send mode: This completes when the modem has received the data
-    async fn wait_ongoing_write(&mut self) -> Result<(), SocketError> {
-        let mut urc_subscription = self.urc_channel.subscribe().unwrap();
-
-        self.drain_background_urcs_and_ensure_in_use()?;
-
-        if !self.handle.busy_writing[self.id].load(Ordering::Acquire) {
-            trace!("[{}] Data already written", self.id);
-            return Ok(());
-        }
-
-        let timeout_instant =
-            Instant::now() + Duration::from_millis(WriteData::MAX_TIMEOUT_MS as u64);
-        while let Some(timeout) = timeout_instant.checked_duration_since(Instant::now()) {
-            // Wait for next urc
-            with_timeout(timeout, urc_subscription.next_message_pure())
-                .await
-                .map_err(|_| SocketError::WriteTimeout)?;
-
-            self.drain_background_urcs_and_ensure_in_use()?;
-
-            if !self.handle.busy_writing[self.id].load(Ordering::Acquire) {
-                trace!("[{}] Data is now written", self.id);
-                return Ok(());
-            } else {
-                trace!("[{}] Data is not yet written", self.id);
-            }
-        }
-
-        Err(SocketError::WriteTimeout)
+        Ok(response.accepted)
     }
 }
 
@@ -344,15 +273,8 @@ impl<AtCl: AtatClient + 'static> Write for TcpSocket<'_, '_, '_, AtCl> {
     }
 
     async fn flush(&mut self) -> Result<(), Self::Error> {
-        if USE_QUICK_SEND_MODE {
-            // All written data is already accepted
-            Ok(())
-        } else {
-            // We do not do any buffering in the data so all writes are sent to the uart immediately
-            // We cannot wait for the modem to reply "SEND OK" using wait_ongoing_write()
-            // as this can cause deadlocks if the application does flush().await before it starts read().await.
-            Ok(())
-        }
+        // All written data is already accepted as we use "quick send mode"
+        Ok(())
     }
 }
 

@@ -1,16 +1,16 @@
-use atat::AtatCmd;
-
-use crate::commands::{
-    tcpip::{WriteData, WRITE_DATA_MAX_LEN},
-    NoResponse,
+use atat::{
+    nom::{bytes, character, combinator, sequence},
+    AtatCmd,
 };
+
+use crate::commands::tcpip::{DataAccept, WriteData, WRITE_DATA_MAX_LEN};
 
 impl AtatCmd for WriteData<'_> {
     const MAX_LEN: usize = WRITE_DATA_MAX_LEN;
-    const MAX_TIMEOUT_MS: u32 = 645_000;
+    const MAX_TIMEOUT_MS: u32 = 5_000;
     const EXPECTS_RESPONSE_CODE: bool = false;
 
-    type Response = NoResponse;
+    type Response = DataAccept;
 
     fn write(&self, buf: &mut [u8]) -> usize {
         let len = self.buf.len();
@@ -20,8 +20,26 @@ impl AtatCmd for WriteData<'_> {
 
     fn parse(
         &self,
-        _resp: Result<&[u8], atat::InternalError>,
+        resp: Result<&[u8], atat::InternalError>,
     ) -> Result<Self::Response, atat::Error> {
-        Ok(NoResponse)
+        if let Ok((reminder, (_, id, _, accepted))) = sequence::tuple::<_, _, (), _>((
+            combinator::recognize(sequence::tuple((
+                bytes::complete::tag("DATA ACCEPT:"),
+                combinator::opt(bytes::complete::tag(b" ")),
+            ))),
+            character::complete::u8,
+            bytes::complete::tag(","),
+            character::complete::u16,
+        ))(resp?)
+        {
+            if reminder.is_empty() {
+                return Ok(DataAccept {
+                    id: id as usize,
+                    accepted: accepted as usize,
+                });
+            }
+        }
+
+        Err(atat::Error::Parse)
     }
 }

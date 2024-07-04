@@ -23,7 +23,6 @@ use crate::{
 };
 
 pub use apn::Apn;
-pub(crate) const USE_QUICK_SEND_MODE: bool = true;
 
 use super::network::NetworkError;
 
@@ -161,15 +160,14 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> DataService<'buf, 'dev, 'sub,
             state.store(new_state, Ordering::Release);
         }
 
-        if USE_QUICK_SEND_MODE {
-            // AT+CIPQSEND
-            // Enter quick send mode so that we get an URC when written data is buffered
-            // instead of when it is received by the server
-            self.send(&SelectDataTransmittingMode {
-                mode: crate::commands::tcpip::DataTransmittingMode::QuickSendMode,
-            })
-            .await?;
-        }
+        // AT+CIPQSEND
+        // Enter quick send mode so that we get an URC when written data is buffered
+        // instead of when it is received by the server
+        // This changes the default "SEND OK" response into "DATA ACCEPT"
+        self.send(&SelectDataTransmittingMode {
+            mode: crate::commands::tcpip::DataTransmittingMode::QuickSendMode,
+        })
+        .await?;
 
         // AT+CDNSCFG
         self.send(&ConfigureDomainNameServer {
