@@ -1,5 +1,5 @@
 use atat::{
-    nom::{bytes, character, combinator, sequence},
+    nom::{bytes, character, sequence},
     AtatCmd,
 };
 
@@ -7,7 +7,7 @@ use crate::commands::tcpip::{DataAccept, WriteData, WRITE_DATA_MAX_LEN};
 
 impl AtatCmd for WriteData<'_> {
     const MAX_LEN: usize = WRITE_DATA_MAX_LEN;
-    const MAX_TIMEOUT_MS: u32 = 5_000;
+    const MAX_TIMEOUT_MS: u32 = 10_000;
 
     type Response = DataAccept;
 
@@ -22,10 +22,7 @@ impl AtatCmd for WriteData<'_> {
         resp: Result<&[u8], atat::InternalError>,
     ) -> Result<Self::Response, atat::Error> {
         if let Ok((reminder, (_, id, _, accepted))) = sequence::tuple::<_, _, (), _>((
-            combinator::recognize(sequence::tuple((
-                bytes::complete::tag("DATA ACCEPT:"),
-                combinator::opt(bytes::complete::tag(b" ")),
-            ))),
+            bytes::complete::tag("DATA ACCEPT:"),
             character::complete::u8,
             bytes::complete::tag(","),
             character::complete::u16,

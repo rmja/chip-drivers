@@ -30,7 +30,6 @@ impl SimcomDigester {
                         bytes::streaming::tag(b"\r\n"),
                         combinator::recognize(sequence::tuple((
                             bytes::streaming::tag("DATA ACCEPT:"),
-                            combinator::opt(bytes::streaming::tag(b" ")),
                             character::streaming::u8,
                             bytes::streaming::tag(","),
                             character::streaming::u16,
