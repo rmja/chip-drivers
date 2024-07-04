@@ -2,9 +2,16 @@ use atat::atat_derive::AtatResp;
 use heapless::String;
 use heapless_bytes::Bytes;
 
+use crate::MAX_SOCKETS;
+
 use super::types::*;
 
 /// 8.2.3 AT+CIPSEND Send Data Through TCP or UDP Connection
+#[derive(AtatResp)]
+pub struct SendBufferSize {
+    pub size: [usize; MAX_SOCKETS],
+}
+
 #[derive(AtatResp)]
 pub struct DataAccept {
     pub id: usize,

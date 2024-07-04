@@ -28,6 +28,8 @@ pub struct StartConnection<'a> {
 }
 
 /// 8.2.3 AT+CIPSEND Send Data Through TCP or UDP Connection
+pub struct QuerySendBufferSize;
+
 #[derive(AtatCmd)]
 #[at_cmd("+CIPSEND", NoResponse, termination = "\r")]
 pub struct SendData {
@@ -35,7 +37,11 @@ pub struct SendData {
     pub len: Option<usize>,
 }
 
-pub const MAX_WRITE: usize = 1024; // This is the value reported by AT+CIPSEND?
+/// The maximum write size
+/// This is smaller than the value reported by AT+CIPSEND?
+/// but it seems by observing the TCP packets that the modem
+/// prefers to write packets with TCP payload of size 1024
+pub const MAX_WRITE: usize = 1024;
 pub const WRITE_DATA_MAX_LEN: usize = MAX_WRITE;
 
 pub struct WriteData<'a> {
@@ -176,10 +182,10 @@ mod tests {
 
     macro_rules! setup_atat {
         () => {{
-            let buf = make_static!([0; 128]);
-            static RES_SLOT: SimcomResponseSlot<100> = SimcomResponseSlot::new();
+            let buf = make_static!([0; 256]);
+            static RES_SLOT: SimcomResponseSlot<200> = SimcomResponseSlot::new();
             static URC_CHANNEL: SimcomUrcChannel = SimcomUrcChannel::new();
-            let ingress = SimcomIngress::<100>::new(buf, &RES_SLOT, &URC_CHANNEL);
+            let ingress = SimcomIngress::<200>::new(buf, &RES_SLOT, &URC_CHANNEL);
 
             let urc_sub = URC_CHANNEL.subscribe().unwrap();
 
@@ -210,6 +216,55 @@ mod tests {
     }
 
     #[test]
+    fn can_query_send_buffer_size_sim800() {
+        let cmd = QuerySendBufferSize;
+        assert_eq_hex!(b"AT+CIPSEND?\r", cmd.to_vec().as_slice());
+
+        let (mut ingress, res_sub, _) = setup_atat!();
+        ingress.try_write(b"\r\n+CIPSEND: 0,1460\r\n+CIPSEND: 1,0\r\n+CIPSEND: 2,0\r\n+CIPSEND: 3,0\r\n+CIPSEND: 4,0\r\n+CIPSEND: 5,0\r\n\r\nOK\r\n").unwrap();
+
+        let response = res_sub.try_get().unwrap();
+        let response: &Response<200> = &response.borrow();
+        if let Response::Ok(message) = response {
+            let response = cmd.parse(Ok(&message)).unwrap();
+            assert_eq!(1460, response.size[0]);
+            assert_eq!(0, response.size[1]);
+            assert_eq!(0, response.size[2]);
+            assert_eq!(0, response.size[3]);
+            assert_eq!(0, response.size[4]);
+            assert_eq!(0, response.size[5]);
+        } else {
+            panic!("Invalid response");
+        }
+    }
+
+    #[cfg(feature = "sim900")]
+    #[test]
+    fn can_query_send_buffer_size_sim900() {
+        let cmd = QuerySendBufferSize;
+        assert_eq_hex!(b"AT+CIPSEND?\r", cmd.to_vec().as_slice());
+
+        let (mut ingress, res_sub, _) = setup_atat!();
+        ingress.try_write(b"\r\n+CIPSEND: 0,1460\r\n+CIPSEND: 1,0\r\n+CIPSEND: 2,0\r\n+CIPSEND: 3,0\r\n+CIPSEND: 4,0\r\n+CIPSEND: 5,0\r\n+CIPSEND: 6,0\r\n+CIPSEND: 7,0\r\n\r\nOK\r\n").unwrap();
+
+        let response = res_sub.try_get().unwrap();
+        let response: &Response<200> = &response.borrow();
+        if let Response::Ok(message) = response {
+            let response = cmd.parse(Ok(&message)).unwrap();
+            assert_eq!(1460, response.size[0]);
+            assert_eq!(0, response.size[1]);
+            assert_eq!(0, response.size[2]);
+            assert_eq!(0, response.size[3]);
+            assert_eq!(0, response.size[4]);
+            assert_eq!(0, response.size[5]);
+            assert_eq!(0, response.size[6]);
+            assert_eq!(0, response.size[7]);
+        } else {
+            panic!("Invalid response");
+        }
+    }
+
+    #[test]
     fn can_send_data() {
         let cmd = SendData {
             id: 2,
@@ -227,7 +282,7 @@ mod tests {
         ingress.try_write(b"\r\nDATA ACCEPT:1,2\r\n").unwrap();
 
         let response = res_sub.try_get().unwrap();
-        let response: &Response<100> = &response.borrow();
+        let response: &Response<200> = &response.borrow();
         if let Response::Ok(message) = response {
             let response = cmd.parse(Ok(&message)).unwrap();
             assert_eq!(1, response.id);
@@ -256,7 +311,7 @@ mod tests {
             .unwrap();
 
         let response = res_sub.try_get().unwrap();
-        let response: &Response<100> = &response.borrow();
+        let response: &Response<200> = &response.borrow();
         if let Response::Ok(message) = response {
             let response = cmd.parse(Ok(&message)).unwrap();
             assert_eq!(3, response.txlen);
@@ -316,7 +371,7 @@ mod tests {
         ingress.try_write(b"\r\n10.0.109.44\r\n").unwrap();
 
         let response = res_sub.try_get().unwrap();
-        let response: &Response<100> = &response.borrow();
+        let response: &Response<200> = &response.borrow();
         if let Response::Ok(message) = response {
             let response = cmd.parse(Ok(&message)).unwrap();
             assert_eq!(b"10.0.109.44", response.ip.as_ref());
@@ -336,7 +391,7 @@ mod tests {
             .unwrap();
 
         let response = res_sub.try_get().unwrap();
-        let response: &Response<100> = &response.borrow();
+        let response: &Response<200> = &response.borrow();
         if let Response::Ok(message) = response {
             let response = cmd.parse(Ok(&message)).unwrap();
             assert_eq!(2, response.id);
@@ -360,7 +415,7 @@ mod tests {
         ).unwrap();
 
         let response = res_sub.try_get().unwrap();
-        let response: &Response<100> = &response.borrow();
+        let response: &Response<200> = &response.borrow();
         if let Response::Ok(message) = response {
             let response = cmd.parse(Ok(&message)).unwrap();
             assert_eq!(2, response.id);
@@ -387,7 +442,7 @@ mod tests {
             .unwrap();
 
         let response = res_sub.try_get().unwrap();
-        let response: &Response<100> = &response.borrow();
+        let response: &Response<200> = &response.borrow();
         if let Response::Ok(message) = response {
             assert!(message.is_empty());
         } else {
@@ -432,7 +487,7 @@ mod tests {
             .unwrap();
 
         let response = res_sub.try_get().unwrap();
-        let response: &Response<100> = &response.borrow();
+        let response: &Response<200> = &response.borrow();
         if let Response::Ok(message) = response {
             assert!(message.is_empty());
         } else {
@@ -461,7 +516,7 @@ mod tests {
         ingress.try_write(b"\r\n+CDNSGIP: 0,8\r\n").unwrap();
 
         let response = res_sub.try_get().unwrap();
-        let response: &Response<100> = &response.borrow();
+        let response: &Response<200> = &response.borrow();
         if let Response::Ok(message) = response {
             assert!(message.is_empty());
         } else {
@@ -486,7 +541,7 @@ mod tests {
             .unwrap();
 
         let response = res_sub.try_get().unwrap();
-        let response: &Response<100> = &response.borrow();
+        let response: &Response<200> = &response.borrow();
         assert_eq!(&Response::OtherError, response);
 
         assert_eq!(0, urc_sub.available());
@@ -510,7 +565,7 @@ mod tests {
         ingress.try_write(b"\r\nOK\r\n").unwrap();
 
         let response = res_sub.try_get().unwrap();
-        let response: &Response<100> = &response.borrow();
+        let response: &Response<200> = &response.borrow();
         if let Response::Ok(message) = response {
             assert!(message.is_empty());
         } else {
@@ -536,7 +591,7 @@ mod tests {
         ingress.try_write(b"\r\n>").unwrap();
 
         let response = res_sub.try_get().unwrap();
-        let response: &Response<100> = &response.borrow();
+        let response: &Response<200> = &response.borrow();
         if let Response::Prompt(prompt) = response {
             assert_eq!(b'>', *prompt);
         } else {

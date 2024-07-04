@@ -227,10 +227,26 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpSocket<'buf, 'dev, 'sub, A
             return Ok(0);
         }
 
+        // let max_len = loop {
+        //     self.drain_background_urcs_and_ensure_in_use()?;
+
+        //     // Get the amount of space in the modem write buffer
+        //     let mut client = self.handle.client.lock().await;
+        //     let buf_size = client.send(&QuerySendBufferSize).await?;
+        //     let max_len = buf_size.size[self.id];
+        //     if max_len > 0 {
+        //         break max_len;
+        //     }
+        // };
+        // let max_len = usize::min(max_len, MAX_WRITE);
+
         let len = usize::min(buf.len(), MAX_WRITE);
+        debug!("[{}] Writing {} bytes", self.id, len);
 
         let mut client = self.handle.client.lock().await;
         // Hold client all the way from request prompt until DATA ACCEPT is received
+
+        // Obtain a prompt
 
         client
             .send(&SendData {
