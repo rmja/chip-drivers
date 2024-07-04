@@ -8,7 +8,6 @@ use crate::commands::tcpip::{DataAccept, WriteData, WRITE_DATA_MAX_LEN};
 impl AtatCmd for WriteData<'_> {
     const MAX_LEN: usize = WRITE_DATA_MAX_LEN;
     const MAX_TIMEOUT_MS: u32 = 5_000;
-    const EXPECTS_RESPONSE_CODE: bool = false;
 
     type Response = DataAccept;
 
