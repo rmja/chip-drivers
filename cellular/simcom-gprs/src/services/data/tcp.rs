@@ -2,14 +2,17 @@ use core::sync::atomic::Ordering;
 
 use atat::{asynch::AtatClient, AtatCmd};
 use core::fmt::Write as _;
-use embassy_time::{with_timeout, Duration, Instant};
+use embassy_time::{with_timeout, Duration, Instant, Timer};
 use embedded_io_async::{Read, Write};
 use embedded_nal_async::{SocketAddr, TcpConnect};
 use heapless::String;
 
 use crate::{
     commands::{
-        tcpip::{ReadData, SendData, StartConnection, WriteData, MAX_WRITE},
+        tcpip::{
+            QueryPreviousConnectionDataTransmittingState, ReadData, SendData, StartConnection,
+            WriteData, MAX_WRITE,
+        },
         urc::Urc,
     },
     device::Handle,
@@ -52,6 +55,8 @@ pub struct TcpSocket<'buf, 'dev, 'sub, AtCl: AtatClient> {
     id: usize,
     handle: &'dev Handle<'sub, AtCl>,
     urc_channel: &'buf SimcomUrcChannel,
+    write_cooldown_timer: Option<Timer>,
+    last_nacklen_before_write: usize,
 }
 
 impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpSocket<'buf, 'dev, 'sub, AtCl> {
@@ -64,6 +69,8 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpSocket<'buf, 'dev, 'sub, A
             id,
             handle,
             urc_channel,
+            write_cooldown_timer: None,
+            last_nacklen_before_write: 0,
         })
     }
 
@@ -227,10 +234,40 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpSocket<'buf, 'dev, 'sub, A
             return Ok(0);
         }
 
+        // Unfortunately the simcom modem seems very bugged when it comes to writing large amount of data
+        // on the same connection. When we exceed something like 20kb written then it incorrectly fails
+        // to honor acknowledged packets from the network. It seems to help if we are not stressing the modem
+        // which is why there is the write_cooldown_timer.
+        if let Some(cooldown) = self.write_cooldown_timer.take() {
+            cooldown.await;
+
+            // Try and wait for not-ackownledged bytes to become zero.
+            // If it does not become 0 after a number of retries, then we simply continue and write anyway.
+            // This seems to actually work.
+            let last_nacklen = self.last_nacklen_before_write;
+            for _ in 1..=5 {
+                self.drain_background_urcs_and_ensure_in_use()?;
+
+                {
+                    let mut client = self.handle.client.lock().await;
+                    let response = client
+                        .send(&QueryPreviousConnectionDataTransmittingState { id: self.id })
+                        .await?;
+                    self.last_nacklen_before_write = response.nacklen;
+
+                    // If seems that if we write bytes to the buffer when there are not-ackownledged
+                    // tcp packets, then the modem becomes overwhelmed and starts to reply "SEND FAIL"
+                    if response.nacklen <= last_nacklen {
+                        break;
+                    }
+                }
+
+                Timer::after_millis(1000).await;
+            }
+        }
+
         // let max_len = loop {
         //     self.drain_background_urcs_and_ensure_in_use()?;
-
-        //     // Get the amount of space in the modem write buffer
         //     let mut client = self.handle.client.lock().await;
         //     let buf_size = client.send(&QuerySendBufferSize).await?;
         //     let max_len = buf_size.size[self.id];
@@ -242,6 +279,8 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpSocket<'buf, 'dev, 'sub, A
 
         let len = usize::min(buf.len(), MAX_WRITE);
         debug!("[{}] Writing {} bytes", self.id, len);
+
+        self.drain_background_urcs_and_ensure_in_use()?;
 
         let mut client = self.handle.client.lock().await;
         // Hold client all the way from request prompt until DATA ACCEPT is received
@@ -258,14 +297,26 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpSocket<'buf, 'dev, 'sub, A
         // We have received prompt and are ready to write data
 
         // Write the data buffer
-        let response = client.send(&WriteData { buf: &buf[..len] }).await?;
-
-        debug!(
-            "[{}] Accepted {} out of {} written bytes",
-            self.id, response.accepted, len
-        );
-
-        Ok(response.accepted)
+        match client.send(&WriteData { buf: &buf[..len] }).await {
+            Ok(response) => {
+                debug!(
+                    "[{}] Accepted {} out of {} written bytes",
+                    self.id, response.accepted, len
+                );
+                // Start write cooldown timer.
+                // 900ms seems to be a good number such that the first DataTransmittingState.nacklen
+                // is likely zero (see above)
+                // A value of 1000ms lets nacklen on the first query be nonzero too much
+                // which causes us to retry the DataTransmittingState query
+                self.write_cooldown_timer = Some(Timer::after_millis(1000));
+                Ok(response.accepted)
+            }
+            Err(e) => {
+                error!("[{}] Got write error {:?}", self.id, e);
+                self.handle.socket_state[self.id].store(SOCKET_STATE_DROPPED, Ordering::Release);
+                Err(SocketError::UnableToWrite)
+            }
+        }
     }
 }
 

@@ -39,6 +39,7 @@ pub enum SocketError {
     Closed,
     UnableToRead,
     ReadTimeout,
+    UnableToWrite,
     WriteTimeout,
 }
 
