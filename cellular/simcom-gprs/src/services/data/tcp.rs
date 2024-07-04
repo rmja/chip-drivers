@@ -240,7 +240,6 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpSocket<'buf, 'dev, 'sub, A
             .await?;
 
         // We have received prompt and are ready to write data
-        trace!("[{}] Write prompt received", self.id);
 
         // Write the data buffer
         let response = client.send(&WriteData { buf: &buf[..len] }).await?;
