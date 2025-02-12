@@ -48,32 +48,38 @@ impl MockSpiDevice<u8> {
     }
 
     fn is_match(x: &Operation<'_, u8>, y: &Operation<'_, u8>) -> bool {
-        if let Operation::Read(x) = x
-            && let Operation::Read(y) = y
-        {
-            x.len() == y.len()
-        } else if let Operation::Write(x) = x
-            && let Operation::Write(y) = y
-        {
-            x == y
-        } else if let Operation::Transfer(_, x) = x
-            && let Operation::Transfer(_, y) = y
-        {
-            x == y
+        if let Operation::Read(x) = x {
+            if let Operation::Read(y) = y {
+                x.len() == y.len()
+            } else {
+                false
+            }
+        } else if let Operation::Write(x) = x {
+            if let Operation::Write(y) = y {
+                x == y
+            } else {
+                false
+            }
+        } else if let Operation::Transfer(_, x) = x {
+            if let Operation::Transfer(_, y) = y {
+                x == y
+            } else {
+                false
+            }
         } else {
             false
         }
     }
 
     fn assign(dest: &mut Operation<'_, u8>, src: &Operation<'_, u8>) {
-        if let Operation::Read(dest) = dest
-            && let Operation::Read(src) = src
-        {
-            dest.copy_from_slice(src)
-        } else if let Operation::Transfer(dest, _) = dest
-            && let Operation::Transfer(src, _) = src
-        {
-            dest.copy_from_slice(src)
+        if let Operation::Read(dest) = dest {
+            if let Operation::Read(src) = src {
+                dest.copy_from_slice(src)
+            }
+        } else if let Operation::Transfer(dest, _) = dest {
+            if let Operation::Transfer(src, _) = src {
+                dest.copy_from_slice(src)
+            }
         }
     }
 }

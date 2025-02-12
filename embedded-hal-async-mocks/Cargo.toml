@@ -4,6 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-embedded-hal-async = "1.0.0-rc.3"
+embedded-hal-async = "1"
 futures = { version = "0.3", default-features = false }
-mockall = "0.12"
+mockall = "0.13"
