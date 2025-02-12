@@ -10,8 +10,8 @@ sim800 = []
 sim900 = []
 
 [dependencies]
-# atat = "0.22"
-atat = { git = "https://github.com/FactbirdHQ/atat", rev="2f55331" }
+atat = "0.24"
+# atat = { git = "https://github.com/FactbirdHQ/atat", rev="2f55331" }
 defmt = { version = "0.3", optional = true }
 embassy-sync = "0.6"
 embassy-time = "0.4"
