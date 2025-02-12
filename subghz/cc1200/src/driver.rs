@@ -121,10 +121,12 @@ where
             let status = Self::wait_for_xtal(&mut self.spi, &mut self.delay).await?;
             self.last_status = status;
 
-            if let Some(status) = status
-                && status.chip_rdy()
-            {
-                Ok(())
+            if let Some(status) = status {
+                if status.chip_rdy() {
+                    Ok(())
+                } else {
+                    Err(DriverError::Timeout)
+                }
             } else {
                 Err(DriverError::Timeout)
             }
@@ -134,10 +136,12 @@ where
             let status = Self::wait_for_xtal(&mut self.spi, &mut self.delay).await?;
             self.last_status = status;
 
-            if let Some(status) = status
-                && status.chip_rdy()
-            {
-                Ok(())
+            if let Some(status) = status {
+                if status.chip_rdy() {
+                    Ok(())
+                } else {
+                    Err(DriverError::Timeout)
+                }
             } else {
                 Err(DriverError::Timeout)
             }
@@ -511,11 +515,17 @@ pub(crate) fn lo_divider(frequency: u32) -> u8 {
 #[cfg(test)]
 mod tests {
     use embedded_hal_async_mocks::{delay::MockDelay, spi::MockSpiDevice};
-    use static_cell::make_static;
 
     use crate::regs::{ext::FreqoffCfg, pri::Iocfg2};
 
     use super::*;
+
+    macro_rules! singleton {
+        ($type:ty, $val:expr) => {{
+            static STATIC_CELL: static_cell::StaticCell<$type> = static_cell::StaticCell::new();
+            STATIC_CELL.init($val)
+        }};
+    }
 
     #[tokio::test]
     async fn read_reg_primary() {
@@ -523,10 +533,13 @@ mod tests {
         let mut spi = MockSpiDevice::new();
         let delay = MockDelay::new();
 
-        spi.expect_transaction_operations(make_static!([Operation::Transfer(
-            make_static!([0x22, 0x33]),
-            &[0x80 | 0x01, 0x00]
-        )]));
+        spi.expect_transaction_operations(singleton!(
+            [Operation<u8>; 1],
+            [Operation::Transfer(
+                singleton!([u8; 2], [0x22, 0x33]),
+                &[0x80 | 0x01, 0x00]
+            )]
+        ));
 
         // When
         let mut driver: Driver<_, _> = Driver::new(spi, delay);
@@ -543,10 +556,13 @@ mod tests {
         let mut spi = MockSpiDevice::new();
         let delay = MockDelay::new();
 
-        spi.expect_transaction_operations(make_static!([Operation::Transfer(
-            make_static!([0x22, 0x00, 0x33]),
-            &[0x80 | 0x2F, 0x01, 0x00]
-        )]));
+        spi.expect_transaction_operations(singleton!(
+            [Operation<u8>; 1],
+            [Operation::Transfer(
+                singleton!([u8; 3], [0x22, 0x00, 0x33]),
+                &[0x80 | 0x2F, 0x01, 0x00]
+            )]
+        ));
 
         // When
         let mut driver: Driver<_, _> = Driver::new(spi, delay);
@@ -563,10 +579,13 @@ mod tests {
         let mut spi = MockSpiDevice::new();
         let delay = MockDelay::new();
 
-        spi.expect_transaction_operations(make_static!([
-            Operation::Transfer(make_static!([0x22]), &[0xC0 | 0x01]),
-            Operation::Read(make_static!([0x33, 0x44]))
-        ]));
+        spi.expect_transaction_operations(singleton!(
+            [Operation<u8>; 2],
+            [
+                Operation::Transfer(singleton!([u8; 1], [0x22]), &[0xC0 | 0x01]),
+                Operation::Read(singleton!([u8; 2], [0x33, 0x44]))
+            ]
+        ));
 
         // When
         let mut driver: Driver<_, _> = Driver::new(spi, delay);
@@ -584,10 +603,13 @@ mod tests {
         let mut spi = MockSpiDevice::new();
         let delay = MockDelay::new();
 
-        spi.expect_transaction_operations(make_static!([
-            Operation::Transfer(make_static!([0x22, 0x00]), &[0xC0 | 0x2F, 0x01]),
-            Operation::Read(make_static!([0x33, 0x44]))
-        ]));
+        spi.expect_transaction_operations(singleton!(
+            [Operation<u8>; 2],
+            [
+                Operation::Transfer(singleton!([u8; 2], [0x22, 0x00]), &[0xC0 | 0x2F, 0x01]),
+                Operation::Read(singleton!([u8; 2], [0x33, 0x44]))
+            ]
+        ));
 
         // When
         let mut driver: Driver<_, _> = Driver::new(spi, delay);
@@ -608,10 +630,13 @@ mod tests {
         let mut spi = MockSpiDevice::new();
         let delay = MockDelay::new();
 
-        spi.expect_transaction_operations(make_static!([
-            Operation::Transfer(make_static!([0x22]), &[0xC0 | 0x3F]),
-            Operation::Read(make_static!([0x33, 0x44]))
-        ]));
+        spi.expect_transaction_operations(singleton!(
+            [Operation<u8>; 2],
+            [
+                Operation::Transfer(singleton!([u8; 1], [0x22]), &[0xC0 | 0x3F]),
+                Operation::Read(singleton!([u8; 2], [0x33, 0x44]))
+            ]
+        ));
 
         // When
         let mut driver: Driver<_, _> = Driver::new(spi, delay);
@@ -629,10 +654,13 @@ mod tests {
         let mut spi = MockSpiDevice::new();
         let delay = MockDelay::new();
 
-        spi.expect_transaction_operations(make_static!([Operation::Transfer(
-            make_static!([0x00, 0x00, 0x11, 0x22, 0x33, 0x44]),
-            &[0x80 | 0x2F, 0x71, 0x00, 0xC0 | 0x3F, 0x00, 0x00]
-        )]));
+        spi.expect_transaction_operations(singleton!(
+            [Operation<u8>; 1],
+            [Operation::Transfer(
+                singleton!([u8; 6], [0x00, 0x00, 0x11, 0x22, 0x33, 0x44]),
+                &[0x80 | 0x2F, 0x71, 0x00, 0xC0 | 0x3F, 0x00, 0x00]
+            )]
+        ));
 
         // When
         let mut driver: Driver<_, _> = Driver::new(spi, delay);
@@ -657,10 +685,13 @@ mod tests {
         let mut spi = MockSpiDevice::new();
         let delay = MockDelay::new();
 
-        spi.expect_transaction_operations(make_static!([Operation::Transfer(
-            make_static!([0x22, 0x00, 0]),
-            &[0x80 | 0x2F, 0xD7, 0x00]
-        )]));
+        spi.expect_transaction_operations(singleton!(
+            [Operation<u8>; 1],
+            [Operation::Transfer(
+                singleton!([u8; 3], [0x22, 0x00, 0]),
+                &[0x80 | 0x2F, 0xD7, 0x00]
+            )]
+        ));
 
         // When
         let mut driver: Driver<_, _> = Driver::new(spi, delay);
@@ -677,15 +708,21 @@ mod tests {
         let mut spi = MockSpiDevice::new();
         let delay = MockDelay::new();
 
-        spi.expect_transaction_operations(make_static!([Operation::Transfer(
-            make_static!([0x00, 0x00, 1]),
-            &[0x80 | 0x2F, 0xD7, 0x00]
-        )]));
+        spi.expect_transaction_operations(singleton!(
+            [Operation<u8>; 1],
+            [Operation::Transfer(
+                singleton!([u8; 3], [0x00, 0x00, 1]),
+                &[0x80 | 0x2F, 0xD7, 0x00]
+            )]
+        ));
 
-        spi.expect_transaction_operations(make_static!([Operation::Transfer(
-            make_static!([0x22, 0x00]),
-            &[0xC0 | 0x3F, 0x00]
-        )]));
+        spi.expect_transaction_operations(singleton!(
+            [Operation<u8>; 1],
+            [Operation::Transfer(
+                singleton!([u8; 2], [0x22, 0x00]),
+                &[0xC0 | 0x3F, 0x00]
+            )]
+        ));
 
         // When
         let mut driver: Driver<_, _> = Driver::new(spi, delay);
@@ -702,36 +739,45 @@ mod tests {
         let mut spi = MockSpiDevice::new();
         let delay = MockDelay::new();
 
-        spi.expect_transaction_operations(make_static!([Operation::Transfer(
-            make_static!([0x00, 0x00, 16]),
-            &[0x80 | 0x2F, 0xD7, 0x00]
-        )]));
+        spi.expect_transaction_operations(singleton!(
+            [Operation<u8>; 1],
+            [Operation::Transfer(
+                singleton!([u8; 3], [0x00, 0x00, 16]),
+                &[0x80 | 0x2F, 0xD7, 0x00]
+            )]
+        ));
 
-        spi.expect_transaction_operations(make_static!([Operation::Transfer(
-            make_static!([
-                0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00
-            ]),
-            &[
-                0xC0 | 0x3F,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00
-            ]
-        )]));
+        spi.expect_transaction_operations(singleton!(
+            [Operation<u8>; 1],
+            [Operation::Transfer(
+                singleton!(
+                    [u8; 17],
+                    [
+                        0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00
+                    ]
+                ),
+                &[
+                    0xC0 | 0x3F,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00
+                ]
+            )]
+        ));
 
         // When
         let mut driver: Driver<_, _> = Driver::new(spi, delay);
@@ -748,41 +794,53 @@ mod tests {
         let mut spi = MockSpiDevice::new();
         let delay = MockDelay::new();
 
-        spi.expect_transaction_operations(make_static!([Operation::Transfer(
-            make_static!([0x00, 0x00, 17]),
-            &[0x80 | 0x2F, 0xD7, 0x00]
-        )]));
+        spi.expect_transaction_operations(singleton!(
+            [Operation<u8>; 1],
+            [Operation::Transfer(
+                singleton!([u8; 3], [0x00, 0x00, 17]),
+                &[0x80 | 0x2F, 0xD7, 0x00]
+            )]
+        ));
 
-        spi.expect_transaction_operations(make_static!([Operation::Transfer(
-            make_static!([
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00
-            ]),
-            &[
-                0xC0 | 0x3F,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00
-            ]
-        )]));
+        spi.expect_transaction_operations(singleton!(
+            [Operation<u8>; 1],
+            [Operation::Transfer(
+                singleton!(
+                    [u8; 17],
+                    [
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00
+                    ]
+                ),
+                &[
+                    0xC0 | 0x3F,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00,
+                    0x00
+                ]
+            )]
+        ));
 
-        spi.expect_transaction_operations(make_static!([Operation::Transfer(
-            make_static!([0x22, 0x00]),
-            &[0xC0 | 0x3F, 0x00]
-        )]));
+        spi.expect_transaction_operations(singleton!(
+            [Operation<u8>; 1],
+            [Operation::Transfer(
+                singleton!([u8; 2], [0x22, 0x00]),
+                &[0xC0 | 0x3F, 0x00]
+            )]
+        ));
 
         // When
         let mut driver: Driver<_, _> = Driver::new(spi, delay);
@@ -799,10 +857,13 @@ mod tests {
         let mut spi = MockSpiDevice::new();
         let delay = MockDelay::new();
 
-        spi.expect_transaction_operations(make_static!([
-            Operation::Transfer(make_static!([0x22]), &[0x40 | 0x3F]),
-            Operation::Write(make_static!([0x33, 0x44]))
-        ]));
+        spi.expect_transaction_operations(singleton!(
+            [Operation<u8>; 2],
+            [
+                Operation::Transfer(singleton!([u8; 1], [0x22]), &[0x40 | 0x3F]),
+                Operation::Write(singleton!([u8; 2], [0x33, 0x44]))
+            ]
+        ));
 
         // When
         let mut driver: Driver<_, _> = Driver::new(spi, delay);
@@ -818,10 +879,10 @@ mod tests {
         let mut spi = MockSpiDevice::new();
         let delay = MockDelay::new();
 
-        spi.expect_transaction_operations(make_static!([Operation::Transfer(
-            make_static!([0x22]),
-            &[0x3D]
-        )]));
+        spi.expect_transaction_operations(singleton!(
+            [Operation<u8>; 1],
+            [Operation::Transfer(singleton!([u8; 1], [0x22]), &[0x3D])]
+        ));
 
         // When
         let mut driver: Driver<_, _> = Driver::new(spi, delay);
@@ -837,15 +898,21 @@ mod tests {
         let mut spi = MockSpiDevice::new();
         let delay = MockDelay::new();
 
-        spi.expect_transaction_operations(make_static!([Operation::Transfer(
-            make_static!([0x10]), // RX
-            &[0x3D]
-        )]));
+        spi.expect_transaction_operations(singleton!(
+            [Operation<u8>; 1],
+            [Operation::Transfer(
+                singleton!([u8; 1], [0x10]), // RX
+                &[0x3D]
+            )]
+        ));
 
-        spi.expect_transaction_operations(make_static!([Operation::Transfer(
-            make_static!([0x00]), // IDLE
-            &[0x3D]
-        )]));
+        spi.expect_transaction_operations(singleton!(
+            [Operation<u8>; 1],
+            [Operation::Transfer(
+                singleton!([u8; 1], [0x00]), // IDLE
+                &[0x3D]
+            )]
+        ));
 
         // When
         let mut driver: Driver<_, _> = Driver::new(spi, delay);

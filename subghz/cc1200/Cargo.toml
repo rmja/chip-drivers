@@ -9,9 +9,9 @@ packet-controller = ["embassy-time", "heapless"]
 serial-controller = ["embassy-time", "futures-async-stream"]
 
 [dependencies]
-bitfield = "0.15"
+bitfield = "0.18"
 defmt = { version = "0.3", optional = true }
-embassy-time = { version = "0.3", optional = true }
+embassy-time = { version = "0.4", optional = true }
 embedded-hal = "1"
 embedded-hal-async = "1"
 futures = { version = "0.3", default-features = false }
@@ -21,7 +21,8 @@ num-derive = "0.4"
 num-traits = { version = "0.2", default-features = false }
 
 [dev-dependencies]
+embassy-time = { version = "0.4", features = ["std", "generic-queue-64"] }
 embedded-hal-async-mocks = { path = "../../embedded-hal-async-mocks" }
-mockall = "0.12"
-static_cell = { version = "2.0.0", features = ["nightly"] }
+mockall = "0.13"
+static_cell = "2"
 tokio = { version = "1", features = ["macros", "rt"] }
