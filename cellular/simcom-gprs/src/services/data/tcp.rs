@@ -26,7 +26,10 @@ impl<'buf, 'dev, 'sub, AtCl: AtatClient + 'static> TcpConnect
 {
     type Error = SocketError;
 
-    type Connection<'a> = TcpSocket<'buf, 'dev, 'sub, AtCl> where Self : 'a;
+    type Connection<'a>
+        = TcpSocket<'buf, 'dev, 'sub, AtCl>
+    where
+        Self: 'a;
 
     async fn connect<'a>(
         &'a self,
@@ -369,7 +372,7 @@ mod tests {
     use atat::AtatIngress;
     use embedded_hal::digital::{ErrorType, OutputPin};
     use embedded_nal_async::{IpAddr, Ipv4Addr, SocketAddr};
-    use static_cell::make_static;
+    use static_cell::StaticCell;
 
     use crate::{
         device::{SocketState, SOCKET_STATE_UNKNOWN, SOCKET_STATE_UNUSED},
@@ -408,14 +411,16 @@ mod tests {
 
     macro_rules! setup_atat {
         () => {{
-            let ingress_buf = make_static!([0; 128]);
+            static INGRESS_BUF: StaticCell<[u8; 128]> = StaticCell::new();
             static RES_SLOT: SimcomResponseSlot<128> = SimcomResponseSlot::new();
-            let device_buf = make_static!([0; 128]);
+            static DEVICE_BUF: StaticCell<[u8; 128]> = StaticCell::new();
             static URC_CHANNEL: SimcomUrcChannel = SimcomUrcChannel::new();
             static SERIAL: SerialMock = SerialMock::new();
             let (tx, rx) = SERIAL.split();
+            let ingress_buf = INGRESS_BUF.init([0; 128]);
             let ingress = SimcomIngress::new(ingress_buf, &RES_SLOT, &URC_CHANNEL);
             let config = Config(ResetPin(true));
+            let device_buf = DEVICE_BUF.init([0; 128]);
             let device = SimcomDevice::new(tx, &RES_SLOT, device_buf, &URC_CHANNEL, config);
             (ingress, device, rx)
         }};
@@ -424,11 +429,12 @@ mod tests {
     async fn _hello_world_example() {
         const INGRESS_BUF_SIZE: usize = 128;
         static RES_SLOT: SimcomResponseSlot<INGRESS_BUF_SIZE> = SimcomResponseSlot::new();
-        let device_buf = make_static!([0u8; 128]);
+        static DEVICE_BUF: StaticCell<[u8; 128]> = StaticCell::new();
         static URC_CHANNEL: SimcomUrcChannel = SimcomUrcChannel::new();
         static SERIAL: SerialMock = SerialMock::new();
         let (tx, _rx) = SERIAL.split();
         let config = Config(ResetPin(true));
+        let device_buf = DEVICE_BUF.init([0; 128]);
         let mut device = SimcomDevice::new(tx, &RES_SLOT, device_buf, &URC_CHANNEL, config);
 
         // Run in a different task

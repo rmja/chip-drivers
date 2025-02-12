@@ -10,10 +10,11 @@ sim800 = []
 sim900 = []
 
 [dependencies]
-atat = "0.22"
+# atat = "0.22"
+atat = { git = "https://github.com/FactbirdHQ/atat", rev="2f55331" }
 defmt = { version = "0.3", optional = true }
-embassy-sync = "0.5"
-embassy-time = "0.3"
+embassy-sync = "0.6"
+embassy-time = "0.4"
 embedded-hal = "1"
 embedded-io = "0.6"
 embedded-io-async = "0.6"
@@ -21,7 +22,7 @@ embedded-nal-async = "0.7"
 futures = { version = "0.3", default-features = false }
 futures-intrusive = { version = "0.5", default-features = false }
 heapless = "0.8"
-heapless-bytes = "0.3"
+heapless-bytes = "0.4"
 hex = { version = "0.4.3", default-features = false }
 log = { version = "0.4", optional = true }
 serde = { version = "1", default-features = false, features = ["derive"] }
@@ -29,7 +30,7 @@ serde = { version = "1", default-features = false, features = ["derive"] }
 [dev-dependencies]
 assert_hex = "0.4"
 critical-section = { version = "1", features = ["std"] }
-embassy-time = { version = "0.3", features = ["std", "generic-queue"] }
+embassy-time = { version = "0.4", features = ["std", "generic-queue-64"] }
 embedded-io-async = { version = "0.6", features = ["std"] }
-static_cell = { version = "2", features = ["nightly"] }
+static_cell = "2"
 tokio = { version = "1", features = ["macros", "rt"] }

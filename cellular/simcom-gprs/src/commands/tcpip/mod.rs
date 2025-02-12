@@ -167,7 +167,7 @@ pub struct ReadData {
 mod tests {
     use assert_hex::assert_eq_hex;
     use atat::{AtatCmd, AtatIngress, DigestResult, Digester, Response};
-    use static_cell::make_static;
+    use static_cell::StaticCell;
 
     use crate::{
         commands::{
@@ -182,7 +182,8 @@ mod tests {
 
     macro_rules! setup_atat {
         () => {{
-            let buf = make_static!([0; 256]);
+            static BUF: StaticCell<[u8; 256]> = StaticCell::new();
+            let buf = BUF.init([0; 256]);
             static RES_SLOT: SimcomResponseSlot<200> = SimcomResponseSlot::new();
             static URC_CHANNEL: SimcomUrcChannel = SimcomUrcChannel::new();
             let ingress = SimcomIngress::<200>::new(buf, &RES_SLOT, &URC_CHANNEL);
