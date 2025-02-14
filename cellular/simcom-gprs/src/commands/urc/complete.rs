@@ -12,12 +12,10 @@ pub(super) fn parse_pdp_state(resp: &[u8]) -> Option<Urc> {
     ))(resp)
     {
         if reminder.is_empty() {
-            if reminder.is_empty() {
-                return Some(Urc::PdbState(super::PdpContextState {
-                    cid: ContextId(id),
-                    state: PdpState::try_from(state).unwrap(),
-                }));
-            }
+            return Some(Urc::PdbState(super::PdpContextState {
+                cid: ContextId(id),
+                state: PdpState::try_from(state).unwrap(),
+            }));
         }
     }
 

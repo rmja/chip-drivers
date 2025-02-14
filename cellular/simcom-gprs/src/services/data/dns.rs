@@ -1,4 +1,5 @@
 use atat::asynch::AtatClient;
+use core::net::IpAddr;
 use embassy_time::{with_timeout, Duration, Instant};
 use embedded_nal_async::{AddrType, Dns};
 
@@ -13,7 +14,7 @@ impl<AtCl: AtatClient + 'static> Dns for DataService<'_, '_, '_, AtCl> {
         &self,
         host: &str,
         addr_type: AddrType,
-    ) -> Result<embedded_nal_async::IpAddr, Self::Error> {
+    ) -> Result<IpAddr, Self::Error> {
         if addr_type == AddrType::IPv6 {
             return Err(SocketError::UnsupportedIpVersion);
         }
@@ -59,7 +60,7 @@ impl<AtCl: AtatClient + 'static> Dns for DataService<'_, '_, '_, AtCl> {
 
     async fn get_host_by_address(
         &self,
-        _addr: embedded_nal_async::IpAddr,
+        _addr: IpAddr,
         _result: &mut [u8],
     ) -> Result<usize, Self::Error> {
         unimplemented!()

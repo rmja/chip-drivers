@@ -3,10 +3,10 @@ mod dns;
 mod tcp;
 
 use atat::{asynch::AtatClient, AtatCmd};
+use core::net::Ipv4Addr;
 use core::{str::from_utf8, sync::atomic::Ordering};
 use embassy_sync::{blocking_mutex::raw::NoopRawMutex, mutex::Mutex};
 use embedded_io::ErrorKind;
-use embedded_nal_async::Ipv4Addr;
 
 use crate::{
     commands::{

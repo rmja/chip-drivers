@@ -2,9 +2,10 @@ use core::sync::atomic::Ordering;
 
 use atat::{asynch::AtatClient, AtatCmd};
 use core::fmt::Write as _;
+use core::net::SocketAddr;
 use embassy_time::{with_timeout, Duration, Instant, Timer};
 use embedded_io_async::{Read, Write};
-use embedded_nal_async::{SocketAddr, TcpConnect};
+use embedded_nal_async::TcpConnect;
 use heapless::String;
 
 use crate::{
@@ -370,8 +371,8 @@ mod tests {
     use core::convert::Infallible;
 
     use atat::AtatIngress;
+    use core::net::{IpAddr, Ipv4Addr, SocketAddr};
     use embedded_hal::digital::{ErrorType, OutputPin};
-    use embedded_nal_async::{IpAddr, Ipv4Addr, SocketAddr};
     use static_cell::StaticCell;
 
     use crate::{

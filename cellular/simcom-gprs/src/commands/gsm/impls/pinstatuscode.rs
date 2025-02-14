@@ -35,7 +35,7 @@ impl<'de> Deserialize<'de> for PinStatusCode {
         }
         struct FieldVisitor;
 
-        impl<'de> de::Visitor<'de> for FieldVisitor {
+        impl de::Visitor<'_> for FieldVisitor {
             type Value = Field;
             fn expecting(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
                 core::fmt::Formatter::write_str(formatter, "variant identifier")
