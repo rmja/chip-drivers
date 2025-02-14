@@ -42,6 +42,15 @@ use serde::{Deserialize, Serialize};
 
 pub use atat;
 
+// It seems as if the type export of SimcomUrcChannel does not work - it causes a rustc ICE in nightly 2024-12-10
+// We therefore export the fundamentals for creating the channel manually
+// See https://github.com/rust-lang/rust/issues/133808
+pub mod rustc_ice_workaround {
+    pub type Urc = crate::commands::urc::Urc;
+    pub const URC_CAPACITY: usize = crate::device::URC_CAPACITY;
+    pub const URC_SUBSCRIBERS: usize = crate::device::URC_SUBSCRIBERS;
+}
+
 #[cfg(feature = "sim900")]
 pub const MAX_SOCKETS: usize = 8;
 #[cfg(not(feature = "sim900"))]
